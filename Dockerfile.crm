@@ -63,9 +63,6 @@ RUN addgroup --system --gid 1001 nodejs \
 COPY --from=builder --chown=nextjs:nodejs /app/apps/vyntrize-crm/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/vyntrize-crm/.next/static ./apps/vyntrize-crm/.next/static
 
-# Copy public assets (if any exist in the CRM app).
-COPY --from=builder --chown=nextjs:nodejs /app/apps/vyntrize-crm/public ./apps/vyntrize-crm/public
-
 USER nextjs
 EXPOSE 3014
 
