@@ -1,0 +1,53 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      - vyntrize-net
+
+  vyntrize-website:
+    image: ghcr.io/${GITHUB_REPOSITORY}/vyntrize-website:latest
+    restart: unless-stopped
+    env_file:
+      - /etc/vyntrize/.env
+    expose:
+      - "3013"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3013/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - vyntrize-net
+
+  vyntrize-crm:
+    image: ghcr.io/${GITHUB_REPOSITORY}/vyntrize-crm:latest
+    restart: unless-stopped
+    env_file:
+      - /etc/vyntrize/.env
+    expose:
+      - "3014"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3014/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - vyntrize-net
+
+volumes:
+  caddy-data:
+  caddy-config:
+
+networks:
+  vyntrize-net:
+    driver: bridge

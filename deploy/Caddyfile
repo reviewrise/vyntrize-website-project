@@ -1,0 +1,7 @@
+www.vyntrise.com {
+    reverse_proxy vyntrize-website:3013
+}
+
+crm.vyntrise.com {
+    reverse_proxy vyntrize-crm:3014
+}
