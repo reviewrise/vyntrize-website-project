@@ -13,7 +13,7 @@ services:
       - vyntrize-net
 
   vyntrize-website:
-    image: ghcr.io/${GITHUB_REPOSITORY}/vyntrize-website:latest
+    image: ghcr.io/reviewrise/vyntrize-website-project/vyntrize-website:latest
     restart: unless-stopped
     env_file:
       - /etc/vyntrize/.env
@@ -29,7 +29,7 @@ services:
       - vyntrize-net
 
   vyntrize-crm:
-    image: ghcr.io/${GITHUB_REPOSITORY}/vyntrize-crm:latest
+    image: ghcr.io/reviewrise/vyntrize-website-project/vyntrize-crm:latest
     restart: unless-stopped
     env_file:
       - /etc/vyntrize/.env
