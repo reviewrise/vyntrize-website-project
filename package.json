@@ -3,9 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "pnpm --filter @platform/vyntrize-db build && pnpm --filter vyntrize-crm build && pnpm --filter ai-studio-applet build",
-    "dev": "pnpm --filter vyntrize-crm dev",
-    "dev:website": "pnpm --filter ai-studio-applet dev",
+    "build": "pnpm --filter @platform/vyntrize-db build && pnpm --filter vyntrize-crm build && pnpm --filter vyntrize-website build",
+    "dev": "pnpm --parallel --filter vyntrize-crm --filter vyntrize-website dev",
+    "dev:crm": "pnpm --filter vyntrize-crm dev",
+    "dev:website": "pnpm --filter vyntrize-website dev",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r exec tsc --noEmit",
     "db:generate": "pnpm --filter @platform/vyntrize-db db:generate",

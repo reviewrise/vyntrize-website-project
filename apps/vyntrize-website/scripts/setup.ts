@@ -1,6 +1,6 @@
 /**
  * One-command website DB setup:
- *   pnpm --filter ai-studio-applet db:setup
+ *   pnpm --filter vyntrize-website db:setup
  *
  * Steps:
  *   1. Connect as superuser → create website_user + vyntrize_website database
@@ -92,7 +92,7 @@ async function main() {
    Website URL: http://localhost:3013
 
    Start the dev server:
-     pnpm --filter ai-studio-applet dev
+     pnpm --filter vyntrize-website dev
 `);
 }
 

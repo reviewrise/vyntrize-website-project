@@ -17,6 +17,10 @@ packages/@platform/vyntrize-db/src/generated/
 # Keep .env.example files
 !.env.example
 
+# Production env files — never commit real secrets
+.env.production
+*.env.production
+
 # Misc
 .DS_Store
 *.log

@@ -62,8 +62,8 @@ Tasks are ordered so the workspace remains in a consistent state at every step: 
 
 - [x] 9. Create `Dockerfile.website` at the workspace root
   - Write a four-stage Dockerfile (`base`, `deps`, `builder`, `runner`) at the workspace root using the same pattern as `Dockerfile.crm`
-  - `deps` stage: filter on `ai-studio-applet` (the package name in `apps/vyntrize-website/package.json`); copy `apps/vyntrize-website/package.json` instead of the CRM package manifest
-  - `builder` stage: run `pnpm --filter @platform/vyntrize-db db:generate`, set dummy `VYNTRIZE_DATABASE_URL`, run `pnpm --filter ai-studio-applet build` (no `NEXT_OUTPUT` env var needed — `output: 'standalone'` is hardcoded in `apps/vyntrize-website/next.config.ts`)
+  - `deps` stage: filter on `vyntrize-website` (the package name in `apps/vyntrize-website/package.json`); copy `apps/vyntrize-website/package.json` instead of the CRM package manifest
+  - `builder` stage: run `pnpm --filter @platform/vyntrize-db db:generate`, set dummy `VYNTRIZE_DATABASE_URL`, run `pnpm --filter vyntrize-website build` (no `NEXT_OUTPUT` env var needed — `output: 'standalone'` is hardcoded in `apps/vyntrize-website/next.config.ts`)
   - `runner` stage: copy standalone bundle and static assets for website, set `PORT=3013`, expose 3013, `CMD ["node", "apps/vyntrize-website/server.js"]`
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
 

@@ -183,9 +183,9 @@ The `packages/**/*` glob covers nested scoped packages like `packages/@platform/
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "pnpm --filter @platform/vyntrize-db build && pnpm --filter vyntrize-crm build && pnpm --filter ai-studio-applet build",
+    "build": "pnpm --filter @platform/vyntrize-db build && pnpm --filter vyntrize-crm build && pnpm --filter vyntrize-website build",
     "dev": "pnpm --filter vyntrize-crm dev",
-    "dev:website": "pnpm --filter ai-studio-applet dev",
+    "dev:website": "pnpm --filter vyntrize-website dev",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r exec tsc --noEmit",
     "db:generate": "pnpm --filter @platform/vyntrize-db db:generate",
@@ -200,7 +200,7 @@ The `packages/**/*` glob covers nested scoped packages like `packages/@platform/
 }
 ```
 
-**Rationale for explicit build order**: `pnpm -r build` would run in parallel by default. Since `vyntrize-crm` and `ai-studio-applet` depend on `@platform/vyntrize-db`, the package must be built first. Explicit `--filter` chaining guarantees order without needing `--workspace-concurrency=1`.
+**Rationale for explicit build order**: `pnpm -r build` would run in parallel by default. Since `vyntrize-crm` and `vyntrize-website` depend on `@platform/vyntrize-db`, the package must be built first. Explicit `--filter` chaining guarantees order without needing `--workspace-concurrency=1`.
 
 #### `tsconfig.base.json`
 
@@ -454,7 +454,7 @@ CMD ["node", "apps/vyntrize-crm/server.js"]
 
 ### `Dockerfile.website`
 
-Builds `vyntrize-website` (package name: `ai-studio-applet`). Same four-stage pattern.
+Builds `vyntrize-website` (package name: `vyntrize-website`). Same four-stage pattern.
 
 ```dockerfile
 # ─── Stage 1: base ───────────────────────────────────────────────────────────
@@ -472,7 +472,7 @@ COPY apps/vyntrize-website/package.json ./apps/vyntrize-website/
 COPY packages/@platform/vyntrize-db/package.json ./packages/@platform/vyntrize-db/
 
 # Filter on the package name declared in apps/vyntrize-website/package.json.
-RUN pnpm install --filter ai-studio-applet... --frozen-lockfile
+RUN pnpm install --filter vyntrize-website... --frozen-lockfile
 
 # ─── Stage 3: builder ────────────────────────────────────────────────────────
 FROM base AS builder
@@ -489,7 +489,7 @@ RUN pnpm --filter @platform/vyntrize-db db:generate
 # vyntrize-website has output: 'standalone' hardcoded in next.config.ts,
 # so no NEXT_OUTPUT env var is needed.
 ENV VYNTRIZE_DATABASE_URL=postgresql://build:build@localhost:5432/build
-RUN pnpm --filter ai-studio-applet build
+RUN pnpm --filter vyntrize-website build
 
 # ─── Stage 4: runner ─────────────────────────────────────────────────────────
 FROM node:20-alpine AS runner
