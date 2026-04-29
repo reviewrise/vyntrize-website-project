@@ -126,14 +126,13 @@ jobs:
             echo "Navigating to deployment directory..."
             cd "${{ secrets.DEPLOY_PATH }}" || { echo "ERROR: Directory ${{ secrets.DEPLOY_PATH }} does not exist"; exit 1; }
             
-            echo "Checking for docker-compose.yml..."
-            if [ ! -f "docker-compose.yml" ]; then
-              echo "ERROR: docker-compose.yml not found in deployment directory"
-              echo "Please ensure docker-compose.yml exists at: ${{ secrets.DEPLOY_PATH }}/docker-compose.yml"
-              exit 1
-            fi
+            echo "Pulling latest code from repository..."
+            git pull origin main || { echo "ERROR: Failed to pull latest code"; exit 1; }
             
-            echo "Pulling latest images..."
+            echo "Navigating to deploy directory..."
+            cd deploy
+            
+            echo "Pulling latest Docker images..."
             docker compose pull
             
             echo "Starting services..."
