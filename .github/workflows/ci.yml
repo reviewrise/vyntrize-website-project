@@ -122,6 +122,21 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            cd ${{ secrets.DEPLOY_PATH }}
+            set -e
+            echo "Navigating to deployment directory..."
+            cd "${{ secrets.DEPLOY_PATH }}" || { echo "ERROR: Directory ${{ secrets.DEPLOY_PATH }} does not exist"; exit 1; }
+            
+            echo "Checking for docker-compose.yml..."
+            if [ ! -f "docker-compose.yml" ]; then
+              echo "ERROR: docker-compose.yml not found in deployment directory"
+              echo "Please ensure docker-compose.yml exists at: ${{ secrets.DEPLOY_PATH }}/docker-compose.yml"
+              exit 1
+            fi
+            
+            echo "Pulling latest images..."
             docker compose pull
+            
+            echo "Starting services..."
             docker compose up -d --remove-orphans
+            
+            echo "✅ Deployment completed successfully!"
