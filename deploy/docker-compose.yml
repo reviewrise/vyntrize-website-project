@@ -3,8 +3,8 @@ services:
     image: caddy:2-alpine
     restart: unless-stopped
     ports:
-      - "8080:80"
-      - "8443:443"
+      - "9080:80"
+      - "9443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
