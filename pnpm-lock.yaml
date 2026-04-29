@@ -171,9 +171,6 @@ importers:
       '@prisma/client':
         specifier: ^7.1.0
         version: 7.8.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(typescript@5.9.3))(typescript@5.9.3)
-      '@prisma/client-runtime-utils':
-        specifier: ^7.2.0
-        version: 7.2.0
       '@prisma/config':
         specifier: ^7.1.0
         version: 7.8.0
@@ -209,8 +206,8 @@ importers:
   packages/@platform/vyntrize-db/src/generated/client:
     dependencies:
       '@prisma/client-runtime-utils':
-        specifier: 7.2.0
-        version: 7.2.0
+        specifier: 7.8.0
+        version: 7.8.0
 
 packages:
 
@@ -1076,9 +1073,6 @@ packages:
 
   '@prisma/adapter-pg@7.8.0':
     resolution: {integrity: sha512-ygb3UkerK3v8MDpXVgCISdRNDozpxh6+JVJgiIGbSr5KBgz10LLf5ejUskPGoXlsIjxsOu6nuy1JVQr2EKGSlg==}
-
-  '@prisma/client-runtime-utils@7.2.0':
-    resolution: {integrity: sha512-dn7oB53v0tqkB0wBdMuTNFNPdEbfICEUe82Tn9FoKAhJCUkDH+fmyEp0ClciGh+9Hp2Tuu2K52kth2MTLstvmA==}
 
   '@prisma/client-runtime-utils@7.8.0':
     resolution: {integrity: sha512-5NQZztQ0oY/ADFkmd9gPuweH5A1/CCY8YQPorLLO0Mu6a87mY5gsnDkzmFmIHs9NFaLnZojzgddFVN4RpKYrdw==}
@@ -5932,8 +5926,6 @@ snapshots:
       postgres-array: 3.0.4
     transitivePeerDependencies:
       - pg-native
-
-  '@prisma/client-runtime-utils@7.2.0': {}
 
   '@prisma/client-runtime-utils@7.8.0': {}
 
