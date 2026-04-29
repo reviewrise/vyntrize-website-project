@@ -1,0 +1,69 @@
+# ─── Stage 1: base ───────────────────────────────────────────────────────────
+FROM node:20-alpine AS base
+RUN corepack enable && corepack prepare pnpm@latest --activate
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
+# ─── Stage 2: deps ───────────────────────────────────────────────────────────
+FROM base AS deps
+WORKDIR /app
+
+# Copy workspace manifests only — no source code yet.
+# This layer is cached as long as package.json / lock files don't change.
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY apps/vyntrize-crm/package.json ./apps/vyntrize-crm/
+COPY packages/@platform/vyntrize-db/package.json ./packages/@platform/vyntrize-db/
+
+# Install only the transitive closure of vyntrize-crm's dependencies.
+# --frozen-lockfile ensures reproducible installs.
+RUN pnpm install --filter vyntrize-crm... --frozen-lockfile
+
+# ─── Stage 3: builder ────────────────────────────────────────────────────────
+FROM base AS builder
+WORKDIR /app
+
+# Bring in installed node_modules from deps stage.
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/vyntrize-crm/node_modules ./apps/vyntrize-crm/node_modules
+COPY --from=deps /app/packages/@platform/vyntrize-db/node_modules ./packages/@platform/vyntrize-db/node_modules
+
+# Copy all source files.
+COPY . .
+
+# Generate the Prisma client before building the Next.js app.
+# This must run before `next build` so the generated types are available.
+RUN pnpm --filter @platform/vyntrize-db db:generate
+
+# Build vyntrize-crm in standalone mode.
+# NEXT_OUTPUT=standalone tells next.config.ts to set output: 'standalone'.
+# CRM_DATABASE_URL is a dummy value — the real URL is injected at runtime.
+ENV NEXT_OUTPUT=standalone
+ENV CRM_DATABASE_URL=postgresql://build:build@localhost:5432/build
+RUN pnpm --filter vyntrize-crm build
+
+# ─── Stage 4: runner ─────────────────────────────────────────────────────────
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3014
+ENV HOSTNAME="0.0.0.0"
+
+# Create a non-root user for security.
+RUN addgroup --system --gid 1001 nodejs \
+ && adduser --system --uid 1001 nextjs
+
+# Copy the standalone bundle produced by Next.js.
+# The standalone output is self-contained: it includes a minimal node_modules
+# with only the server-side runtime dependencies.
+COPY --from=builder --chown=nextjs:nodejs /app/apps/vyntrize-crm/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/vyntrize-crm/.next/static ./apps/vyntrize-crm/.next/static
+
+# Copy public assets (if any exist in the CRM app).
+COPY --from=builder --chown=nextjs:nodejs /app/apps/vyntrize-crm/public ./apps/vyntrize-crm/public
+
+USER nextjs
+EXPOSE 3014
+
+# The standalone server entry point is server.js at the root of the standalone output.
+CMD ["node", "apps/vyntrize-crm/server.js"]

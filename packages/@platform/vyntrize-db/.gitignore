@@ -1,0 +1,33 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+build
+
+# Environment variables
+.env
+.env.local
+.env*.local
+
+# Prisma generated client (regenerated via `db:generate`)
+node_modules/.prisma
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# TypeScript build info
+*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode
+.idea
+
+src/generated

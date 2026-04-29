@@ -1,0 +1,234 @@
+@import "tailwindcss";
+
+/* ── Dark mode: class strategy ── */
+@variant dark (&:where(.dark, .dark *));
+
+/* ════════════════════════════════════════════════════
+   VYNTRISE DESIGN TOKENS
+   Single source of truth for all colors.
+   Usage in JSX:  className="bg-[var(--color-surface)]"
+   Usage in CSS:  background: var(--color-surface);
+════════════════════════════════════════════════════ */
+:root {
+  /* ── Light mode backgrounds ── */
+  --color-bg:           #ffffff;
+  --color-surface:      #f8fafc;   /* slate-50 */
+  --color-raised:       #f1f5f9;   /* slate-100 */
+  --color-border:       #e2e8f0;   /* slate-200 */
+  --color-border-muted: #f1f5f9;   /* slate-100 */
+
+  /* ── Light mode text ── */
+  --color-text:         #0f172a;   /* slate-900 */
+  --color-text-muted:   #64748b;   /* slate-500 */
+  --color-text-subtle:  #94a3b8;   /* slate-400 */
+
+  /* ── Brand: Primary action (light mode) ── */
+  --color-primary:      #6366F1;   /* indigo — matches brand button */
+  --color-primary-h:    #4F46E5;   /* hover */
+  --color-primary-fg:   #ffffff;
+
+  /* ── Brand: Gradient (logo + hero visuals) ── */
+  --color-grad-start:   #41A5FF;   /* bright cyan-blue */
+  --color-grad-end:     #2A52BE;   /* deep indigo-blue */
+
+  /* ── Data viz ── */
+  --color-data-green:   #00E5FF;
+  --color-data-purple:  #9D4EDD;
+  --color-data-cyan:    #00B4D8;
+}
+
+.dark {
+  /* ── Dark mode backgrounds (VyntRise brand spec) ── */
+  --color-bg:           #0B101A;   /* deepest navy — main canvas */
+  --color-surface:      #151B2B;   /* card / panel surface */
+  --color-raised:       #1E2538;   /* elevated surface / hover */
+  --color-border:       #1E2538;   /* border matches raised */
+  --color-border-muted: #151B2B;
+
+  /* ── Dark mode text ── */
+  --color-text:         #FFFFFF;
+  --color-text-muted:   #8A96A8;   /* cool muted slate */
+  --color-text-subtle:  #5A6478;
+
+  /* ── Brand: Primary action (dark mode — same indigo) ── */
+  --color-primary:      #6366F1;
+  --color-primary-h:    #818CF8;   /* lighter on dark for hover */
+  --color-primary-fg:   #ffffff;
+}
+
+/* ════════════════════════════════════════════════════
+   TAILWIND THEME REGISTRATION
+   Registers tokens so Tailwind utilities work:
+   bg-background, text-foreground, border-border, etc.
+════════════════════════════════════════════════════ */
+@theme {
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-serif), Georgia, serif;
+  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Map tokens → Tailwind color names */
+  --color-background:           var(--color-bg);
+  --color-foreground:           var(--color-text);
+  --color-border:               var(--color-border);
+  --color-muted:                var(--color-surface);
+  --color-muted-foreground:     var(--color-text-muted);
+  --color-accent:               var(--color-raised);
+  --color-accent-foreground:    var(--color-text);
+  --color-primary:              var(--color-primary);
+  --color-primary-foreground:   var(--color-primary-fg);
+  --color-ring:                 var(--color-primary);
+  --color-input:                var(--color-border);
+  --color-destructive:          #ef4444;
+  --color-destructive-foreground: #ffffff;
+
+  --radius-lg: 0.75rem;
+  --radius-md: 0.5rem;
+  --radius-sm: 0.375rem;
+}
+
+/* ════════════════════════════════════════════════════
+   BASE STYLES
+════════════════════════════════════════════════════ */
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   UTILITY CLASSES
+   Use these instead of hardcoded Tailwind colors
+   so dark mode is automatic.
+════════════════════════════════════════════════════ */
+
+/* Backgrounds */
+.bg-base    { background-color: var(--color-bg); }
+.bg-surface { background-color: var(--color-surface); }
+.bg-raised  { background-color: var(--color-raised); }
+
+/* Text */
+.text-base  { color: var(--color-text); }
+.text-muted { color: var(--color-text-muted); }
+
+/* Borders */
+.border-base  { border-color: var(--color-border); }
+
+/* Primary button */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-primary-fg);
+}
+.btn-primary:hover {
+  background-color: var(--color-primary-h);
+}
+
+/* Brand gradient — logo, hero visuals */
+.brand-gradient {
+  background: linear-gradient(135deg, var(--color-grad-start) 0%, var(--color-grad-end) 100%);
+}
+.brand-gradient-text {
+  background: linear-gradient(135deg, var(--color-grad-start) 0%, var(--color-grad-end) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Glass card */
+.glass-morphism {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.dark .glass-morphism {
+  background: rgba(21, 27, 43, 0.85);
+  border: 1px solid rgba(30, 37, 56, 0.8);
+}
+
+/* Notion-style card */
+.notion-card {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  @apply rounded-xl p-6 transition-all duration-200 hover:shadow-md;
+}
+.dark .notion-card {
+  background-color: var(--color-surface);
+}
+
+/* Badge */
+.github-badge {
+  background-color: var(--color-surface);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-mono font-medium;
+}
+
+.writing-mode-vertical {
+  writing-mode: vertical-rl;
+}
+
+/* ════════════════════════════════════════════════════
+   LEGAL PROSE
+════════════════════════════════════════════════════ */
+.prose-legal h2 {
+  @apply text-xl font-extrabold mt-12 mb-4 first:mt-0 scroll-mt-28;
+  color: var(--color-text);
+}
+.prose-legal h3 {
+  @apply text-base font-bold mt-6 mb-2;
+  color: var(--color-text);
+}
+.prose-legal p {
+  @apply text-sm leading-relaxed mb-4;
+  color: var(--color-text-muted);
+}
+.prose-legal ul {
+  @apply space-y-2 mb-4 pl-0;
+}
+.prose-legal ul li {
+  @apply flex items-start gap-2.5 text-sm;
+  color: var(--color-text-muted);
+}
+.prose-legal ul li::before {
+  content: '';
+  @apply mt-2 h-1.5 w-1.5 rounded-full bg-blue-400 shrink-0;
+}
+.prose-legal a {
+  color: var(--color-primary);
+  @apply underline underline-offset-2;
+}
+.prose-legal .callout {
+  @apply rounded-xl px-5 py-4 mb-6;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+.prose-legal .callout p {
+  @apply text-sm mb-0;
+  color: var(--color-text-muted);
+}
+.prose-legal .callout-label {
+  @apply text-[10px] font-bold uppercase tracking-widest mb-1;
+  color: var(--color-primary);
+}
+.prose-legal .section-divider {
+  @apply border-t mt-12 mb-12;
+  border-color: var(--color-border);
+}
+.prose-legal table {
+  @apply w-full text-sm border-collapse mb-6;
+}
+.prose-legal th {
+  @apply text-left text-[10px] font-bold uppercase tracking-wider pb-2 pr-4;
+  color: var(--color-text-subtle);
+  border-bottom: 1px solid var(--color-border);
+}
+.prose-legal td {
+  @apply py-2.5 pr-4 align-top;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border-muted);
+}

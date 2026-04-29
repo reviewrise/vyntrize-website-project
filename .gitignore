@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.next/
+dist/
+out/
+
+# Prisma generated client
+packages/@platform/vyntrize-db/src/generated/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+# Keep .env.example files
+!.env.example
+
+# Misc
+.DS_Store
+*.log
+.turbo/

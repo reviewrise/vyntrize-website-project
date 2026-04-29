@@ -1,0 +1,65 @@
+// Vyntrize Website Database Schema
+// Stores contact form submissions for CRM import
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Contact form submissions from the website
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Contact information
+  firstName String
+  lastName  String
+  email     String
+  company   String?
+
+  // Intent and message
+  intent    String // ai-search, automation, custom-software, data, marketing, other
+  message   String @db.Text
+
+  // Lead tracking
+  status    ContactStatus @default(NEW)
+  priority  Priority      @default(MEDIUM)
+  assignedTo String?      // User ID from auth service
+  
+  // Follow-up tracking
+  firstResponseAt DateTime?
+  lastContactedAt DateTime?
+  notes           String?   @db.Text
+
+  // Metadata
+  source      String?  // utm_source, referrer, etc.
+  ipAddress   String?
+  userAgent   String?
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+  @@map("contact_submissions")
+}
+
+enum ContactStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL_SENT
+  WON
+  LOST
+  SPAM
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}

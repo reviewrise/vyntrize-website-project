@@ -1,0 +1,55 @@
+# ─── Stage 1: base ───────────────────────────────────────────────────────────
+FROM node:20-alpine AS base
+RUN corepack enable && corepack prepare pnpm@latest --activate
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
+# ─── Stage 2: deps ───────────────────────────────────────────────────────────
+FROM base AS deps
+WORKDIR /app
+
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
+COPY apps/vyntrize-website/package.json ./apps/vyntrize-website/
+COPY packages/@platform/vyntrize-db/package.json ./packages/@platform/vyntrize-db/
+
+# Filter on the package name declared in apps/vyntrize-website/package.json.
+RUN pnpm install --filter ai-studio-applet... --frozen-lockfile
+
+# ─── Stage 3: builder ────────────────────────────────────────────────────────
+FROM base AS builder
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/vyntrize-website/node_modules ./apps/vyntrize-website/node_modules
+COPY --from=deps /app/packages/@platform/vyntrize-db/node_modules ./packages/@platform/vyntrize-db/node_modules
+
+COPY . .
+
+RUN pnpm --filter @platform/vyntrize-db db:generate
+
+# vyntrize-website has output: 'standalone' hardcoded in next.config.ts,
+# so no NEXT_OUTPUT env var is needed.
+ENV VYNTRIZE_DATABASE_URL=postgresql://build:build@localhost:5432/build
+RUN pnpm --filter ai-studio-applet build
+
+# ─── Stage 4: runner ─────────────────────────────────────────────────────────
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3013
+ENV HOSTNAME="0.0.0.0"
+
+RUN addgroup --system --gid 1001 nodejs \
+ && adduser --system --uid 1001 nextjs
+
+COPY --from=builder --chown=nextjs:nodejs /app/apps/vyntrize-website/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/vyntrize-website/.next/static ./apps/vyntrize-website/.next/static
+
+# The website has a public/ directory with assets (images, fonts, etc.).
+COPY --from=builder --chown=nextjs:nodejs /app/apps/vyntrize-website/public ./apps/vyntrize-website/public
+
+USER nextjs
+EXPOSE 3013
+
+CMD ["node", "apps/vyntrize-website/server.js"]
