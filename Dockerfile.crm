@@ -14,6 +14,10 @@ COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY apps/vyntrize-crm/package.json ./apps/vyntrize-crm/
 COPY packages/@platform/vyntrize-db/package.json ./packages/@platform/vyntrize-db/
 
+# Copy Prisma schema files needed for postinstall hook
+COPY packages/@platform/vyntrize-db/prisma ./packages/@platform/vyntrize-db/prisma
+COPY packages/@platform/vyntrize-db/prisma.config.ts ./packages/@platform/vyntrize-db/
+
 # Install only the transitive closure of vyntrize-crm's dependencies.
 # --frozen-lockfile ensures reproducible installs.
 RUN pnpm install --filter vyntrize-crm... --frozen-lockfile

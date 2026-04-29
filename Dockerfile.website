@@ -12,6 +12,10 @@ COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY apps/vyntrize-website/package.json ./apps/vyntrize-website/
 COPY packages/@platform/vyntrize-db/package.json ./packages/@platform/vyntrize-db/
 
+# Copy Prisma schema files needed for postinstall hook
+COPY packages/@platform/vyntrize-db/prisma ./packages/@platform/vyntrize-db/prisma
+COPY packages/@platform/vyntrize-db/prisma.config.ts ./packages/@platform/vyntrize-db/
+
 # Filter on the package name declared in apps/vyntrize-website/package.json.
 RUN pnpm install --filter vyntrize-website... --frozen-lockfile
 
