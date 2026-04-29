@@ -50,4 +50,5 @@ volumes:
 
 networks:
   vyntrize-net:
-    driver: bridge
+    external: true
+    name: review-rise-monorepo_reviewrise-network
