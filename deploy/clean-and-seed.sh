@@ -24,34 +24,24 @@ echo "🌱 Seeding CRM users..."
 
 docker run --rm \
   --network review-rise-monorepo_reviewrise-network \
-  -e CI=true \
   -e CRM_DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@vyntrize-postgres:5432/${POSTGRES_DB}" \
-  -v "$(pwd)/../apps/vyntrize-crm:/app/crm:ro" \
-  -v "$(pwd)/../packages/@platform/vyntrize-db:/app/db:ro" \
-  -w /app/seed \
+  -v "$(pwd)/standalone-seed.ts:/app/seed.ts:ro" \
+  -v "$(pwd)/../packages/@platform/vyntrize-db/prisma:/app/prisma:ro" \
+  -v "$(pwd)/../packages/@platform/vyntrize-db/prisma.config.ts:/app/prisma.config.ts:ro" \
+  -w /app \
   node:20-alpine \
   sh -c "
-    echo '📦 Installing pnpm and dependencies...' && \
+    echo '📦 Setting up environment...' && \
     corepack enable && corepack prepare pnpm@latest --activate && \
     
-    echo '📦 Copying and installing database package...' && \
-    cp -r /app/db /app/seed/db && \
-    cd /app/seed/db && pnpm install && \
+    echo '📦 Installing dependencies...' && \
+    pnpm add -g prisma@7.8.0 @prisma/client@7.8.0 bcryptjs tsx @types/node && \
     
-    echo '📦 Setting up seed environment...' && \
-    cd /app/seed && \
-    mkdir -p node_modules/@prisma && \
-    ln -s /app/seed/db/src/generated/client node_modules/@prisma/client && \
-    ln -s /app/seed/db/node_modules/@prisma/client-runtime-utils node_modules/@prisma/client-runtime-utils && \
-    
-    echo '📦 Installing seed dependencies...' && \
-    pnpm add bcryptjs tsx @types/bcryptjs @types/node --save-dev && \
-    
-    echo '📦 Copying seed script...' && \
-    cp /app/crm/scripts/seed-users.ts /app/seed/ && \
+    echo '📦 Generating Prisma client...' && \
+    prisma generate && \
     
     echo '🌱 Running seed script...' && \
-    pnpm exec tsx seed-users.ts
+    tsx seed.ts
   "
 
 echo ""
