@@ -36,12 +36,6 @@ services:
       - /etc/vyntrize/.env
     expose:
       - "3013"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3013/api/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
     networks:
       - vyntrize-net
 
@@ -52,12 +46,6 @@ services:
       - /etc/vyntrize/.env
     expose:
       - "3014"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3014/api/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
     networks:
       - vyntrize-net
 
