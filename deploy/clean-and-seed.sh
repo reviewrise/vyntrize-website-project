@@ -50,7 +50,7 @@ docker run --rm \
     cp /app/crm/scripts/seed-users.ts /app/seed/ && \
     
     echo '🌱 Running seed script...' && \
-    tsx seed-users.ts
+    pnpm exec tsx seed-users.ts
   "
 
 echo ""
