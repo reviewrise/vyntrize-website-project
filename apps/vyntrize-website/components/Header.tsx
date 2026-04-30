@@ -165,7 +165,7 @@ export default function Header() {
 
           {/* SEO Analyzer — free tool */}
           <a
-            href="https://vyntrise.com/en"
+            href="https://seo-analyzer.vyntrise.com/"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors"
