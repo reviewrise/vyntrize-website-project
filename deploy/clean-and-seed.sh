@@ -35,13 +35,13 @@ docker run --rm \
     corepack enable && corepack prepare pnpm@latest --activate && \
     
     echo '📦 Installing dependencies...' && \
-    pnpm add -g prisma@7.8.0 @prisma/client@7.8.0 bcryptjs tsx @types/node && \
+    pnpm add prisma@7.8.0 @prisma/client@7.8.0 bcryptjs tsx @types/node && \
     
     echo '📦 Generating Prisma client...' && \
-    prisma generate && \
+    pnpm exec prisma generate && \
     
     echo '🌱 Running seed script...' && \
-    tsx seed.ts
+    pnpm exec tsx seed.ts
   "
 
 echo ""
