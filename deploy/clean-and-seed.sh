@@ -26,8 +26,7 @@ docker run --rm \
   --network review-rise-monorepo_reviewrise-network \
   -e CRM_DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@vyntrize-postgres:5432/${POSTGRES_DB}" \
   -v "$(pwd)/standalone-seed.ts:/app/seed.ts:ro" \
-  -v "$(pwd)/../packages/@platform/vyntrize-db/prisma:/app/prisma:ro" \
-  -v "$(pwd)/../packages/@platform/vyntrize-db/prisma.config.ts:/app/prisma.config.ts:ro" \
+  -v "$(pwd)/../packages/@platform/vyntrize-db/prisma:/app/prisma-source:ro" \
   -w /app \
   node:20-alpine \
   sh -c "
@@ -36,6 +35,11 @@ docker run --rm \
     
     echo '📦 Installing dependencies...' && \
     pnpm add prisma@7.8.0 @prisma/client@7.8.0 bcryptjs tsx @types/node && \
+    
+    echo '📦 Copying Prisma schema without custom output...' && \
+    mkdir -p prisma && \
+    cp /app/prisma-source/schema.prisma prisma/schema.prisma && \
+    sed -i '/output.*=.*\"..\/src\/generated\/client\"/d' prisma/schema.prisma && \
     
     echo '📦 Generating Prisma client...' && \
     pnpm exec prisma generate && \
