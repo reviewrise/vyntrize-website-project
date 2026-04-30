@@ -44,12 +44,6 @@ services:
     depends_on:
       vyntrize-postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3013 || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   vyntrize-crm:
     image: ghcr.io/reviewrise/vyntrize-website-project/vyntrize-crm:latest
@@ -66,12 +60,6 @@ services:
     depends_on:
       vyntrize-postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3014 || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
 volumes:
   caddy-data:
