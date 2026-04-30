@@ -15,18 +15,15 @@ docker run --rm \
   -e CRM_DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@vyntrize-postgres:5432/${POSTGRES_DB}" \
   -v "$(pwd)/../apps/vyntrize-crm:/app/crm" \
   -v "$(pwd)/../packages/@platform/vyntrize-db:/app/db" \
-  -v "$(pwd)/../pnpm-lock.yaml:/app/pnpm-lock.yaml:ro" \
-  -v "$(pwd)/../pnpm-workspace.yaml:/app/pnpm-workspace.yaml:ro" \
-  -v "$(pwd)/../package.json:/app/package.json:ro" \
   -w /app \
   node:20-alpine \
   sh -c "
     echo '📦 Installing pnpm...' && \
     corepack enable && corepack prepare pnpm@latest --activate && \
     echo '📦 Installing database dependencies...' && \
-    cd /app/db && pnpm install --no-frozen-lockfile && \
+    cd /app/db && pnpm install && \
     echo '📦 Installing CRM dependencies...' && \
-    cd /app/crm && pnpm install --no-frozen-lockfile && \
+    cd /app/crm && pnpm install && \
     echo '🌱 Running seed script...' && \
     pnpm seed:users
   "
