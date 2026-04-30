@@ -42,6 +42,7 @@ docker run --rm \
     cd /app/seed && \
     mkdir -p node_modules/@prisma && \
     ln -s /app/seed/db/src/generated/client node_modules/@prisma/client && \
+    ln -s /app/seed/db/node_modules/@prisma/client-runtime-utils node_modules/@prisma/client-runtime-utils && \
     
     echo '📦 Installing seed dependencies...' && \
     pnpm add bcryptjs tsx @types/bcryptjs @types/node --save-dev && \
