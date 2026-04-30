@@ -3,7 +3,7 @@
  * This script can run independently without workspace dependencies
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from './src/generated/client/index.js';
 import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
