@@ -1,8 +1,7 @@
 // Analytics Funnel API Endpoint
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { getSession } from '@/lib/session';
 import { vyntrizeDb } from '@platform/vyntrize-db';
 
 interface FunnelStep {
@@ -16,8 +15,8 @@ interface FunnelStep {
 export async function GET(request: NextRequest) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions);
-    if (!session) {
+    const session = await getSession();
+    if (!session.isLoggedIn) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
