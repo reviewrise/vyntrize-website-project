@@ -20,6 +20,7 @@ const CRM_NAV = [
     { href: '/pipeline', label: 'Pipeline', icon: Kanban },
     { href: '/contacts', label: 'Contacts', icon: Users },
     { href: '/companies', label: 'Companies', icon: Building2 },
+    { href: '/analytics', label: 'Analytics', icon: BarChart2 },
 ];
 
 const WEBSITE_NAV = [
