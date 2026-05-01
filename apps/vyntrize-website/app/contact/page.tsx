@@ -46,6 +46,11 @@ export default function Contact() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
+    
+    // Get analytics IDs
+    const analytics = getAnalytics();
+    const visitorId = analytics?.getVisitorId();
+    const sessionId = analytics?.getSessionId();
 
     try {
       const response = await fetch('/api/contact', {
@@ -58,6 +63,8 @@ export default function Contact() {
           company: formData.get('company'),
           intent: selected,
           message: formData.get('message'),
+          visitorId,
+          sessionId,
         }),
       });
 
@@ -65,7 +72,6 @@ export default function Contact() {
         setSubmitted(true);
         
         // Track form submission
-        const analytics = getAnalytics();
         if (analytics) {
           analytics.trackFormSubmit('contact-form', {
             intent: selected,
