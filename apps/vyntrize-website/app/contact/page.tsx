@@ -7,6 +7,7 @@ import {
   ArrowRight, Mail, MessageSquare, Clock, CheckCircle2,
   MapPin, Search, Bot, Code, Database, Sparkles,
 } from 'lucide-react';
+import { getAnalytics } from '@/lib/analytics';
 
 const intents = [
   { id: 'ai-search', label: 'AI Search & Reputation', icon: Search },
@@ -62,6 +63,15 @@ export default function Contact() {
 
       if (response.ok) {
         setSubmitted(true);
+        
+        // Track form submission
+        const analytics = getAnalytics();
+        if (analytics) {
+          analytics.trackFormSubmit('contact-form', {
+            intent: selected,
+            hasCompany: !!formData.get('company'),
+          });
+        }
       } else {
         console.error('Failed to submit form');
       }

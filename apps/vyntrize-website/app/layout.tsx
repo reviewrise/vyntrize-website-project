@@ -7,7 +7,7 @@ import CookieBanner from '@/components/CookieBanner';
 import CookieConsentProvider from '@/components/CookieConsentProvider';
 import AgentChatbot from '@/components/AgentChatbot';
 import ThemeProvider from '@/components/ThemeProvider';
-import { PageTracker } from '@/components/PageTracker';
+import { AnalyticsProvider } from '@/components/AnalyticsProvider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -95,7 +95,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className={`scroll-smooth ${inter.variable} ${jetbrainsMono.variable} ${cormorantGaramond.variable}`}>
       <body className="font-sans antialiased flex flex-col min-h-screen transition-colors duration-200" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
         <ThemeProvider>
-          <PageTracker />
+          <AnalyticsProvider />
           <Header />
           <CookieConsentProvider>
             <main className="flex-1">{children}</main>
