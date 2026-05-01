@@ -129,6 +129,12 @@ export default function AnalyticsPage() {
             Track website performance and visitor behavior
           </p>
         </div>
+        <a
+          href="/analytics/reports"
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
+        >
+          View Detailed Reports
+        </a>
       </div>
 
       {/* Date Range Selector */}
