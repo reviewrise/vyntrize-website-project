@@ -1,4 +1,4 @@
-# ─── Stage 1: base ───────────────────────────────────────────────────────────
+ # ─── Stage 1: base ───────────────────────────────────────────────────────────
 FROM node:20-alpine AS base
 RUN corepack enable && corepack prepare pnpm@latest --activate
 ENV PNPM_HOME="/pnpm"
