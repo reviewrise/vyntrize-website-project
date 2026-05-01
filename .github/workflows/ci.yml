@@ -57,6 +57,9 @@ jobs:
         run: pnpm lint
 
       - name: Build
+        env:
+          CRM_DATABASE_URL: postgresql://build:build@localhost:5432/build
+          VYNTRIZE_DATABASE_URL: postgresql://build:build@localhost:5432/build
         run: pnpm build
 
   docker:
