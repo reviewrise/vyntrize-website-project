@@ -6,6 +6,7 @@ import {
     LayoutDashboard, Kanban, Users, Building2,
     Download, UserCog, LogOut, Globe, Briefcase,
     UserCircle, Settings, ChevronRight, BarChart2,
+    CheckSquare, Mail,
 } from 'lucide-react';
 import { logout } from '@/lib/actions/auth';
 
@@ -20,7 +21,13 @@ const CRM_NAV = [
     { href: '/pipeline', label: 'Pipeline', icon: Kanban },
     { href: '/contacts', label: 'Contacts', icon: Users },
     { href: '/companies', label: 'Companies', icon: Building2 },
+    { href: '/tasks', label: 'Tasks', icon: CheckSquare },
+    { href: '/email-templates', label: 'Email Templates', icon: Mail },
     { href: '/analytics', label: 'Analytics', icon: BarChart2 },
+];
+
+const SETTINGS_NAV = [
+    { href: '/settings/pipeline', label: 'Pipeline Stages', icon: Settings },
 ];
 
 const WEBSITE_NAV = [
@@ -108,6 +115,11 @@ export function Sidebar({ role, displayName, email }: SidebarProps) {
                 <SectionLabel label="Website" />
                 <div className="space-y-0.5">
                     {WEBSITE_NAV.map(item => <NavItem key={item.href} {...item} />)}
+                </div>
+
+                <SectionLabel label="Settings" />
+                <div className="space-y-0.5">
+                    {SETTINGS_NAV.map(item => <NavItem key={item.href} {...item} />)}
                 </div>
 
                 {role === 'ADMIN' && (
