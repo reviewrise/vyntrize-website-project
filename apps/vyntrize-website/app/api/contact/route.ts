@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { LeadActivityService } from '@/../../apps/vyntrize-crm/lib/services/lead-activity-service';
+import { AttributionService } from '@/../../apps/vyntrize-crm/lib/attribution/attribution-service';
 import { extractUTMParams } from '@/lib/analytics/utils';
 import crypto from 'crypto';
 
@@ -104,6 +105,26 @@ export async function POST(req: NextRequest) {
             });
         } catch (error) {
             console.error('Error creating lead activity:', error);
+        }
+
+        // Track attribution (first touch and last touch)
+        try {
+            if (sessionId) {
+                // Track from session (includes UTM params)
+                await AttributionService.trackFromSession(lead.id, sessionId);
+            } else {
+                // Track from UTM params directly
+                await AttributionService.recordFirstTouch(lead.id, {
+                    source: utmParams?.source,
+                    medium: utmParams?.medium,
+                    campaign: utmParams?.campaign,
+                    content: utmParams?.content,
+                    term: utmParams?.term,
+                });
+            }
+        } catch (error) {
+            console.error('Error tracking attribution:', error);
+            // Don't fail the request if attribution tracking fails
         }
 
         return NextResponse.json({ 
