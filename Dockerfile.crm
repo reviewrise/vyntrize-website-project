@@ -67,21 +67,19 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/vyntrize-crm/.next/static ./
 COPY --from=builder --chown=nextjs:nodejs /app/packages/@platform/vyntrize-db/src/generated ./packages/@platform/vyntrize-db/src/generated
 COPY --from=builder --chown=nextjs:nodejs /app/packages/@platform/vyntrize-db/node_modules/@prisma ./packages/@platform/vyntrize-db/node_modules/@prisma
 
-# Copy pg and all its dependencies to the standalone app's node_modules
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/pg ./node_modules/pg
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/pg-pool ./node_modules/pg-pool
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/pg-types ./node_modules/pg-types
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/pg-int8 ./node_modules/pg-int8
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/pg-protocol ./node_modules/pg-protocol
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/postgres-array ./node_modules/postgres-array
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/postgres-bytea ./node_modules/postgres-bytea
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/postgres-date ./node_modules/postgres-date
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/postgres-interval ./node_modules/postgres-interval
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/postgres-range ./node_modules/postgres-range
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/packet-reader ./node_modules/packet-reader
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/pgpass ./node_modules/pgpass
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/split2 ./node_modules/split2
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/buffer-writer ./node_modules/buffer-writer
+# Copy pg and all its dependencies from pnpm store to the standalone app's node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.pnpm/pg@8.20.0/node_modules/pg ./node_modules/pg
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.pnpm/pg-pool@3.13.0_pg@8.20.0/node_modules/pg-pool ./node_modules/pg-pool
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.pnpm/pg-types@2.2.0/node_modules/pg-types ./node_modules/pg-types
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.pnpm/pg-int8@1.0.1/node_modules/pg-int8 ./node_modules/pg-int8
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.pnpm/pg-protocol@1.13.0/node_modules/pg-protocol ./node_modules/pg-protocol
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.pnpm/postgres-array@3.0.4/node_modules/postgres-array ./node_modules/postgres-array
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.pnpm/postgres-bytea@1.0.1/node_modules/postgres-bytea ./node_modules/postgres-bytea
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.pnpm/postgres-date@1.0.7/node_modules/postgres-date ./node_modules/postgres-date
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.pnpm/postgres-interval@1.2.0/node_modules/postgres-interval ./node_modules/postgres-interval
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.pnpm/pgpass@1.0.5/node_modules/pgpass ./node_modules/pgpass
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.pnpm/split2@4.2.0/node_modules/split2 ./node_modules/split2
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.pnpm/pg-connection-string@2.12.0/node_modules/pg-connection-string ./node_modules/pg-connection-string
 
 USER nextjs
 EXPOSE 3014
