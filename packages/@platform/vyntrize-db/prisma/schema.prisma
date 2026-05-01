@@ -68,9 +68,15 @@ model CrmUser {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  assignedLeads Lead[]     @relation("AssignedLeads")
-  activities    Activity[]
-  auditLogs     AuditLog[]
+  assignedLeads       Lead[]            @relation("AssignedLeads")
+  activities          Activity[]
+  auditLogs           AuditLog[]
+  leadNotes           LeadNote[]        @relation("LeadNoteAuthor")
+  assignedTasks       LeadTask[]        @relation("AssignedTasks")
+  createdTasks        LeadTask[]        @relation("CreatedTasks")
+  emailTemplates      EmailTemplate[]   @relation("EmailTemplateAuthor")
+  sentEmails          EmailTracking[]   @relation("SentEmails")
+  pipelineAutoAssigns PipelineStage[]   @relation("PipelineAutoAssign")
 
   @@map("crm_users")
 }
@@ -88,6 +94,12 @@ model Company {
   website   String?
   industry  String?
   notes     String?   @db.Text
+  
+  // Enrichment fields
+  employeeCount  Int?
+  annualRevenue  BigInt?
+  enrichmentData Json?
+  
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
@@ -108,6 +120,12 @@ model Contact {
   jobTitle    String?
   companyId   String?
   company     Company?  @relation(fields: [companyId], references: [id])
+  
+  // Social & engagement fields
+  linkedinUrl      String?
+  twitterHandle    String?
+  lastContactedAt  DateTime?
+  
   deletedAt   DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -135,12 +153,37 @@ model Lead {
   assigneeId  String?
   assignee    CrmUser?    @relation("AssignedLeads", fields: [assigneeId], references: [id])
   closingNote String?     @db.Text
+  
+  // Analytics & Scoring fields
+  score              Int?       @default(0)
+  qualificationStatus String?   @default("new")
+  lastActivityAt     DateTime?
+  visitorId          String?
+  sessionId          String?
+  
+  // Attribution fields
+  source      String?
+  medium      String?
+  campaign    String?
+  utmContent  String?
+  utmTerm     String?
+  
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  activities  Activity[]
+  activities      Activity[]
+  leadActivities  LeadActivity[]
+  leadScores      LeadScore[]
+  leadSource      LeadSource?    @relation("LeadSourceAttribution")
+  leadNotes       LeadNote[]
+  leadTasks       LeadTask[]
+  emailTracking   EmailTracking[]
 
   @@index([stage])
+  @@index([score])
+  @@index([qualificationStatus])
+  @@index([lastActivityAt])
+  @@index([visitorId])
   @@map("crm_leads")
 }
 
@@ -237,4 +280,404 @@ model PageView {
   @@index([sessionId])
   @@index([createdAt])
   @@map("page_views")
+}
+
+// ─── Analytics: Events ────────────────────────────────────────────────────────
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  sessionId  String
+  visitorId  String?
+  userId     String?
+
+  eventType  String   // 'page_view', 'click', 'form_submit', 'custom'
+  eventName  String?
+  eventData  Json?
+
+  // Page context
+  pageUrl    String   @db.Text
+  pageTitle  String?
+  referrer   String?  @db.Text
+
+  // UTM parameters
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmContent  String?
+  utmTerm     String?
+
+  // Device & browser
+  userAgent   String?  @db.Text
+  deviceType  String?  // 'desktop', 'mobile', 'tablet'
+  browser     String?
+  os          String?
+
+  // Location (anonymized)
+  ipAddressHash String?
+  country       String?
+  city          String?
+
+  @@index([sessionId])
+  @@index([visitorId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("analytics_events")
+}
+
+// ─── Analytics: Sessions ──────────────────────────────────────────────────────
+
+model AnalyticsSession {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessionId  String   @unique
+  visitorId  String
+  userId     String?
+
+  // Session timing
+  startedAt        DateTime
+  endedAt          DateTime?
+  durationSeconds  Int?
+
+  // Session metrics
+  pageViews   Int @default(0)
+  eventsCount Int @default(0)
+
+  // Entry point
+  landingPage   String?  @db.Text
+  entryReferrer String?  @db.Text
+
+  // UTM parameters (from entry)
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmContent  String?
+  utmTerm     String?
+
+  // Device info
+  deviceType String?
+  browser    String?
+  os         String?
+
+  // Location
+  country String?
+  city    String?
+
+  // Conversion tracking
+  converted       Boolean @default(false)
+  conversionType  String?
+
+  @@index([visitorId])
+  @@index([startedAt])
+  @@index([utmCampaign])
+  @@map("analytics_sessions")
+}
+
+// ─── Analytics: Daily Metrics ─────────────────────────────────────────────────
+
+model AnalyticsDailyMetric {
+  id         Int      @id @default(autoincrement())
+  metricDate DateTime @unique @db.Date
+
+  // Traffic metrics
+  totalSessions    Int @default(0)
+  totalPageViews   Int @default(0)
+  uniqueVisitors   Int @default(0)
+
+  // Engagement metrics
+  avgSessionDurationSeconds Int?
+  avgPagesPerSession        Decimal? @db.Decimal(10, 2)
+  bounceRate                Decimal? @db.Decimal(5, 2)
+
+  // Conversion metrics
+  totalConversions Int     @default(0)
+  conversionRate   Decimal? @db.Decimal(5, 2)
+
+  // Top sources (JSONB for flexibility)
+  topSources   Json?
+  topPages     Json?
+  topCampaigns Json?
+
+  createdAt DateTime @default(now())
+
+  @@map("analytics_daily_metrics")
+}
+
+// ─── Lead Intelligence: Activities ────────────────────────────────────────────
+
+model LeadActivity {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  leadId String
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  activityType String  // 'page_view', 'email_open', 'form_submit', 'download', etc.
+  activityName String?
+  activityData Json?
+
+  // Context
+  pageUrl   String?  @db.Text
+  sessionId String?
+
+  // Metadata
+  ipAddressHash String?
+  userAgent     String?  @db.Text
+
+  @@index([leadId])
+  @@index([activityType])
+  @@index([createdAt])
+  @@map("lead_activities")
+}
+
+// ─── Lead Intelligence: Scores ────────────────────────────────────────────────
+
+model LeadScore {
+  id            Int      @id @default(autoincrement())
+  calculatedAt  DateTime @default(now())
+
+  leadId String
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  score         Int  @default(0)
+  previousScore Int?
+
+  // Scoring factors (what contributed to the score)
+  factors Json?
+
+  // Qualification
+  qualificationStatus String?
+
+  @@index([leadId])
+  @@index([score])
+  @@index([calculatedAt])
+  @@map("lead_scores")
+}
+
+// ─── Lead Intelligence: Source Attribution ────────────────────────────────────
+
+model LeadSource {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  leadId String @unique
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade, name: "LeadSourceAttribution")
+
+  // First touch attribution
+  firstTouchSource   String?
+  firstTouchMedium   String?
+  firstTouchCampaign String?
+  firstTouchContent  String?
+  firstTouchTerm     String?
+  firstTouchAt       DateTime?
+
+  // Last touch attribution
+  lastTouchSource   String?
+  lastTouchMedium   String?
+  lastTouchCampaign String?
+  lastTouchContent  String?
+  lastTouchTerm     String?
+  lastTouchAt       DateTime?
+
+  // Multi-touch (all touchpoints)
+  touchpoints Json?
+
+  @@map("lead_sources")
+}
+
+// ─── CRM Enhancement: Notes ───────────────────────────────────────────────────
+
+model LeadNote {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  leadId String
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   CrmUser @relation(fields: [userId], references: [id], name: "LeadNoteAuthor")
+
+  note     String  @db.Text
+  isPinned Boolean @default(false)
+
+  @@index([leadId])
+  @@index([createdAt])
+  @@map("lead_notes")
+}
+
+// ─── CRM Enhancement: Tasks ───────────────────────────────────────────────────
+
+model LeadTask {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  leadId String
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  assignedToId String?
+  assignedTo   CrmUser? @relation(fields: [assignedToId], references: [id], name: "AssignedTasks")
+
+  createdById String
+  createdBy   CrmUser @relation(fields: [createdById], references: [id], name: "CreatedTasks")
+
+  title       String
+  description String?  @db.Text
+
+  status      TaskStatus   @default(PENDING)
+  priority    TaskPriority @default(MEDIUM)
+
+  dueDate     DateTime?
+  completedAt DateTime?
+
+  @@index([leadId])
+  @@index([assignedToId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("lead_tasks")
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// ─── CRM Enhancement: Email Templates ─────────────────────────────────────────
+
+model EmailTemplate {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String?
+  user   CrmUser? @relation(fields: [userId], references: [id], name: "EmailTemplateAuthor")
+
+  name      String
+  subject   String
+  body      String   @db.Text
+
+  // Template variables (e.g., {{firstName}}, {{companyName}})
+  variables Json?
+
+  isShared Boolean @default(false)
+  
+  emailTracking EmailTracking[]
+
+  @@index([userId])
+  @@map("email_templates")
+}
+
+// ─── CRM Enhancement: Email Tracking ──────────────────────────────────────────
+
+model EmailTracking {
+  id     Int      @id @default(autoincrement())
+  sentAt DateTime @default(now())
+
+  leadId String
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  sentById String
+  sentBy   CrmUser @relation(fields: [sentById], references: [id], name: "SentEmails")
+
+  templateId Int?
+  template   EmailTemplate? @relation(fields: [templateId], references: [id])
+
+  subject String
+  body    String @db.Text
+
+  openedAt  DateTime?
+  clickedAt DateTime?
+  repliedAt DateTime?
+
+  openCount  Int @default(0)
+  clickCount Int @default(0)
+
+  @@index([leadId])
+  @@index([sentById])
+  @@index([sentAt])
+  @@map("email_tracking")
+}
+
+// ─── CRM Enhancement: Pipeline Stages ─────────────────────────────────────────
+
+model PipelineStage {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name        String
+  description String?  @db.Text
+
+  stageOrder  Int      @unique
+  probability Int      @default(0) // Win probability (0-100)
+
+  // Automation rules
+  autoAssignToId   String?
+  autoAssignTo     CrmUser? @relation(fields: [autoAssignToId], references: [id], name: "PipelineAutoAssign")
+  autoCreateTask   Boolean  @default(false)
+  taskTemplate     Json?
+
+  isActive Boolean @default(true)
+
+  @@map("pipeline_stages")
+}
+
+// ─── CRM Enhancement: Custom Fields ───────────────────────────────────────────
+
+model CustomField {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  entityType String // 'lead', 'contact', 'company'
+
+  fieldName  String
+  fieldLabel String
+  fieldType  String // 'text', 'number', 'date', 'select', 'multi_select', 'boolean'
+
+  options      Json?
+  defaultValue String?
+
+  isRequired   Boolean @default(false)
+  isSearchable Boolean @default(true)
+
+  displayOrder Int?
+
+  values CustomFieldValue[]
+
+  @@unique([entityType, fieldName])
+  @@map("custom_fields")
+}
+
+// ─── CRM Enhancement: Custom Field Values ─────────────────────────────────────
+
+model CustomFieldValue {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customFieldId Int
+  customField   CustomField @relation(fields: [customFieldId], references: [id], onDelete: Cascade)
+
+  entityType String
+  entityId   String
+
+  value String? @db.Text
+
+  @@index([entityType, entityId])
+  @@index([customFieldId])
+  @@map("custom_field_values")
 }
