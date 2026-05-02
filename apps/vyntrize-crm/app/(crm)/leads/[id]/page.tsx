@@ -90,11 +90,6 @@ export default async function LeadDetailPage({
                         )}
                     </div>
                 </div>
-                
-                {/* Lead Score Widget */}
-                <div className="w-80">
-                    <LeadScoreWidget leadId={lead.id} />
-                </div>
             </div>
 
             {/* Two Column Layout */}
@@ -206,7 +201,7 @@ export default async function LeadDetailPage({
                 {/* Sidebar - Right Column (1/3) */}
                 <div className="lg:col-span-1 space-y-6">
                     {/* Lead Notes */}
-                    <LeadNotes leadId={lead.id} currentUserId={session.userId} />
+                    <LeadNotes leadId={lead.id} currentUserId={session.userId} currentUserRole={session.role} />
                 </div>
             </div>
         </div>

@@ -7,7 +7,7 @@ import { getSession } from '@/lib/session';
 // GET - Fetch a single template
 export async function GET(
   request: NextRequest,
-  { params }: { params: { templateId: string } }
+  { params }: { params: Promise<{ templateId: string }> }
 ) {
   try {
     const session = await getSession();
@@ -15,7 +15,8 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const templateId = parseInt(params.templateId, 10);
+    const { templateId: templateIdStr } = await params;
+    const templateId = parseInt(templateIdStr, 10);
 
     const template = await vyntrizeDb.emailTemplate.findUnique({
       where: { id: templateId },
@@ -52,7 +53,7 @@ export async function GET(
 // PATCH - Update an email template
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { templateId: string } }
+  { params }: { params: Promise<{ templateId: string }> }
 ) {
   try {
     const session = await getSession();
@@ -60,7 +61,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const templateId = parseInt(params.templateId, 10);
+    const { templateId: templateIdStr } = await params;
+    const templateId = parseInt(templateIdStr, 10);
     const body = await request.json();
     const { name, subject, body: templateBody, variables, isShared } = body;
 
@@ -157,7 +159,7 @@ export async function PATCH(
 // DELETE - Delete an email template
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { templateId: string } }
+  { params }: { params: Promise<{ templateId: string }> }
 ) {
   try {
     const session = await getSession();
@@ -165,7 +167,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const templateId = parseInt(params.templateId, 10);
+    const { templateId: templateIdStr } = await params;
+    const templateId = parseInt(templateIdStr, 10);
 
     // Check if template exists
     const existingTemplate = await vyntrizeDb.emailTemplate.findUnique({

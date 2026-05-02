@@ -7,7 +7,7 @@ import { getSession } from '@/lib/session';
 // PATCH - Update a pipeline stage
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { stageId: string } }
+  { params }: { params: Promise<{ stageId: string }> }
 ) {
   try {
     const session = await getSession();
@@ -23,7 +23,8 @@ export async function PATCH(
       );
     }
 
-    const stageId = parseInt(params.stageId, 10);
+    const { stageId: stageIdStr } = await params;
+    const stageId = parseInt(stageIdStr, 10);
     const body = await request.json();
     const {
       name,
@@ -125,7 +126,7 @@ export async function PATCH(
 // DELETE - Delete a pipeline stage
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { stageId: string } }
+  { params }: { params: Promise<{ stageId: string }> }
 ) {
   try {
     const session = await getSession();
@@ -141,7 +142,8 @@ export async function DELETE(
       );
     }
 
-    const stageId = parseInt(params.stageId, 10);
+    const { stageId: stageIdStr } = await params;
+    const stageId = parseInt(stageIdStr, 10);
 
     // Check if stage exists
     const existingStage = await vyntrizeDb.pipelineStage.findUnique({

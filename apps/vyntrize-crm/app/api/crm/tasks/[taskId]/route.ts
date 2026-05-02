@@ -7,7 +7,7 @@ import { getSession } from '@/lib/session';
 // PATCH - Update a task
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { taskId: string } }
+  { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
     const session = await getSession();
@@ -15,7 +15,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const taskId = parseInt(params.taskId, 10);
+    const { taskId: taskIdStr } = await params;
+    const taskId = parseInt(taskIdStr, 10);
     const body = await request.json();
     const { title, description, assignedToId, priority, status, dueDate } = body;
 
@@ -109,7 +110,7 @@ export async function PATCH(
 // DELETE - Delete a task
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { taskId: string } }
+  { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
     const session = await getSession();
@@ -117,7 +118,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const taskId = parseInt(params.taskId, 10);
+    const { taskId: taskIdStr } = await params;
+    const taskId = parseInt(taskIdStr, 10);
 
     // Check if task exists
     const existingTask = await vyntrizeDb.leadTask.findUnique({

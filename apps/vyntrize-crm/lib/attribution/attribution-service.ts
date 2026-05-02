@@ -145,7 +145,7 @@ export class AttributionService {
       };
 
       // Get existing touchpoints
-      const touchpoints = (attribution.touchpoints as TouchPoint[]) || [];
+      const touchpoints = (attribution.touchpoints as unknown as TouchPoint[]) || [];
 
       // Check if this is a duplicate (same source/medium/campaign within 5 minutes)
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
@@ -214,7 +214,7 @@ export class AttributionService {
           }
         : null;
 
-      const touchpoints = (attribution.touchpoints as TouchPoint[]) || [];
+      const touchpoints = (attribution.touchpoints as unknown as TouchPoint[]) || [];
 
       return {
         firstTouch,

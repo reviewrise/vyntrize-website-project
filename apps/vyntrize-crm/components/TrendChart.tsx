@@ -30,7 +30,7 @@ interface TrendChartProps {
 }
 
 // Custom Tooltip Component
-function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
+function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload || !payload.length) return null;
 
   return (
@@ -41,7 +41,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
     >
       <p className="text-sm font-semibold text-gray-900 mb-2">{label}</p>
       <div className="space-y-1">
-        {payload.map((entry, index) => (
+        {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <div

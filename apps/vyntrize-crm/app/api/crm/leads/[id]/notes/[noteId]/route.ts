@@ -7,7 +7,7 @@ import { getSession } from '@/lib/session';
 // PATCH - Update a note
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string; noteId: string } }
+  { params }: { params: Promise<{ id: string; noteId: string }> }
 ) {
   try {
     const session = await getSession();
@@ -15,7 +15,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const noteId = parseInt(params.noteId, 10);
+    const { id: leadId, noteId: noteIdStr } = await params;
+    const noteId = parseInt(noteIdStr, 10);
     const body = await request.json();
     const { note, isPinned } = body;
 
@@ -28,7 +29,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Note not found' }, { status: 404 });
     }
 
-    if (existingNote.leadId !== params.id) {
+    if (existingNote.leadId !== leadId) {
       return NextResponse.json({ error: 'Note does not belong to this lead' }, { status: 403 });
     }
 
@@ -74,7 +75,7 @@ export async function PATCH(
 // DELETE - Delete a note
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; noteId: string } }
+  { params }: { params: Promise<{ id: string; noteId: string }> }
 ) {
   try {
     const session = await getSession();
@@ -82,7 +83,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const noteId = parseInt(params.noteId, 10);
+    const { id: leadId, noteId: noteIdStr } = await params;
+    const noteId = parseInt(noteIdStr, 10);
 
     // Check if note exists and belongs to the lead
     const existingNote = await vyntrizeDb.leadNote.findUnique({
@@ -93,7 +95,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Note not found' }, { status: 404 });
     }
 
-    if (existingNote.leadId !== params.id) {
+    if (existingNote.leadId !== leadId) {
       return NextResponse.json({ error: 'Note does not belong to this lead' }, { status: 403 });
     }
 

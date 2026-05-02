@@ -81,15 +81,15 @@ export class LeadScorer {
     const downloadScore = (activityCounts['download'] || 0) * SCORING_WEIGHTS.download;
 
     // Recency score
-    const recencyScore = hasRecentActivity(lead.lastActivityAt)
+    const recencyScore = hasRecentActivity(lead.lastActivityAt ?? undefined)
       ? SCORING_WEIGHTS.recentActivity
       : 0;
 
     // Demographic scores
-    const companySizeCategory = categorizeCompanySize(lead.contact.company?.employeeCount);
+    const companySizeCategory = categorizeCompanySize(lead.contact.company?.employeeCount ?? undefined);
     const companySizeScore = SCORING_WEIGHTS.companySize[companySizeCategory];
 
-    const jobTitleCategory = categorizeJobTitle(lead.contact.jobTitle);
+    const jobTitleCategory = categorizeJobTitle(lead.contact.jobTitle ?? undefined);
     const jobTitleScore = SCORING_WEIGHTS.jobTitle[jobTitleCategory];
 
     // Calculate engagement score (bonus for diverse activity types)

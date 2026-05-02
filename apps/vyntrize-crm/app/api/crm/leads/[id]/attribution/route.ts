@@ -6,7 +6,7 @@ import { getSession } from '@/lib/session';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication
@@ -15,7 +15,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const leadId = params.id;
+    const { id: leadId } = await params;
 
     // Get attribution data
     const attribution = await AttributionService.getAttribution(leadId);
