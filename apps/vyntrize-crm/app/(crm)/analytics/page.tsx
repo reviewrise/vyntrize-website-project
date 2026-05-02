@@ -1,13 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import MetricCard from '@/components/MetricCard';
+import dynamic from 'next/dynamic';
 import {
   EyeIcon,
   UserGroupIcon,
   CursorArrowRaysIcon,
   ArrowTrendingUpIcon,
 } from '@heroicons/react/24/outline';
+
+// Dynamically import MetricCard to avoid SSR issues
+const MetricCard = dynamic(() => import('@/components/MetricCard'), {
+  ssr: false,
+  loading: () => <div className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
+});
 
 interface DashboardData {
   metrics: {
