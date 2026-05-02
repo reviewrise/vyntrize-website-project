@@ -334,25 +334,36 @@ export default function WebsiteAnalyticsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {data.topSources.map((source, index) => (
-                  <motion.tr
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="hover:bg-primary-50 transition-colors duration-150"
-                  >
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {source.source}
+                {data.topSources.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="px-4 py-8 text-center text-gray-500">
+                      <div className="flex flex-col items-center">
+                        <CursorArrowRaysIcon className="h-8 w-8 text-gray-400 mb-2" />
+                        <p className="text-sm">No traffic sources data available</p>
+                      </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {source.sessions.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-primary-600">
-                      {source.conversionRate.toFixed(2)}%
-                    </td>
-                  </motion.tr>
-                ))}
+                  </tr>
+                ) : (
+                  data.topSources.map((source, index) => (
+                    <motion.tr
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="hover:bg-primary-50 transition-colors duration-150"
+                    >
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {source.source}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {source.sessions.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-primary-600">
+                        {source.conversionRate.toFixed(2)}%
+                      </td>
+                    </motion.tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -374,22 +385,33 @@ export default function WebsiteAnalyticsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {data.topPages.map((page, index) => (
-                  <motion.tr
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="hover:bg-primary-50 transition-colors duration-150"
-                  >
-                    <td className="px-4 py-4 text-sm text-gray-900 truncate max-w-xs">
-                      {page.url}
+                {data.topPages.length === 0 ? (
+                  <tr>
+                    <td colSpan={2} className="px-4 py-8 text-center text-gray-500">
+                      <div className="flex flex-col items-center">
+                        <EyeIcon className="h-8 w-8 text-gray-400 mb-2" />
+                        <p className="text-sm">No page views data available</p>
+                      </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-primary-600">
-                      {page.views.toLocaleString()}
-                    </td>
-                  </motion.tr>
-                ))}
+                  </tr>
+                ) : (
+                  data.topPages.map((page, index) => (
+                    <motion.tr
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="hover:bg-primary-50 transition-colors duration-150"
+                    >
+                      <td className="px-4 py-4 text-sm text-gray-900 truncate max-w-xs">
+                        {page.url}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-primary-600">
+                        {page.views.toLocaleString()}
+                      </td>
+                    </motion.tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
