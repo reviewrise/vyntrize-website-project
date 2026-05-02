@@ -1,127 +1,164 @@
-// Analytics tracking API endpoint
+/**
+ * Analytics Tracking API Endpoint
+ * Receives tracking events from the website and stores them in the CRM database
+ */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { EventProcessor } from '@/lib/analytics/event-processor';
-import { isBotRequest } from '@/lib/analytics/bot-detector';
-import { AnalyticsEvent } from '@/lib/analytics/types';
+import { vyntrizeDb } from '@platform/vyntrize-db';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+interface TrackingEvent {
+  type: 'pageview' | 'event' | 'session_start' | 'session_end';
+  timestamp: number;
+  url: string;
+  referrer: string;
+  sessionId: string;
+  visitorId: string;
+  eventName?: string;
+  eventData?: Record<string, any>;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmContent?: string;
+  utmTerm?: string;
+}
 
-// Rate limiting map (in-memory, simple implementation)
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 100; // requests per window
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-
-/**
- * POST /api/track
- * Receive and process analytics events
- */
 export async function POST(request: NextRequest) {
   try {
-    // Check for bot
-    if (isBotRequest(request)) {
-      return NextResponse.json(
-        { error: 'Bot detected' },
-        { status: 403 }
-      );
+    const { events } = await request.json() as { events: TrackingEvent[] };
+    
+    if (!events || !Array.isArray(events) || events.length === 0) {
+      return NextResponse.json({ error: 'No events provided' }, { status: 400 });
     }
-    
-    // Rate limiting
-    const clientId = getClientIdentifier(request);
-    if (isRateLimited(clientId)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      );
+
+    // Process each event
+    for (const event of events) {
+      await processEvent(event, request);
     }
-    
-    // Parse request body
-    const body = await request.json();
-    
-    // Validate request
-    if (!body.events || !Array.isArray(body.events)) {
-      return NextResponse.json(
-        { error: 'Invalid request: events array required' },
-        { status: 400 }
-      );
-    }
-    
-    // Validate each event
-    const events: AnalyticsEvent[] = body.events.filter((event: any) =>
-      EventProcessor.validateEvent(event)
-    );
-    
-    if (events.length === 0) {
-      return NextResponse.json(
-        { error: 'No valid events provided' },
-        { status: 400 }
-      );
-    }
-    
-    // Process events asynchronously
-    await EventProcessor.processEvents(events, request);
-    
-    // Return success with session ID
-    return NextResponse.json({
-      success: true,
-      processed: events.length,
-      sessionId: events[0]?.sessionId,
-    });
+
+    return NextResponse.json({ success: true, processed: events.length });
   } catch (error) {
-    console.error('Analytics tracking error:', error);
-    
+    console.error('Error processing analytics events:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to process events' },
       { status: 500 }
     );
   }
 }
 
-/**
- * Get client identifier for rate limiting
- */
-function getClientIdentifier(request: NextRequest): string {
-  // Use IP address or session ID for rate limiting
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ||
-              request.headers.get('x-real-ip') ||
-              'unknown';
-  return ip;
-}
+async function processEvent(event: TrackingEvent, request: NextRequest) {
+  const { type, sessionId, visitorId, url, referrer, timestamp, eventName, eventData, utmSource, utmMedium, utmCampaign, utmContent, utmTerm } = event;
 
-/**
- * Check if client is rate limited
- */
-function isRateLimited(clientId: string): boolean {
-  const now = Date.now();
-  const limit = rateLimitMap.get(clientId);
-  
-  if (!limit || now > limit.resetAt) {
-    // Reset or create new limit
-    rateLimitMap.set(clientId, {
-      count: 1,
-      resetAt: now + RATE_LIMIT_WINDOW,
+  // Get or create session
+  let session = await vyntrizeDb.analyticsSession.findUnique({
+    where: { id: sessionId },
+  });
+
+  if (!session) {
+    // Create new session
+    const parsedUrl = new URL(url);
+    const userAgent = request.headers.get('user-agent') || '';
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '';
+
+    session = await vyntrizeDb.analyticsSession.create({
+      data: {
+        id: sessionId,
+        visitorId,
+        startedAt: new Date(timestamp),
+        lastActivityAt: new Date(timestamp),
+        pageViews: 0,
+        utmSource: utmSource || null,
+        utmMedium: utmMedium || null,
+        utmCampaign: utmCampaign || null,
+        utmContent: utmContent || null,
+        utmTerm: utmTerm || null,
+        referrer: referrer || null,
+        landingPage: parsedUrl.pathname,
+        userAgent,
+        ipAddress: ip.split(',')[0].trim(), // Get first IP if multiple
+        converted: false,
+      },
     });
-    return false;
   }
-  
-  if (limit.count >= RATE_LIMIT) {
-    return true;
+
+  // Handle different event types
+  switch (type) {
+    case 'pageview':
+      await handlePageView(session, event);
+      break;
+    case 'event':
+      await handleCustomEvent(session, event);
+      break;
+    case 'session_end':
+      await handleSessionEnd(session, event);
+      break;
+    case 'session_start':
+      // Already handled by session creation
+      break;
   }
-  
-  // Increment count
-  limit.count++;
-  return false;
 }
 
-// Clean up old rate limit entries periodically
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    const now = Date.now();
-    for (const [key, value] of rateLimitMap.entries()) {
-      if (now > value.resetAt) {
-        rateLimitMap.delete(key);
-      }
-    }
-  }, 60 * 1000); // Clean up every minute
+async function handlePageView(session: any, event: TrackingEvent) {
+  const parsedUrl = new URL(event.url);
+  
+  // Create page view event
+  await vyntrizeDb.analyticsEvent.create({
+    data: {
+      sessionId: session.id,
+      eventType: 'page_view',
+      eventName: 'Page View',
+      pageUrl: parsedUrl.pathname,
+      pageTitle: '', // Would need to be sent from client
+      timestamp: new Date(event.timestamp),
+    },
+  });
+
+  // Update session
+  await vyntrizeDb.analyticsSession.update({
+    where: { id: session.id },
+    data: {
+      pageViews: { increment: 1 },
+      lastActivityAt: new Date(event.timestamp),
+    },
+  });
+}
+
+async function handleCustomEvent(session: any, event: TrackingEvent) {
+  if (!event.eventName) return;
+
+  const parsedUrl = new URL(event.url);
+  
+  await vyntrizeDb.analyticsEvent.create({
+    data: {
+      sessionId: session.id,
+      eventType: 'custom',
+      eventName: event.eventName,
+      pageUrl: parsedUrl.pathname,
+      pageTitle: '',
+      timestamp: new Date(event.timestamp),
+      metadata: event.eventData || {},
+    },
+  });
+
+  // Update session activity
+  await vyntrizeDb.analyticsSession.update({
+    where: { id: session.id },
+    data: {
+      lastActivityAt: new Date(event.timestamp),
+    },
+  });
+}
+
+async function handleSessionEnd(session: any, event: TrackingEvent) {
+  const duration = event.eventData?.duration || 0;
+  const pageViews = event.eventData?.pageViews || session.pageViews;
+
+  await vyntrizeDb.analyticsSession.update({
+    where: { id: session.id },
+    data: {
+      endedAt: new Date(event.timestamp),
+      durationSeconds: duration,
+      pageViews,
+      lastActivityAt: new Date(event.timestamp),
+    },
+  });
 }
