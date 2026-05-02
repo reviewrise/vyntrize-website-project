@@ -47,9 +47,11 @@ class AnalyticsTracker {
       apiEndpoint: config.apiEndpoint,
     };
 
+    console.log('[Analytics] Initializing with config:', this.config);
+
     // Check Do Not Track
     if (this.config.respectDNT && this.isDNTEnabled()) {
-      this.log('Do Not Track is enabled, analytics disabled');
+      console.log('[Analytics] Do Not Track is enabled, analytics disabled');
       return;
     }
 
@@ -149,26 +151,30 @@ class AnalyticsTracker {
   }
 
   private trackSessionStart() {
+    if (typeof window === 'undefined') return;
+    
     const event: TrackingEvent = {
       type: 'session_start',
       timestamp: Date.now(),
-      url: typeof window !== 'undefined' ? window.location.href : '',
-      referrer: typeof document !== 'undefined' ? document.referrer : '',
+      url: window.location.href,
+      referrer: document.referrer || '',
       sessionId: this.sessionId,
       visitorId: this.visitorId,
       ...this.getUTMParams(),
     };
     
     this.queue.push(event);
-    this.log('Session started', event);
+    console.log('[Analytics] Session started', event);
   }
 
   private trackSessionEnd() {
+    if (typeof window === 'undefined') return;
+    
     const duration = Math.floor((Date.now() - this.sessionStartTime) / 1000);
     const event: TrackingEvent = {
       type: 'session_end',
       timestamp: Date.now(),
-      url: typeof window !== 'undefined' ? window.location.href : '',
+      url: window.location.href,
       referrer: '',
       sessionId: this.sessionId,
       visitorId: this.visitorId,
@@ -180,11 +186,13 @@ class AnalyticsTracker {
     
     this.queue.push(event);
     this.flush();
-    this.log('Session ended', event);
+    console.log('[Analytics] Session ended', event);
   }
 
   public trackPageView() {
     if (typeof window === 'undefined') return;
+    
+    console.log('[Analytics] trackPageView called');
     
     this.pageViewCount++;
     this.lastActivityTime = Date.now();
@@ -200,7 +208,7 @@ class AnalyticsTracker {
     };
     
     this.queue.push(event);
-    this.log('Page view tracked', event);
+    console.log('[Analytics] Page view queued:', event);
     
     if (this.queue.length >= this.config.batchSize) {
       this.flush();
@@ -237,6 +245,8 @@ class AnalyticsTracker {
     const events = [...this.queue];
     this.queue = [];
     
+    console.log('[Analytics] Flushing', events.length, 'events to', this.config.apiEndpoint);
+    
     try {
       const response = await fetch(this.config.apiEndpoint, {
         method: 'POST',
@@ -247,13 +257,18 @@ class AnalyticsTracker {
         keepalive: true, // Important for beforeunload events
       });
       
+      console.log('[Analytics] Response status:', response.status);
+      
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[Analytics] Error response:', errorText);
         throw new Error(`Failed to send analytics: ${response.status}`);
       }
       
-      this.log('Flushed', events.length, 'events');
+      const result = await response.json();
+      console.log('[Analytics] Success:', result);
     } catch (error) {
-      this.log('Error sending analytics:', error);
+      console.error('[Analytics] Error sending analytics:', error);
       // Re-queue events on failure
       this.queue.unshift(...events);
     }

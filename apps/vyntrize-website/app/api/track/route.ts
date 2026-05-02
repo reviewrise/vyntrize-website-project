@@ -48,6 +48,21 @@ export async function POST(request: NextRequest) {
 async function processEvent(event: TrackingEvent, request: NextRequest) {
   const { type, sessionId, visitorId, url, referrer, timestamp, eventName, eventData, utmSource, utmMedium, utmCampaign, utmContent, utmTerm } = event;
 
+  // Validate required fields
+  if (!url || !sessionId || !visitorId) {
+    console.error('Invalid event data:', { url, sessionId, visitorId });
+    return;
+  }
+
+  // Parse URL safely
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(url);
+  } catch (error) {
+    console.error('Invalid URL:', url);
+    return;
+  }
+
   // Get or create session
   let session = await vyntrizeDb.analyticsSession.findUnique({
     where: { id: sessionId },
@@ -55,7 +70,6 @@ async function processEvent(event: TrackingEvent, request: NextRequest) {
 
   if (!session) {
     // Create new session
-    const parsedUrl = new URL(url);
     const userAgent = request.headers.get('user-agent') || '';
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '';
 
@@ -98,7 +112,13 @@ async function processEvent(event: TrackingEvent, request: NextRequest) {
 }
 
 async function handlePageView(session: any, event: TrackingEvent) {
-  const parsedUrl = new URL(event.url);
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(event.url);
+  } catch (error) {
+    console.error('Invalid URL in page view:', event.url);
+    return;
+  }
   
   // Create page view event
   await vyntrizeDb.analyticsEvent.create({
@@ -125,7 +145,13 @@ async function handlePageView(session: any, event: TrackingEvent) {
 async function handleCustomEvent(session: any, event: TrackingEvent) {
   if (!event.eventName) return;
 
-  const parsedUrl = new URL(event.url);
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(event.url);
+  } catch (error) {
+    console.error('Invalid URL in custom event:', event.url);
+    return;
+  }
   
   await vyntrizeDb.analyticsEvent.create({
     data: {
