@@ -160,7 +160,27 @@ export default function WebsiteAnalyticsPage() {
   }
 
   if (!data) {
-    return null;
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-center min-h-[60vh]"
+      >
+        <div className="text-center max-w-md">
+          <EyeIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">No Analytics Data</h2>
+          <p className="text-gray-600 mb-6">
+            There's no analytics data available for the selected date range. Analytics data will appear here once visitors interact with vyntrize.com.
+          </p>
+          <button
+            onClick={fetchDashboardData}
+            className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          >
+            Refresh Data
+          </button>
+        </div>
+      </motion.div>
+    );
   }
 
   return (
