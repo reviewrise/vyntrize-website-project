@@ -128,6 +128,8 @@ export default function MetricCard({
       transition={{ duration: 0.3 }}
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
       className={`${cardClasses} rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-6 relative overflow-hidden`}
+      role="article"
+      aria-label={`${title} metric card`}
     >
       {/* Background decoration */}
       {gradient && (
@@ -136,23 +138,23 @@ export default function MetricCard({
 
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
-          <p className={`text-sm font-medium ${gradient ? 'text-white/80' : 'text-gray-600'}`}>
+          <p className={`text-sm font-medium ${gradient ? 'text-white/80' : 'text-gray-600'}`} id={`${title.replace(/\s+/g, '-').toLowerCase()}-label`}>
             {title}
           </p>
           {icon && (
-            <div className={`p-3 ${gradient ? 'bg-white/20' : 'bg-blue-50'} rounded-lg`}>
+            <div className={`p-3 ${gradient ? 'bg-white/20' : 'bg-blue-50'} rounded-lg`} aria-hidden="true">
               {icon}
             </div>
           )}
         </div>
 
-        <div className="mb-2">
+        <div className="mb-2" aria-labelledby={`${title.replace(/\s+/g, '-').toLowerCase()}-label`}>
           {mounted && typeof value === 'number' ? (
-            <p className="text-3xl font-bold">
+            <p className="text-3xl font-bold" aria-live="polite">
               <AnimatedNumber value={value} format={format} />
             </p>
           ) : (
-            <p className="text-3xl font-bold">{formatValue(value)}</p>
+            <p className="text-3xl font-bold" aria-live="polite">{formatValue(value)}</p>
           )}
         </div>
 

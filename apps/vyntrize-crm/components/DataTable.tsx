@@ -46,6 +46,20 @@ export default function DataTable<T extends Record<string, any>>({
     setSortConfig({ key, direction });
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent, key: string) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleSort(key);
+    }
+  };
+
+  const handleRowKeyDown = (e: React.KeyboardEvent, row: T) => {
+    if ((e.key === 'Enter' || e.key === ' ') && onRowClick) {
+      e.preventDefault();
+      onRowClick(row);
+    }
+  };
+
   const sortedData = [...data].sort((a, b) => {
     if (!sortConfig) return 0;
 
@@ -115,10 +129,10 @@ export default function DataTable<T extends Record<string, any>>({
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-      <table className="min-w-full divide-y divide-gray-200">
+    <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm" role="region" aria-label="Data table">
+      <table className="min-w-full divide-y divide-gray-200" role="table">
         <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
-          <tr>
+          <tr role="row">
             {columns.map((column, index) => (
               <th
                 key={index}
@@ -126,6 +140,16 @@ export default function DataTable<T extends Record<string, any>>({
                   column.sortable ? 'cursor-pointer select-none hover:bg-gray-200 transition-colors' : ''
                 } ${column.className || ''}`}
                 onClick={() => column.sortable && handleSort(column.key as string)}
+                onKeyDown={(e) => column.sortable && handleKeyDown(e, column.key as string)}
+                tabIndex={column.sortable ? 0 : undefined}
+                role="columnheader"
+                aria-sort={
+                  sortConfig?.key === column.key
+                    ? sortConfig.direction === 'asc'
+                      ? 'ascending'
+                      : 'descending'
+                    : undefined
+                }
               >
                 <div className="flex items-center gap-2">
                   {column.label}
@@ -165,6 +189,9 @@ export default function DataTable<T extends Record<string, any>>({
                 ${onRowClick ? 'cursor-pointer' : ''}
               `}
               onClick={() => onRowClick?.(row)}
+              onKeyDown={(e) => handleRowKeyDown(e, row)}
+              tabIndex={onRowClick ? 0 : undefined}
+              role="row"
             >
               {columns.map((column, colIndex) => {
                 const value = row[column.key as keyof T];
@@ -172,6 +199,7 @@ export default function DataTable<T extends Record<string, any>>({
                   <td
                     key={colIndex}
                     className={`px-6 py-4 whitespace-nowrap text-sm ${column.className || ''}`}
+                    role="cell"
                   >
                     {column.render ? column.render(value, row) : String(value)}
                   </td>
