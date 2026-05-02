@@ -34,7 +34,7 @@ interface DashboardData {
 }
 
 // Inline MetricCard component
-function MetricCard({ title, value, change, icon, gradient, format = 'number' }: any) {
+function MetricCard({ title, value, change, icon, format = 'number' }: any) {
   const formatValue = (val: number) => {
     switch (format) {
       case 'percentage':
@@ -48,25 +48,21 @@ function MetricCard({ title, value, change, icon, gradient, format = 'number' }:
     }
   };
 
-  const cardClasses = gradient
-    ? `bg-gradient-to-br ${gradient} text-white`
-    : 'bg-white text-gray-900';
-
   return (
-    <div className={`${cardClasses} rounded-xl shadow-lg p-6`}>
+    <div className="rounded-2xl p-6" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
       <div className="flex items-center justify-between mb-4">
-        <p className={`text-sm font-medium ${gradient ? 'text-white/80' : 'text-gray-600'}`}>
+        <p className="text-sm font-semibold" style={{ color: 'var(--color-text-muted)' }}>
           {title}
         </p>
         {icon && (
-          <div className={`p-3 ${gradient ? 'bg-white/20' : 'bg-blue-50'} rounded-lg`}>
+          <div className="p-2 rounded-lg" style={{ backgroundColor: 'var(--color-primary-soft)' }}>
             {icon}
           </div>
         )}
       </div>
-      <p className="text-3xl font-bold">{formatValue(value)}</p>
+      <p className="text-3xl font-bold" style={{ color: 'var(--color-text)' }}>{formatValue(value)}</p>
       {change !== undefined && change !== 0 && (
-        <p className={`text-sm mt-2 ${gradient ? 'text-white/80' : 'text-gray-600'}`}>
+        <p className="text-sm mt-2" style={{ color: change > 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>
           {change > 0 ? '+' : ''}{change.toFixed(1)}% vs previous period
         </p>
       )}
@@ -141,12 +137,13 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-          <p className="mt-2 text-sm text-gray-600">Track website performance and visitor behavior</p>
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--color-text)' }}>Analytics Dashboard</h1>
+          <p className="mt-2 text-sm" style={{ color: 'var(--color-text-muted)' }}>Track website performance and visitor behavior</p>
         </div>
         <a
           href="/analytics/reports"
-          className="px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 text-sm font-semibold shadow-lg"
+          className="px-6 py-3 rounded-xl text-sm font-semibold text-white"
+          style={{ backgroundColor: 'var(--color-primary)', boxShadow: 'var(--shadow-md)' }}
         >
           View Detailed Reports
         </a>
@@ -158,30 +155,26 @@ export default function AnalyticsPage() {
           title="Page Views"
           value={data.metrics.totalPageViews}
           change={data.comparison?.changes.pageViews}
-          icon={<EyeIcon className="h-6 w-6 text-white" />}
-          gradient="from-blue-500 to-blue-600"
+          icon={<EyeIcon className="h-6 w-6" style={{ color: 'var(--color-primary)' }} />}
         />
         <MetricCard
           title="Unique Visitors"
           value={data.metrics.uniqueVisitors}
           change={data.comparison?.changes.visitors}
-          icon={<UserGroupIcon className="h-6 w-6 text-white" />}
-          gradient="from-green-500 to-emerald-600"
+          icon={<UserGroupIcon className="h-6 w-6" style={{ color: 'var(--color-primary)' }} />}
         />
         <MetricCard
           title="Total Sessions"
           value={data.metrics.totalSessions}
           change={data.comparison?.changes.sessions}
-          icon={<CursorArrowRaysIcon className="h-6 w-6 text-white" />}
-          gradient="from-purple-500 to-purple-600"
+          icon={<CursorArrowRaysIcon className="h-6 w-6" style={{ color: 'var(--color-primary)' }} />}
         />
         <MetricCard
           title="Conversion Rate"
           value={data.metrics.conversionRate}
           change={data.comparison?.changes.conversionRate}
           format="percentage"
-          icon={<ArrowTrendingUpIcon className="h-6 w-6 text-white" />}
-          gradient="from-orange-500 to-orange-600"
+          icon={<ArrowTrendingUpIcon className="h-6 w-6" style={{ color: 'var(--color-primary)' }} />}
         />
       </div>
 
@@ -191,22 +184,22 @@ export default function AnalyticsPage() {
           title="Avg. Session Duration"
           value={data.metrics.avgSessionDuration}
           format="duration"
-          icon={<ClockIcon className="h-6 w-6 text-primary-600" />}
+          icon={<ClockIcon className="h-6 w-6" style={{ color: 'var(--color-primary)' }} />}
         />
         <MetricCard
           title="Bounce Rate"
           value={data.metrics.bounceRate}
           format="percentage"
-          icon={<ArrowPathRoundedSquareIcon className="h-6 w-6 text-primary-600" />}
+          icon={<ArrowPathRoundedSquareIcon className="h-6 w-6" style={{ color: 'var(--color-primary)' }} />}
         />
       </div>
 
       {/* Empty State */}
       {data.trends.length === 0 && data.topSources.length === 0 && (
-        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
-          <ChartBarIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Analytics Data Yet</h3>
-          <p className="text-gray-600">
+        <div className="rounded-2xl p-12 text-center" style={{ backgroundColor: 'var(--color-surface)', border: '2px dashed var(--color-border)' }}>
+          <ChartBarIcon className="h-16 w-16 mx-auto mb-4" style={{ color: 'var(--color-text-subtle)' }} />
+          <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-text)' }}>No Analytics Data Yet</h3>
+          <p style={{ color: 'var(--color-text-muted)' }}>
             Analytics data will appear here once visitors interact with your website.
           </p>
         </div>
@@ -214,23 +207,23 @@ export default function AnalyticsPage() {
 
       {/* Top Sources */}
       {data.topSources.length > 0 && (
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Top Traffic Sources</h2>
+        <div className="rounded-2xl p-6" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+          <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--color-text)' }}>Top Traffic Sources</h2>
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Source</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Sessions</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Conv. Rate</th>
+                <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase" style={{ color: 'var(--color-text-muted)' }}>Source</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase" style={{ color: 'var(--color-text-muted)' }}>Sessions</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase" style={{ color: 'var(--color-text-muted)' }}>Conv. Rate</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody>
                 {data.topSources.map((source: any, index: number) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 text-sm font-medium text-gray-900">{source.source}</td>
-                    <td className="px-4 py-4 text-sm text-gray-600">{source.sessions.toLocaleString()}</td>
-                    <td className="px-4 py-4 text-sm font-semibold text-primary-600">
+                  <tr key={index} style={{ borderBottom: '1px solid var(--color-border)' }} className="hover:bg-opacity-50" onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-raised)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                    <td className="px-4 py-4 text-sm font-medium" style={{ color: 'var(--color-text)' }}>{source.source}</td>
+                    <td className="px-4 py-4 text-sm" style={{ color: 'var(--color-text-muted)' }}>{source.sessions.toLocaleString()}</td>
+                    <td className="px-4 py-4 text-sm font-semibold" style={{ color: 'var(--color-primary)' }}>
                       {source.conversionRate.toFixed(2)}%
                     </td>
                   </tr>
