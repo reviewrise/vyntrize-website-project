@@ -1,14 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import MetricCard from '@/components/MetricCard';
 import TrendChart from '@/components/TrendChart';
 import DateRangeSelector, { DateRange } from '@/components/DateRangeSelector';
+import ErrorMessage from '@/components/ErrorMessage';
 import {
   ChartBarIcon,
   EyeIcon,
   UserGroupIcon,
   ArrowTrendingUpIcon,
+  ClockIcon,
+  ArrowPathRoundedSquareIcon,
 } from '@heroicons/react/24/outline';
 
 interface DashboardData {
@@ -48,6 +52,25 @@ interface DashboardData {
     };
   };
 }
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.3 },
+  },
+};
 
 export default function AnalyticsPage() {
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -92,26 +115,50 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading analytics...</p>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="space-y-6"
+      >
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="h-8 w-64 bg-gray-200 rounded animate-pulse mb-2"></div>
+            <div className="h-4 w-96 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+          <div className="h-10 w-48 bg-gray-200 rounded animate-pulse"></div>
         </div>
-      </div>
+
+        {/* Date Range Skeleton */}
+        <div className="bg-white rounded-xl shadow-lg p-6 animate-pulse">
+          <div className="h-10 w-full bg-gray-200 rounded"></div>
+        </div>
+
+        {/* Metric Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-white rounded-xl shadow-lg p-6 animate-pulse">
+              <div className="h-4 w-24 bg-gray-200 rounded mb-4"></div>
+              <div className="h-8 w-32 bg-gray-200 rounded mb-2"></div>
+              <div className="h-4 w-20 bg-gray-200 rounded"></div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-800">Error: {error}</p>
-        <button
-          onClick={fetchDashboardData}
-          className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
-        >
-          Try again
-        </button>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <ErrorMessage
+          message={error}
+          onRetry={fetchDashboardData}
+        />
+      </motion.div>
     );
   }
 
@@ -120,36 +167,45 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-8"
+    >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <motion.div variants={itemVariants} className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+            Analytics Dashboard
+          </h1>
+          <p className="mt-2 text-sm text-gray-600">
             Track website performance and visitor behavior
           </p>
         </div>
-        <a
+        <motion.a
           href="/analytics/reports"
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
         >
           View Detailed Reports
-        </a>
-      </div>
+        </motion.a>
+      </motion.div>
 
       {/* Date Range Selector */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="flex items-center justify-between">
+      <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-lg p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <DateRangeSelector value={dateRange} onChange={setDateRange} />
           <div>
-            <label htmlFor="granularity" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="granularity" className="block text-sm font-medium text-gray-700 mb-2">
               Granularity
             </label>
             <select
               id="granularity"
               value={granularity}
               onChange={(e) => setGranularity(e.target.value as any)}
-              className="block w-32 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              className="block w-full md:w-40 rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm"
             >
               <option value="hour">Hourly</option>
               <option value="day">Daily</option>
@@ -158,97 +214,130 @@ export default function AnalyticsPage() {
             </select>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard
-          title="Total Sessions"
-          value={data.metrics.totalSessions}
-          change={data.comparison?.changes.sessions}
-          changeLabel="vs previous period"
-          icon={<ChartBarIcon className="h-6 w-6 text-blue-600" />}
-        />
-        <MetricCard
-          title="Page Views"
-          value={data.metrics.totalPageViews}
-          change={data.comparison?.changes.pageViews}
-          changeLabel="vs previous period"
-          icon={<EyeIcon className="h-6 w-6 text-green-600" />}
-        />
-        <MetricCard
-          title="Unique Visitors"
-          value={data.metrics.uniqueVisitors}
-          change={data.comparison?.changes.visitors}
-          changeLabel="vs previous period"
-          icon={<UserGroupIcon className="h-6 w-6 text-purple-600" />}
-        />
-        <MetricCard
-          title="Conversion Rate"
-          value={data.metrics.conversionRate}
-          change={data.comparison?.changes.conversionRate}
-          changeLabel="vs previous period"
-          format="percentage"
-          icon={<ArrowTrendingUpIcon className="h-6 w-6 text-orange-600" />}
-        />
-      </div>
+      {/* Primary Metric Cards */}
+      <motion.div
+        variants={containerVariants}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+      >
+        <motion.div variants={itemVariants}>
+          <MetricCard
+            title="Total Sessions"
+            value={data.metrics.totalSessions}
+            change={data.comparison?.changes.sessions}
+            changeLabel="vs previous period"
+            icon={<ChartBarIcon className="h-6 w-6 text-white" />}
+            gradient="from-blue-500 to-blue-600"
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <MetricCard
+            title="Page Views"
+            value={data.metrics.totalPageViews}
+            change={data.comparison?.changes.pageViews}
+            changeLabel="vs previous period"
+            icon={<EyeIcon className="h-6 w-6 text-white" />}
+            gradient="from-green-500 to-emerald-600"
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <MetricCard
+            title="Unique Visitors"
+            value={data.metrics.uniqueVisitors}
+            change={data.comparison?.changes.visitors}
+            changeLabel="vs previous period"
+            icon={<UserGroupIcon className="h-6 w-6 text-white" />}
+            gradient="from-purple-500 to-purple-600"
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <MetricCard
+            title="Conversion Rate"
+            value={data.metrics.conversionRate}
+            change={data.comparison?.changes.conversionRate}
+            changeLabel="vs previous period"
+            format="percentage"
+            icon={<ArrowTrendingUpIcon className="h-6 w-6 text-white" />}
+            gradient="from-orange-500 to-orange-600"
+          />
+        </motion.div>
+      </motion.div>
 
-      {/* Additional Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <MetricCard
-          title="Avg. Session Duration"
-          value={data.metrics.avgSessionDuration}
-          format="duration"
-        />
-        <MetricCard
-          title="Bounce Rate"
-          value={data.metrics.bounceRate}
-          format="percentage"
-        />
-      </div>
+      {/* Secondary Metrics */}
+      <motion.div
+        variants={containerVariants}
+        className="grid grid-cols-1 md:grid-cols-2 gap-6"
+      >
+        <motion.div variants={itemVariants}>
+          <MetricCard
+            title="Avg. Session Duration"
+            value={data.metrics.avgSessionDuration}
+            format="duration"
+            icon={<ClockIcon className="h-6 w-6 text-primary-600" />}
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <MetricCard
+            title="Bounce Rate"
+            value={data.metrics.bounceRate}
+            format="percentage"
+            icon={<ArrowPathRoundedSquareIcon className="h-6 w-6 text-primary-600" />}
+          />
+        </motion.div>
+      </motion.div>
 
       {/* Trend Chart */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Traffic Trends</h2>
-        <TrendChart data={data.trends} type="line" />
-      </div>
+      <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-lg p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">Traffic Trends</h2>
+        <TrendChart data={data.trends} type="area" />
+      </motion.div>
 
       {/* Top Sources and Top Pages */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <motion.div
+        variants={containerVariants}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+      >
         {/* Top Sources */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Top Traffic Sources</h2>
+        <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">Top Traffic Sources</h2>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full">
               <thead>
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <tr className="border-b border-gray-200">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Source
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Sessions
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Conversions
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Conv. Rate
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-100">
                 {data.topSources.map((source, index) => (
-                  <tr key={index}>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <motion.tr
+                    key={index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="hover:bg-primary-50 transition-colors duration-150"
+                  >
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {source.source}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
                       {source.sessions.toLocaleString()}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
                       {source.conversions}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-primary-600">
                       {source.conversionRate.toFixed(2)}%
                     </td>
                   </tr>
@@ -256,30 +345,36 @@ export default function AnalyticsPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </motion.div>
 
         {/* Top Pages */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Top Pages</h2>
+        <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">Top Pages</h2>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full">
               <thead>
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <tr className="border-b border-gray-200">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Page
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Views
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-100">
                 {data.topPages.map((page, index) => (
-                  <tr key={index}>
-                    <td className="px-4 py-3 text-sm text-gray-900 truncate max-w-xs">
+                  <motion.tr
+                    key={index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="hover:bg-primary-50 transition-colors duration-150"
+                  >
+                    <td className="px-4 py-4 text-sm text-gray-900 truncate max-w-xs">
                       {page.url}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-primary-600">
                       {page.views.toLocaleString()}
                     </td>
                   </tr>
@@ -287,8 +382,8 @@ export default function AnalyticsPage() {
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 }
