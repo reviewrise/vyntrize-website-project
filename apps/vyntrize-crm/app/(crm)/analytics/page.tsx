@@ -73,6 +73,8 @@ const itemVariants = {
 };
 
 export default function AnalyticsPage() {
+  console.log('AnalyticsPage component rendering...');
+  
   const [dateRange, setDateRange] = useState<DateRange>({
     label: 'Last 30 days',
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -99,9 +101,16 @@ export default function AnalyticsPage() {
         includeComparison: 'true',
       });
 
+      console.log('Fetching analytics data with params:', params.toString());
+
       const response = await fetch(`/api/analytics/dashboard?${params}`);
+      
+      console.log('Response status:', response.status, response.statusText);
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch dashboard data');
+        const errorText = await response.text();
+        console.error('API error response:', errorText);
+        throw new Error(`Failed to fetch dashboard data: ${response.status}`);
       }
 
       const result = await response.json();
@@ -112,13 +121,16 @@ export default function AnalyticsPage() {
       // Always set data, even if metrics are zero
       setData(result);
     } catch (err) {
+      console.error('Fetch error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
+      console.log('Loading complete, data state:', data);
     }
   };
 
   if (loading) {
+    console.log('Rendering loading state...');
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -154,6 +166,7 @@ export default function AnalyticsPage() {
   }
 
   if (error) {
+    console.log('Rendering error state:', error);
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -168,6 +181,7 @@ export default function AnalyticsPage() {
   }
 
   if (!data) {
+    console.log('Rendering empty state, data is:', data);
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
