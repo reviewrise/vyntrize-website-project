@@ -340,7 +340,7 @@ export default function AnalyticsPage() {
                     <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-primary-600">
                       {source.conversionRate.toFixed(2)}%
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
@@ -377,7 +377,7 @@ export default function AnalyticsPage() {
                     <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-primary-600">
                       {page.views.toLocaleString()}
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
