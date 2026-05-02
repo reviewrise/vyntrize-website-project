@@ -1,191 +1,380 @@
-import { prisma } from '@/lib/prisma';
-import { getSession } from '@/lib/session';
-import { redirect } from 'next/navigation';
-import { Eye, Users, MousePointerClick, TrendingUp } from 'lucide-react';
+'use client';
 
-function daysAgo(n: number) {
-    const d = new Date();
-    d.setDate(d.getDate() - n);
-    d.setHours(0, 0, 0, 0);
-    return d;
-}
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import MetricCard from '@/components/MetricCard';
+import TrendChart from '@/components/TrendChart';
+import DateRangeSelector, { DateRange } from '@/components/DateRangeSelector';
+import ErrorMessage from '@/components/ErrorMessage';
+import {
+  EyeIcon,
+  UserGroupIcon,
+  CursorArrowRaysIcon,
+  ArrowTrendingUpIcon,
+  ClockIcon,
+  ArrowPathRoundedSquareIcon,
+} from '@heroicons/react/24/outline';
 
-function StatCard({ label, value, sub, icon: Icon, iconBg }: {
-    label: string; value: string | number; sub?: string;
-    icon: React.ElementType; iconBg: string;
-}) {
-    return (
-        <div className="crm-card p-5">
-            <div className="flex items-start justify-between mb-3">
-                <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${iconBg}`}>
-                    <Icon className="h-4 w-4 text-white" />
-                </div>
-            </div>
-            <p className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>{value}</p>
-            <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{label}</p>
-            {sub && <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-subtle)' }}>{sub}</p>}
-        </div>
-    );
-}
-
-function BarRow({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
-    const pct = max > 0 ? Math.round((value / max) * 100) : 0;
-    return (
-        <div className="flex items-center gap-3">
-            <p className="text-xs truncate w-40 flex-shrink-0" style={{ color: 'var(--color-text)' }}>{label}</p>
-            <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--color-raised)' }}>
-                <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
-            </div>
-            <p className="text-xs w-8 text-right flex-shrink-0" style={{ color: 'var(--color-text-muted)' }}>{value}</p>
-        </div>
-    );
-}
-
-export default async function WebsiteAnalyticsPage() {
-    const session = await getSession();
-    if (!session.isLoggedIn) redirect('/login');
-
-    const since30 = daysAgo(30);
-    const since7 = daysAgo(7);
-
-    const [
-        totalViews, views30d, views7d,
-        uniqueVisitors30d, topPages, topSources,
-        deviceBreakdown, submissionsTotal, submissions30d, intentBreakdown,
-    ] = await Promise.all([
-        prisma.pageView.count(),
-        prisma.pageView.count({ where: { createdAt: { gte: since30 } } }),
-        prisma.pageView.count({ where: { createdAt: { gte: since7 } } }),
-        prisma.pageView.groupBy({ by: ['sessionId'], where: { createdAt: { gte: since30 } }, _count: true })
-            .then((r: { sessionId: string; _count: number }[]) => r.length),
-        prisma.pageView.groupBy({
-            by: ['path'], where: { createdAt: { gte: since30 } },
-            _count: { path: true }, orderBy: { _count: { path: 'desc' } }, take: 10,
-        }),
-        prisma.pageView.groupBy({
-            by: ['source'], where: { createdAt: { gte: since30 }, source: { not: null } },
-            _count: { source: true }, orderBy: { _count: { source: 'desc' } }, take: 8,
-        }),
-        prisma.pageView.groupBy({ by: ['device'], where: { createdAt: { gte: since30 } }, _count: { device: true } }),
-        prisma.contactSubmission.count(),
-        prisma.contactSubmission.count({ where: { createdAt: { gte: since30 } } }),
-        prisma.contactSubmission.groupBy({
-            by: ['intent'], _count: { intent: true }, orderBy: { _count: { intent: 'desc' } },
-        }),
-    ]);
-
-    const conversionRate = views30d > 0 ? ((submissions30d / views30d) * 100).toFixed(1) : '0.0';
-
-    const deviceMap: Record<string, number> = {};
-    for (const d of deviceBreakdown) deviceMap[d.device ?? 'unknown'] = d._count.device;
-    const totalDevices = Object.values(deviceMap).reduce((a, b) => a + b, 0);
-
-    const intentLabels: Record<string, string> = {
-        'ai-search': 'AI Search & Reputation',
-        'automation': 'Intelligent Automation',
-        'custom-software': 'Custom Software',
-        'data': 'Data & Analytics',
-        'marketing': 'Digital Marketing',
-        'other': 'Something else',
+interface DashboardData {
+  metrics: {
+    totalSessions: number;
+    totalPageViews: number;
+    uniqueVisitors: number;
+    avgSessionDuration: number;
+    bounceRate: number;
+    conversionRate: number;
+  };
+  trends: Array<{
+    date: string;
+    sessions: number;
+    pageViews: number;
+    conversions: number;
+  }>;
+  topSources: Array<{
+    source: string;
+    sessions: number;
+    conversions: number;
+    conversionRate: number;
+  }>;
+  topPages: Array<{
+    url: string;
+    views: number;
+    avgDuration: number;
+  }>;
+  comparison?: {
+    current: any;
+    previous: any;
+    changes: {
+      sessions: number;
+      pageViews: number;
+      visitors: number;
+      conversionRate: number;
     };
+  };
+}
 
-    const maxPageViews = topPages[0]?._count.path ?? 1;
-    const maxSourceViews = topSources[0]?._count.source ?? 1;
-    const maxIntentCount = intentBreakdown[0]?._count.intent ?? 1;
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
 
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.3 },
+  },
+};
+
+export default function WebsiteAnalyticsPage() {
+  const [dateRange, setDateRange] = useState<DateRange>({
+    label: 'Last 30 days',
+    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
+  });
+  const [granularity, setGranularity] = useState<'hour' | 'day' | 'week' | 'month'>('day');
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [dateRange, granularity]);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const params = new URLSearchParams({
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+        granularity,
+        includeComparison: 'true',
+      });
+
+      const response = await fetch(`/api/analytics/website/dashboard?${params}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard data');
+      }
+
+      const result = await response.json();
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
     return (
-        <div className="space-y-6 max-w-5xl">
-            <div>
-                <h1 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>Website Analytics</h1>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                    vyntrise.com · last 30 days
-                </p>
-            </div>
-
-            {/* Stat cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard label="Page views (30d)" value={views30d.toLocaleString()} sub={`${totalViews.toLocaleString()} all time`} icon={Eye} iconBg="bg-indigo-500" />
-                <StatCard label="Unique visitors (30d)" value={uniqueVisitors30d.toLocaleString()} sub={`${views7d.toLocaleString()} last 7 days`} icon={Users} iconBg="bg-violet-500" />
-                <StatCard label="Form submissions (30d)" value={submissions30d.toLocaleString()} sub={`${submissionsTotal.toLocaleString()} all time`} icon={MousePointerClick} iconBg="bg-emerald-500" />
-                <StatCard label="Conversion rate" value={`${conversionRate}%`} sub="views → submissions" icon={TrendingUp} iconBg="bg-amber-500" />
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-5">
-                {/* Top pages */}
-                <div className="crm-card p-5">
-                    <p className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text)' }}>Top Pages</p>
-                    {topPages.length === 0 ? (
-                        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>No data yet — tracking starts once visitors arrive.</p>
-                    ) : (
-                        <div className="space-y-3">
-                            {topPages.map((p: { path: string; _count: { path: number } }) => (
-                                <BarRow key={p.path} label={p.path || '/'} value={p._count.path} max={maxPageViews} color="bg-indigo-500" />
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                {/* Traffic sources */}
-                <div className="crm-card p-5">
-                    <p className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text)' }}>Traffic Sources</p>
-                    {topSources.length === 0 ? (
-                        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>No referrer data yet.</p>
-                    ) : (
-                        <div className="space-y-3">
-                            {topSources.map((s: { source: string | null; _count: { source: number } }) => (
-                                <BarRow key={s.source} label={s.source ?? 'Direct'} value={s._count.source} max={maxSourceViews} color="bg-violet-500" />
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                {/* Device breakdown */}
-                <div className="crm-card p-5">
-                    <p className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text)' }}>Devices</p>
-                    {totalDevices === 0 ? (
-                        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>No device data yet.</p>
-                    ) : (
-                        <div className="space-y-3">
-                            {(['desktop', 'mobile', 'tablet'] as const).map(device => {
-                                const count = deviceMap[device] ?? 0;
-                                const pct = totalDevices > 0 ? Math.round((count / totalDevices) * 100) : 0;
-                                const colors: Record<string, string> = { desktop: 'bg-blue-500', mobile: 'bg-emerald-500', tablet: 'bg-amber-500' };
-                                return (
-                                    <div key={device} className="flex items-center gap-3">
-                                        <p className="text-xs capitalize w-16 flex-shrink-0" style={{ color: 'var(--color-text)' }}>{device}</p>
-                                        <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--color-raised)' }}>
-                                            <div className={`h-full rounded-full ${colors[device]}`} style={{ width: `${pct}%` }} />
-                                        </div>
-                                        <p className="text-xs w-12 text-right flex-shrink-0" style={{ color: 'var(--color-text-muted)' }}>
-                                            {count} <span style={{ color: 'var(--color-text-subtle)' }}>({pct}%)</span>
-                                        </p>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
-
-                {/* Intent breakdown */}
-                <div className="crm-card p-5">
-                    <p className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text)' }}>Form Submission Intents</p>
-                    {intentBreakdown.length === 0 ? (
-                        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>No submissions yet.</p>
-                    ) : (
-                        <div className="space-y-3">
-                            {intentBreakdown.map((i: { intent: string; _count: { intent: number } }) => (
-                                <BarRow
-                                    key={i.intent}
-                                    label={intentLabels[i.intent] ?? i.intent}
-                                    value={i._count.intent}
-                                    max={maxIntentCount}
-                                    color="bg-emerald-500"
-                                />
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="space-y-6"
+      >
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="h-8 w-64 bg-gray-200 rounded animate-pulse mb-2"></div>
+            <div className="h-4 w-96 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+          <div className="h-10 w-48 bg-gray-200 rounded animate-pulse"></div>
         </div>
+
+        {/* Date Range Skeleton */}
+        <div className="bg-white rounded-xl shadow-lg p-6 animate-pulse">
+          <div className="h-10 w-full bg-gray-200 rounded"></div>
+        </div>
+
+        {/* Metric Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-white rounded-xl shadow-lg p-6 animate-pulse">
+              <div className="h-4 w-24 bg-gray-200 rounded mb-4"></div>
+              <div className="h-8 w-32 bg-gray-200 rounded mb-2"></div>
+              <div className="h-4 w-20 bg-gray-200 rounded"></div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
     );
+  }
+
+  if (error) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <ErrorMessage message={error} onRetry={fetchDashboardData} />
+      </motion.div>
+    );
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return (
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-8"
+    >
+      {/* Header */}
+      <motion.div variants={itemVariants} className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+            Website Analytics
+          </h1>
+          <p className="mt-2 text-sm text-gray-600">
+            Track vyntrize.com performance and visitor behavior
+          </p>
+        </div>
+        <motion.a
+          href="/website/analytics/reports"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+        >
+          View Detailed Reports
+        </motion.a>
+      </motion.div>
+
+      {/* Date Range Selector */}
+      <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-lg p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <DateRangeSelector value={dateRange} onChange={setDateRange} />
+          <div>
+            <label htmlFor="granularity" className="block text-sm font-medium text-gray-700 mb-2">
+              Granularity
+            </label>
+            <select
+              id="granularity"
+              value={granularity}
+              onChange={(e) => setGranularity(e.target.value as any)}
+              className="block w-full md:w-40 rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm"
+            >
+              <option value="hour">Hourly</option>
+              <option value="day">Daily</option>
+              <option value="week">Weekly</option>
+              <option value="month">Monthly</option>
+            </select>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Primary Metric Cards */}
+      <motion.div
+        variants={containerVariants}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+      >
+        <motion.div variants={itemVariants}>
+          <MetricCard
+            title="Page Views"
+            value={data.metrics.totalPageViews}
+            change={data.comparison?.changes.pageViews}
+            changeLabel="vs previous period"
+            icon={<EyeIcon className="h-6 w-6 text-white" />}
+            gradient="from-blue-500 to-blue-600"
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <MetricCard
+            title="Unique Visitors"
+            value={data.metrics.uniqueVisitors}
+            change={data.comparison?.changes.visitors}
+            changeLabel="vs previous period"
+            icon={<UserGroupIcon className="h-6 w-6 text-white" />}
+            gradient="from-green-500 to-emerald-600"
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <MetricCard
+            title="Total Sessions"
+            value={data.metrics.totalSessions}
+            change={data.comparison?.changes.sessions}
+            changeLabel="vs previous period"
+            icon={<CursorArrowRaysIcon className="h-6 w-6 text-white" />}
+            gradient="from-purple-500 to-purple-600"
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <MetricCard
+            title="Conversion Rate"
+            value={data.metrics.conversionRate}
+            change={data.comparison?.changes.conversionRate}
+            changeLabel="vs previous period"
+            format="percentage"
+            icon={<ArrowTrendingUpIcon className="h-6 w-6 text-white" />}
+            gradient="from-orange-500 to-orange-600"
+          />
+        </motion.div>
+      </motion.div>
+
+      {/* Secondary Metrics */}
+      <motion.div
+        variants={containerVariants}
+        className="grid grid-cols-1 md:grid-cols-2 gap-6"
+      >
+        <motion.div variants={itemVariants}>
+          <MetricCard
+            title="Avg. Session Duration"
+            value={data.metrics.avgSessionDuration}
+            format="duration"
+            icon={<ClockIcon className="h-6 w-6 text-primary-600" />}
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <MetricCard
+            title="Bounce Rate"
+            value={data.metrics.bounceRate}
+            format="percentage"
+            icon={<ArrowPathRoundedSquareIcon className="h-6 w-6 text-primary-600" />}
+          />
+        </motion.div>
+      </motion.div>
+
+      {/* Trend Chart */}
+      <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-lg p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">Traffic Trends</h2>
+        <TrendChart data={data.trends} type="area" />
+      </motion.div>
+
+      {/* Top Sources and Top Pages */}
+      <motion.div
+        variants={containerVariants}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+      >
+        {/* Top Sources */}
+        <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">Top Traffic Sources</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Source
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Sessions
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Conv. Rate
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {data.topSources.map((source, index) => (
+                  <motion.tr
+                    key={index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="hover:bg-primary-50 transition-colors duration-150"
+                  >
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {source.source}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {source.sessions.toLocaleString()}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-primary-600">
+                      {source.conversionRate.toFixed(2)}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+
+        {/* Top Pages */}
+        <motion.div variants={itemVariants} className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">Top Pages</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Page
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Views
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {data.topPages.map((page, index) => (
+                  <motion.tr
+                    key={index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="hover:bg-primary-50 transition-colors duration-150"
+                  >
+                    <td className="px-4 py-4 text-sm text-gray-900 truncate max-w-xs">
+                      {page.url}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-primary-600">
+                      {page.views.toLocaleString()}
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
+  );
 }
