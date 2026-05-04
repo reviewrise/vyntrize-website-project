@@ -8,6 +8,7 @@ import { ActivityFeed } from '@/components/ActivityFeed';
 import LeadScoreWidget from '@/components/LeadScoreWidget';
 import LeadActivityTimeline from '@/components/LeadActivityTimeline';
 import LeadNotes from '@/components/LeadNotes';
+import LeadDetailClient, { LeadEmailHistory } from './LeadDetailClient';
 
 const STAGE_LABELS: Record<string, string> = {
     NEW: 'New',
@@ -90,6 +91,11 @@ export default async function LeadDetailPage({
                         )}
                     </div>
                 </div>
+                <LeadDetailClient 
+                    leadId={lead.id}
+                    contactEmail={lead.contact.email}
+                    contactName={`${lead.contact.firstName} ${lead.contact.lastName}`}
+                />
             </div>
 
             {/* Two Column Layout */}
@@ -154,6 +160,9 @@ export default async function LeadDetailPage({
 
                     {/* Lead Activity Timeline */}
                     <LeadActivityTimeline leadId={lead.id} />
+
+                    {/* Email History */}
+                    <LeadEmailHistory leadId={lead.id} />
 
                     {/* Activity Feed */}
                     <ActivityFeed

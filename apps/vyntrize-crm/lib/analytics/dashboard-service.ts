@@ -36,6 +36,11 @@ export class DashboardService {
    * Get dashboard metrics for a date range
    */
   static async getMetrics(startDate: Date, endDate: Date): Promise<DashboardMetrics> {
+    console.log('[DashboardService] getMetrics called with:', { 
+      startDate: startDate.toISOString(), 
+      endDate: endDate.toISOString() 
+    });
+
     // Get sessions in date range
     const sessions = await vyntrizeDb.analyticsSession.findMany({
       where: {
@@ -45,6 +50,15 @@ export class DashboardService {
         },
       },
     });
+
+    console.log('[DashboardService] Found sessions:', sessions.length);
+    if (sessions.length > 0) {
+      console.log('[DashboardService] First session:', {
+        id: sessions[0].id,
+        startedAt: sessions[0].startedAt,
+        pageViews: sessions[0].pageViews,
+      });
+    }
 
     const totalSessions = sessions.length;
     const uniqueVisitors = new Set(sessions.map((s) => s.visitorId)).size;
@@ -66,7 +80,7 @@ export class DashboardService {
     const conversions = sessions.filter((s) => s.converted).length;
     const conversionRate = totalSessions > 0 ? (conversions / totalSessions) * 100 : 0;
 
-    return {
+    const result = {
       totalSessions,
       totalPageViews,
       uniqueVisitors,
@@ -74,6 +88,10 @@ export class DashboardService {
       bounceRate: Math.round(bounceRate * 100) / 100,
       conversionRate: Math.round(conversionRate * 100) / 100,
     };
+
+    console.log('[DashboardService] Calculated metrics:', result);
+
+    return result;
   }
 
   /**

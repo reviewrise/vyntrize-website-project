@@ -19,6 +19,8 @@ export async function GET(request: NextRequest) {
     const granularity = (searchParams.get('granularity') as 'hour' | 'day' | 'week' | 'month') || 'day';
     const includeComparison = searchParams.get('includeComparison') === 'true';
 
+    console.log('[Dashboard API] Query params:', { startDateParam, endDateParam, granularity, includeComparison });
+
     // Validate date parameters
     if (!startDateParam || !endDateParam) {
       return NextResponse.json(
@@ -29,6 +31,8 @@ export async function GET(request: NextRequest) {
 
     const startDate = new Date(startDateParam);
     const endDate = new Date(endDateParam);
+
+    console.log('[Dashboard API] Parsed dates:', { startDate: startDate.toISOString(), endDate: endDate.toISOString() });
 
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
       return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
@@ -42,6 +46,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch dashboard data
+    console.log('[Dashboard API] Fetching metrics...');
     const [metrics, trends, topSources, topPages, comparison] = await Promise.all([
       DashboardService.getMetrics(startDate, endDate),
       DashboardService.getTrends(startDate, endDate, granularity),
@@ -49,6 +54,11 @@ export async function GET(request: NextRequest) {
       DashboardService.getTopPages(startDate, endDate, 10),
       includeComparison ? DashboardService.getComparison(startDate, endDate) : null,
     ]);
+
+    console.log('[Dashboard API] Metrics result:', metrics);
+    console.log('[Dashboard API] Trends count:', trends.length);
+    console.log('[Dashboard API] Top sources count:', topSources.length);
+    console.log('[Dashboard API] Top pages count:', topPages.length);
 
     return NextResponse.json({
       metrics,

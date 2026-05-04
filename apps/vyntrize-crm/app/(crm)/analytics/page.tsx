@@ -86,15 +86,28 @@ export default function AnalyticsPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `/api/analytics/dashboard?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&granularity=day&includeComparison=true`
-      );
       
-      if (!response.ok) throw new Error('Failed to fetch data');
+      // Adjust end date to include the full day (23:59:59)
+      const endDate = new Date(dateRange.endDate);
+      endDate.setHours(23, 59, 59, 999);
+      const endDateStr = endDate.toISOString();
+      
+      const url = `/api/analytics/dashboard?startDate=${dateRange.startDate}&endDate=${endDateStr}&granularity=day&includeComparison=true`;
+      console.log('[Analytics Dashboard] Fetching data from:', url);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[Analytics Dashboard] Error response:', errorText);
+        throw new Error('Failed to fetch data');
+      }
       
       const result = await response.json();
+      console.log('[Analytics Dashboard] Received data:', result);
       setData(result);
     } catch (err) {
+      console.error('[Analytics Dashboard] Error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);

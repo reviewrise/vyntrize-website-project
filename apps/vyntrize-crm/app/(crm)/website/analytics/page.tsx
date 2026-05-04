@@ -86,8 +86,14 @@ export default function WebsiteAnalyticsPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
+      
+      // Adjust end date to include the full day (23:59:59)
+      const endDate = new Date(dateRange.endDate);
+      endDate.setHours(23, 59, 59, 999);
+      const endDateStr = endDate.toISOString();
+      
       const response = await fetch(
-        `/api/analytics/website/dashboard?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&granularity=day&includeComparison=true`
+        `/api/analytics/website/dashboard?startDate=${dateRange.startDate}&endDate=${endDateStr}&granularity=day&includeComparison=true`
       );
       
       if (!response.ok) throw new Error('Failed to fetch data');

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { updateContact, deleteContact } from '@/lib/actions/contacts';
 import { ArrowLeft, TrendingUp } from 'lucide-react';
 import { ActivityFeed } from '@/components/ActivityFeed';
+import ContactDetailClient, { ContactEmailHistory } from './ContactDetailClient';
+import ContactEditDrawer from './ContactEditDrawer';
 
 export default async function ContactDetailPage({
     params,
@@ -55,67 +57,76 @@ export default async function ContactDetailPage({
                 </Link>
             </div>
 
-            <div>
-                <h1 className="text-2xl font-extrabold mb-1" style={{ color: 'var(--color-text)' }}>
-                    {contact.firstName} {contact.lastName}
-                </h1>
-                <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                    {contact.email}{contact.company ? ` · ${contact.company.name}` : ''}
-                </p>
+            <div className="flex items-start justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-extrabold mb-1" style={{ color: 'var(--color-text)' }}>
+                        {contact.firstName} {contact.lastName}
+                    </h1>
+                    <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                        {contact.email}{contact.company ? ` · ${contact.company.name}` : ''}
+                    </p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <ContactEditDrawer
+                        contact={{
+                            id: contact.id,
+                            firstName: contact.firstName,
+                            lastName: contact.lastName,
+                            email: contact.email,
+                            phone: contact.phone,
+                            jobTitle: contact.jobTitle,
+                            companyId: contact.companyId,
+                        }}
+                        companies={companies}
+                    />
+                    <ContactDetailClient 
+                        contactId={contact.id}
+                        contactEmail={contact.email}
+                        contactName={`${contact.firstName} ${contact.lastName}`}
+                    />
+                </div>
             </div>
 
-            {/* Edit Form */}
+            {/* Contact Info Card */}
             <div
                 className="rounded-2xl p-6"
                 style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
             >
                 <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text)' }}>
-                    Edit Contact
+                    Contact Information
                 </h2>
-                <form action={async (formData: FormData) => { "use server"; await updateContact(formData); }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="hidden" name="id" value={contact.id} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text-muted)' }}>First Name</label>
-                        <input name="firstName" type="text" defaultValue={contact.firstName} className="w-full rounded-lg px-3 py-2 text-sm" style={{ backgroundColor: 'var(--color-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Last Name</label>
-                        <input name="lastName" type="text" defaultValue={contact.lastName} className="w-full rounded-lg px-3 py-2 text-sm" style={{ backgroundColor: 'var(--color-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
+                        <p className="text-xs font-semibold mb-1" style={{ color: 'var(--color-text-muted)' }}>Name</p>
+                        <p className="text-sm" style={{ color: 'var(--color-text)' }}>
+                            {contact.firstName} {contact.lastName}
+                        </p>
                     </div>
                     <div>
-                        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Email</label>
-                        <input name="email" type="email" defaultValue={contact.email} className="w-full rounded-lg px-3 py-2 text-sm" style={{ backgroundColor: 'var(--color-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
+                        <p className="text-xs font-semibold mb-1" style={{ color: 'var(--color-text-muted)' }}>Email</p>
+                        <p className="text-sm" style={{ color: 'var(--color-text)' }}>{contact.email}</p>
                     </div>
-                    <div>
-                        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Phone</label>
-                        <input name="phone" type="tel" defaultValue={contact.phone ?? ''} className="w-full rounded-lg px-3 py-2 text-sm" style={{ backgroundColor: 'var(--color-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Job Title</label>
-                        <input name="jobTitle" type="text" defaultValue={contact.jobTitle ?? ''} className="w-full rounded-lg px-3 py-2 text-sm" style={{ backgroundColor: 'var(--color-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Company</label>
-                        <select name="companyId" defaultValue={contact.companyId ?? ''} className="w-full rounded-lg px-3 py-2 text-sm" style={{ backgroundColor: 'var(--color-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
-                            <option value="">No company</option>
-                            {companies.map((c) => (
-                                <option key={c.id} value={c.id}>{c.name}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="md:col-span-2 flex items-center gap-3">
-                        <button type="submit" className="rounded-lg px-4 py-2 text-sm font-semibold text-white" style={{ backgroundColor: 'var(--color-primary)' }}>
-                            Save Changes
-                        </button>
-                        <form action={async (formData: FormData) => { "use server"; await deleteContact(formData); }}>
-                            <input type="hidden" name="id" value={contact.id} />
-                            <input type="hidden" name="confirmed" value="true" />
-                            <button type="submit" className="rounded-lg px-4 py-2 text-sm font-semibold text-red-400" style={{ backgroundColor: 'var(--color-raised)', border: '1px solid var(--color-border)' }}>
-                                Delete Contact
-                            </button>
-                        </form>
-                    </div>
-                </form>
+                    {contact.phone && (
+                        <div>
+                            <p className="text-xs font-semibold mb-1" style={{ color: 'var(--color-text-muted)' }}>Phone</p>
+                            <p className="text-sm" style={{ color: 'var(--color-text)' }}>{contact.phone}</p>
+                        </div>
+                    )}
+                    {contact.jobTitle && (
+                        <div>
+                            <p className="text-xs font-semibold mb-1" style={{ color: 'var(--color-text-muted)' }}>Job Title</p>
+                            <p className="text-sm" style={{ color: 'var(--color-text)' }}>{contact.jobTitle}</p>
+                        </div>
+                    )}
+                    {contact.company && (
+                        <div>
+                            <p className="text-xs font-semibold mb-1" style={{ color: 'var(--color-text-muted)' }}>Company</p>
+                            <Link href={`/companies/${contact.company.id}`} className="text-sm" style={{ color: 'var(--color-primary)' }}>
+                                {contact.company.name}
+                            </Link>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Associated Leads */}
@@ -139,6 +150,9 @@ export default async function ContactDetailPage({
                     )}
                 </div>
             </div>
+
+            {/* Email History */}
+            <ContactEmailHistory contactId={contact.id} />
 
             {/* Activity Feed */}
             <ActivityFeed

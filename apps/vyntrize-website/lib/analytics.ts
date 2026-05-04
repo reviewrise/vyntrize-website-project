@@ -32,13 +32,20 @@ class AnalyticsTracker {
   private config: Required<AnalyticsConfig>;
   private queue: TrackingEvent[] = [];
   private flushTimer: NodeJS.Timeout | null = null;
-  private sessionId: string;
-  private visitorId: string;
-  private sessionStartTime: number;
-  private lastActivityTime: number;
+  private sessionId: string = '';
+  private visitorId: string = '';
+  private sessionStartTime: number = 0;
+  private lastActivityTime: number = 0;
   private pageViewCount: number = 0;
+  private initialized: boolean = false;
 
   constructor(config: AnalyticsConfig) {
+    // Don't initialize during SSR
+    if (typeof window === 'undefined') {
+      console.log('[Analytics] Skipping initialization during SSR');
+      return;
+    }
+
     this.config = {
       batchSize: config.batchSize || 10,
       flushInterval: config.flushInterval || 5000,
@@ -61,6 +68,11 @@ class AnalyticsTracker {
     this.sessionStartTime = Date.now();
     this.lastActivityTime = Date.now();
 
+    console.log('[Analytics] Initialized with visitorId:', this.visitorId, 'sessionId:', this.sessionId);
+
+    // Mark as initialized
+    this.initialized = true;
+
     // Track session start
     this.trackSessionStart();
 
@@ -68,14 +80,12 @@ class AnalyticsTracker {
     this.startFlushTimer();
 
     // Track session end on page unload
-    if (typeof window !== 'undefined') {
-      window.addEventListener('beforeunload', () => this.trackSessionEnd());
-      window.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-          this.flush();
-        }
-      });
-    }
+    window.addEventListener('beforeunload', () => this.trackSessionEnd());
+    window.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        this.flush();
+      }
+    });
   }
 
   private isDNTEnabled(): boolean {
@@ -88,18 +98,18 @@ class AnalyticsTracker {
   }
 
   private getOrCreateVisitorId(): string {
-    if (typeof window === 'undefined') return this.generateId();
+    if (typeof window === 'undefined') return '';
     
     let visitorId = localStorage.getItem('_va_vid');
     if (!visitorId) {
-      visitorId = this.generateId();
+      visitorId = `v_${Date.now()}_${Math.random().toString(36).substr(2, 11)}`;
       localStorage.setItem('_va_vid', visitorId);
     }
     return visitorId;
   }
 
   private getOrCreateSessionId(): string {
-    if (typeof window === 'undefined') return this.generateId();
+    if (typeof window === 'undefined') return '';
     
     const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
     const stored = sessionStorage.getItem('_va_sid');
@@ -112,14 +122,10 @@ class AnalyticsTracker {
       }
     }
     
-    const sessionId = this.generateId();
+    const sessionId = `s_${Date.now()}_${Math.random().toString(36).substr(2, 11)}`;
     sessionStorage.setItem('_va_sid', sessionId);
     sessionStorage.setItem('_va_sid_time', Date.now().toString());
     return sessionId;
-  }
-
-  private generateId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 
   private getUTMParams(): Partial<TrackingEvent> {
@@ -151,7 +157,7 @@ class AnalyticsTracker {
   }
 
   private trackSessionStart() {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !this.initialized) return;
     
     const event: TrackingEvent = {
       type: 'session_start',
@@ -168,7 +174,7 @@ class AnalyticsTracker {
   }
 
   private trackSessionEnd() {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !this.initialized) return;
     
     const duration = Math.floor((Date.now() - this.sessionStartTime) / 1000);
     const event: TrackingEvent = {
@@ -190,7 +196,10 @@ class AnalyticsTracker {
   }
 
   public trackPageView() {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !this.initialized) {
+      console.log('[Analytics] trackPageView skipped - not initialized');
+      return;
+    }
     
     console.log('[Analytics] trackPageView called');
     
@@ -216,7 +225,7 @@ class AnalyticsTracker {
   }
 
   public trackEvent(eventName: string, eventData?: Record<string, any>) {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !this.initialized) return;
     
     this.lastActivityTime = Date.now();
     

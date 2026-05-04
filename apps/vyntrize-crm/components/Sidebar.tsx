@@ -6,7 +6,7 @@ import {
     LayoutDashboard, Kanban, Users, Building2,
     Download, UserCog, LogOut, Globe, Briefcase,
     UserCircle, Settings, ChevronRight, BarChart2,
-    CheckSquare, Mail,
+    CheckSquare, Mail, Send,
 } from 'lucide-react';
 import { logout } from '@/lib/actions/auth';
 
@@ -22,6 +22,7 @@ const CRM_NAV = [
     { href: '/contacts', label: 'Contacts', icon: Users },
     { href: '/companies', label: 'Companies', icon: Building2 },
     { href: '/tasks', label: 'Tasks', icon: CheckSquare },
+    { href: '/campaigns', label: 'Campaigns', icon: Send },
     { href: '/email-templates', label: 'Email Templates', icon: Mail },
     { href: '/analytics', label: 'Analytics', icon: BarChart2 },
 ];

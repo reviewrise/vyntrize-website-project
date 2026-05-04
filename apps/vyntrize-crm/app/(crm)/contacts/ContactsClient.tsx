@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Users, Plus, Search, Mail, Briefcase } from 'lucide-react';
+import { Users, Plus, Search, Mail, Briefcase, EnvelopeIcon } from 'lucide-react';
 import { Drawer } from '@/components/Drawer';
 import { createContact } from '@/lib/actions/contacts';
+import BulkEmailComposer from '@/components/BulkEmailComposer';
 
 interface Company { id: string; name: string; }
 interface Contact {
@@ -56,6 +57,8 @@ function Avatar({ name }: { name: string }) {
 export function ContactsClient({ contacts, companies, total, q, pageNum, totalPages }: Props) {
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
+    const [isBulkEmailOpen, setIsBulkEmailOpen] = useState(false);
     const router = useRouter();
 
     async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
@@ -68,6 +71,26 @@ export function ContactsClient({ contacts, companies, total, q, pageNum, totalPa
         router.refresh();
     }
 
+    function toggleContact(contactId: string) {
+        const newSelected = new Set(selectedContacts);
+        if (newSelected.has(contactId)) {
+            newSelected.delete(contactId);
+        } else {
+            newSelected.add(contactId);
+        }
+        setSelectedContacts(newSelected);
+    }
+
+    function toggleAll() {
+        if (selectedContacts.size === contacts.length) {
+            setSelectedContacts(new Set());
+        } else {
+            setSelectedContacts(new Set(contacts.map(c => c.id)));
+        }
+    }
+
+    const selectedContactsData = contacts.filter(c => selectedContacts.has(c.id));
+
     return (
         <>
             {/* Header */}
@@ -76,11 +99,23 @@ export function ContactsClient({ contacts, companies, total, q, pageNum, totalPa
                     <h1 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>Contacts</h1>
                     <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                         {total} contact{total !== 1 ? 's' : ''}
+                        {selectedContacts.size > 0 && ` · ${selectedContacts.size} selected`}
                     </p>
                 </div>
-                <button onClick={() => setDrawerOpen(true)} className="btn-primary">
-                    <Plus className="h-3.5 w-3.5" /> New Contact
-                </button>
+                <div className="flex items-center gap-2">
+                    {selectedContacts.size > 0 && (
+                        <button 
+                            onClick={() => setIsBulkEmailOpen(true)} 
+                            className="btn-secondary flex items-center gap-2"
+                        >
+                            <Mail className="h-3.5 w-3.5" /> 
+                            Send Email ({selectedContacts.size})
+                        </button>
+                    )}
+                    <button onClick={() => setDrawerOpen(true)} className="btn-primary">
+                        <Plus className="h-3.5 w-3.5" /> New Contact
+                    </button>
+                </div>
             </div>
 
             {/* Search bar */}
@@ -127,32 +162,54 @@ export function ContactsClient({ contacts, companies, total, q, pageNum, totalPa
                         <div
                             className="grid px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest"
                             style={{
-                                gridTemplateColumns: '2fr 2fr 1.5fr',
+                                gridTemplateColumns: '40px 2fr 2fr 1.5fr',
                                 backgroundColor: 'var(--color-raised)',
                                 borderBottom: '1px solid var(--color-border)',
                                 color: 'var(--color-text-subtle)',
                             }}
                         >
+                            <input 
+                                type="checkbox" 
+                                checked={selectedContacts.size === contacts.length && contacts.length > 0}
+                                onChange={toggleAll}
+                                className="cursor-pointer"
+                            />
                             <span>Contact</span>
                             <span>Email</span>
                             <span>Company</span>
                         </div>
 
                         {contacts.map(contact => (
-                            <Link
+                            <div
                                 key={contact.id}
-                                href={`/contacts/${contact.id}`}
                                 className="grid px-4 py-3 items-center transition-colors"
                                 style={{
-                                    gridTemplateColumns: '2fr 2fr 1.5fr',
+                                    gridTemplateColumns: '40px 2fr 2fr 1.5fr',
                                     borderBottom: '1px solid var(--color-border)',
-                                    backgroundColor: 'transparent',
+                                    backgroundColor: selectedContacts.has(contact.id) ? 'var(--color-raised)' : 'transparent',
                                 }}
-                                onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--color-raised)')}
-                                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                                onMouseEnter={e => {
+                                    if (!selectedContacts.has(contact.id)) {
+                                        e.currentTarget.style.backgroundColor = 'var(--color-raised)';
+                                    }
+                                }}
+                                onMouseLeave={e => {
+                                    if (!selectedContacts.has(contact.id)) {
+                                        e.currentTarget.style.backgroundColor = 'transparent';
+                                    }
+                                }}
                             >
-                                {/* Name + avatar */}
-                                <div className="flex items-center gap-3 min-w-0">
+                                {/* Checkbox */}
+                                <input 
+                                    type="checkbox" 
+                                    checked={selectedContacts.has(contact.id)}
+                                    onChange={() => toggleContact(contact.id)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="cursor-pointer"
+                                />
+
+                                {/* Name + avatar - clickable */}
+                                <Link href={`/contacts/${contact.id}`} className="flex items-center gap-3 min-w-0">
                                     <Avatar name={`${contact.firstName} ${contact.lastName}`} />
                                     <div className="min-w-0">
                                         <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>
@@ -167,7 +224,7 @@ export function ContactsClient({ contacts, companies, total, q, pageNum, totalPa
                                             </div>
                                         )}
                                     </div>
-                                </div>
+                                </Link>
 
                                 {/* Email */}
                                 <div className="flex items-center gap-1.5 min-w-0">
@@ -194,7 +251,7 @@ export function ContactsClient({ contacts, companies, total, q, pageNum, totalPa
                                         <span className="text-xs" style={{ color: 'var(--color-text-subtle)' }}>—</span>
                                     )}
                                 </div>
-                            </Link>
+                            </div>
                         ))}
                     </>
                 )}
@@ -261,6 +318,27 @@ export function ContactsClient({ contacts, companies, total, q, pageNum, totalPa
                     </div>
                 </form>
             </Drawer>
+
+            {/* Bulk Email Composer */}
+            <BulkEmailComposer
+                isOpen={isBulkEmailOpen}
+                onClose={() => {
+                    setIsBulkEmailOpen(false);
+                    setSelectedContacts(new Set());
+                }}
+                recipients={selectedContactsData.map(c => ({
+                    id: c.id,
+                    email: c.email,
+                    name: `${c.firstName} ${c.lastName}`,
+                    firstName: c.firstName,
+                    lastName: c.lastName,
+                    companyName: c.company?.name,
+                }))}
+                onSuccess={() => {
+                    setSelectedContacts(new Set());
+                    router.refresh();
+                }}
+            />
         </>
     );
 }

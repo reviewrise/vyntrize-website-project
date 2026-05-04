@@ -64,9 +64,14 @@ export default function WebsiteAnalyticsReportsPage() {
     setLoading(true);
     setError(null);
     try {
+      // Adjust end date to include the full day (23:59:59)
+      const endDate = new Date(dateRange.endDate);
+      endDate.setHours(23, 59, 59, 999);
+      const endDateStr = endDate.toISOString();
+
       const params = new URLSearchParams({
         startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
+        endDate: endDateStr,
       });
 
       const [funnelRes, sourcesRes, pagesRes] = await Promise.all([

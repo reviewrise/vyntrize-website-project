@@ -16,8 +16,10 @@ export function AnalyticsProvider() {
 
   // Initialize analytics on mount (only if analytics consent is given)
   useEffect(() => {
-    // Only initialize if analytics consent is given
-    if (consent?.analytics) {
+    // Only initialize if analytics consent is given and we're in the browser
+    if (consent?.analytics && typeof window !== 'undefined') {
+      console.log('[AnalyticsProvider] Initializing analytics');
+      
       const tracker = initAnalytics({
         apiEndpoint: '/api/track',
         batchSize: 10,
@@ -26,8 +28,16 @@ export function AnalyticsProvider() {
         debug: process.env.NODE_ENV === 'development',
       });
 
-      // Track initial page view
-      tracker.trackPageView();
+      // Track initial page view after ensuring DOM is ready
+      if (document.readyState === 'complete') {
+        console.log('[AnalyticsProvider] Tracking initial page view (already loaded)');
+        tracker.trackPageView();
+      } else {
+        window.addEventListener('load', () => {
+          console.log('[AnalyticsProvider] Tracking initial page view (on load)');
+          tracker.trackPageView();
+        }, { once: true });
+      }
     }
   }, [consent?.analytics]);
 
@@ -36,6 +46,7 @@ export function AnalyticsProvider() {
     if (consent?.analytics) {
       const analytics = getAnalytics();
       if (analytics) {
+        console.log('[AnalyticsProvider] Route changed, tracking page view');
         analytics.trackPageView();
       }
     }

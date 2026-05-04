@@ -77,6 +77,8 @@ model CrmUser {
   emailTemplates      EmailTemplate[]   @relation("EmailTemplateAuthor")
   sentEmails          EmailTracking[]   @relation("SentEmails")
   pipelineAutoAssigns PipelineStage[]   @relation("PipelineAutoAssign")
+  emailCampaigns      EmailCampaign[]   @relation("EmailCampaignAuthor")
+  emailLogs           EmailLog[]        @relation("EmailLogUser")
 
   @@map("crm_users")
 }
@@ -132,6 +134,7 @@ model Contact {
 
   leads       Lead[]
   activities  Activity[]
+  emailLogs   EmailLog[]
 
   @@index([email])
   @@index([deletedAt])
@@ -178,6 +181,7 @@ model Lead {
   leadNotes       LeadNote[]
   leadTasks       LeadTask[]
   emailTracking   EmailTracking[]
+  emailLogs       EmailLog[]     @relation("EmailLogLead")
 
   @@index([stage])
   @@index([score])
@@ -576,6 +580,8 @@ model EmailTemplate {
   isShared Boolean @default(false)
   
   emailTracking EmailTracking[]
+  emailCampaigns EmailCampaign[]
+  emailLogs     EmailLog[]      @relation("EmailLogTemplate")
 
   @@index([userId])
   @@map("email_templates")
@@ -610,6 +616,192 @@ model EmailTracking {
   @@index([sentById])
   @@index([sentAt])
   @@map("email_tracking")
+}
+
+// ─── Email System: Campaigns ──────────────────────────────────────────────────
+
+model EmailCampaign {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  name        String
+  subject     String
+  templateId  Int?
+  template    EmailTemplate? @relation(fields: [templateId], references: [id])
+  
+  status      EmailCampaignStatus @default(DRAFT)
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  
+  // Targeting
+  targetType   String   // 'all', 'filtered', 'manual'
+  targetFilter Json?    // Filter criteria for contacts
+  
+  // Stats
+  totalRecipients Int @default(0)
+  sentCount       Int @default(0)
+  deliveredCount  Int @default(0)
+  openedCount     Int @default(0)
+  clickedCount    Int @default(0)
+  bouncedCount    Int @default(0)
+  failedCount     Int @default(0)
+  
+  // Relations
+  userId      String
+  user        CrmUser  @relation(fields: [userId], references: [id], name: "EmailCampaignAuthor")
+  emails      EmailLog[]
+  
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("email_campaigns")
+}
+
+enum EmailCampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+  FAILED
+  CANCELLED
+}
+
+// ─── Email System: Email Logs ─────────────────────────────────────────────────
+
+model EmailLog {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Email details
+  subject     String
+  body        String   @db.Text
+  htmlBody    String?  @db.Text
+  fromEmail   String
+  fromName    String?
+  toEmail     String
+  toName      String?
+  replyTo     String?
+  
+  // Tracking
+  trackingId  String   @unique
+  status      EmailStatus @default(QUEUED)
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  openedAt    DateTime?
+  clickedAt   DateTime?
+  bouncedAt   DateTime?
+  failedAt    DateTime?
+  errorMessage String?  @db.Text
+  
+  // Counts
+  openCount   Int @default(0)
+  clickCount  Int @default(0)
+  
+  // Relations
+  contactId   String?
+  contact     Contact? @relation(fields: [contactId], references: [id])
+  leadId      String?
+  lead        Lead?    @relation(fields: [leadId], references: [id], name: "EmailLogLead")
+  campaignId  String?
+  campaign    EmailCampaign? @relation(fields: [campaignId], references: [id])
+  templateId  Int?
+  template    EmailTemplate? @relation(fields: [templateId], references: [id], name: "EmailLogTemplate")
+  userId      String
+  user        CrmUser  @relation(fields: [userId], references: [id], name: "EmailLogUser")
+  
+  // Events
+  events      EmailEvent[]
+  
+  @@index([contactId])
+  @@index([leadId])
+  @@index([campaignId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("email_logs")
+}
+
+enum EmailStatus {
+  QUEUED
+  SENDING
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+}
+
+// ─── Email System: Email Events ───────────────────────────────────────────────
+
+model EmailEvent {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  
+  emailLogId  String
+  emailLog    EmailLog @relation(fields: [emailLogId], references: [id], onDelete: Cascade)
+  
+  eventType   EmailEventType
+  eventData   Json?    // Additional event data (IP, user agent, link clicked, etc.)
+  
+  @@index([emailLogId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("email_events")
+}
+
+enum EmailEventType {
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+  UNSUBSCRIBED
+}
+
+// ─── Email System: Email Queue ────────────────────────────────────────────────
+
+model EmailQueue {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  emailData   Json     // Serialized email data
+  status      EmailQueueStatus @default(PENDING)
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(3)
+  scheduledFor DateTime?
+  processedAt DateTime?
+  errorMessage String?  @db.Text
+  
+  @@index([status])
+  @@index([scheduledFor])
+  @@index([createdAt])
+  @@map("email_queue")
+}
+
+enum EmailQueueStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// ─── Email System: Unsubscribes ───────────────────────────────────────────────
+
+model EmailUnsubscribe {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  
+  email       String   @unique
+  reason      String?
+  contactId   String?
+  
+  @@index([email])
+  @@map("email_unsubscribes")
 }
 
 // ─── CRM Enhancement: Pipeline Stages ─────────────────────────────────────────
