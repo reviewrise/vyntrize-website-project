@@ -159,10 +159,17 @@ class AnalyticsTracker {
   private trackSessionStart() {
     if (typeof window === 'undefined' || !this.initialized) return;
     
+    // Ensure we have a valid URL
+    const url = window.location?.href;
+    if (!url) {
+      console.log('[Analytics] Session start skipped - no URL available yet');
+      return;
+    }
+    
     const event: TrackingEvent = {
       type: 'session_start',
       timestamp: Date.now(),
-      url: window.location.href,
+      url,
       referrer: document.referrer || '',
       sessionId: this.sessionId,
       visitorId: this.visitorId,
@@ -176,11 +183,18 @@ class AnalyticsTracker {
   private trackSessionEnd() {
     if (typeof window === 'undefined' || !this.initialized) return;
     
+    // Ensure we have a valid URL
+    const url = window.location?.href;
+    if (!url) {
+      console.log('[Analytics] Session end skipped - no URL available');
+      return;
+    }
+    
     const duration = Math.floor((Date.now() - this.sessionStartTime) / 1000);
     const event: TrackingEvent = {
       type: 'session_end',
       timestamp: Date.now(),
-      url: window.location.href,
+      url,
       referrer: '',
       sessionId: this.sessionId,
       visitorId: this.visitorId,
@@ -201,6 +215,13 @@ class AnalyticsTracker {
       return;
     }
     
+    // Ensure we have a valid URL
+    const url = window.location?.href;
+    if (!url) {
+      console.log('[Analytics] trackPageView skipped - no URL available yet');
+      return;
+    }
+    
     console.log('[Analytics] trackPageView called');
     
     this.pageViewCount++;
@@ -209,8 +230,8 @@ class AnalyticsTracker {
     const event: TrackingEvent = {
       type: 'pageview',
       timestamp: Date.now(),
-      url: window.location.href,
-      referrer: document.referrer,
+      url,
+      referrer: document.referrer || '',
       sessionId: this.sessionId,
       visitorId: this.visitorId,
       ...this.getUTMParams(),
@@ -227,13 +248,20 @@ class AnalyticsTracker {
   public trackEvent(eventName: string, eventData?: Record<string, any>) {
     if (typeof window === 'undefined' || !this.initialized) return;
     
+    // Ensure we have a valid URL
+    const url = window.location?.href;
+    if (!url) {
+      console.log('[Analytics] trackEvent skipped - no URL available');
+      return;
+    }
+    
     this.lastActivityTime = Date.now();
     
     const event: TrackingEvent = {
       type: 'event',
       timestamp: Date.now(),
-      url: window.location.href,
-      referrer: document.referrer,
+      url,
+      referrer: document.referrer || '',
       sessionId: this.sessionId,
       visitorId: this.visitorId,
       eventName,

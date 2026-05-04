@@ -28,14 +28,24 @@ export function AnalyticsProvider() {
         debug: process.env.NODE_ENV === 'development',
       });
 
-      // Track initial page view after ensuring DOM is ready
+      // Track initial page view after a small delay to ensure window.location is available
+      const trackInitialView = () => {
+        // Double-check window.location is available
+        if (window.location?.href) {
+          console.log('[AnalyticsProvider] Tracking initial page view');
+          tracker.trackPageView();
+        } else {
+          console.log('[AnalyticsProvider] Window location not ready, retrying...');
+          setTimeout(trackInitialView, 100);
+        }
+      };
+
+      // Track after DOM is ready
       if (document.readyState === 'complete') {
-        console.log('[AnalyticsProvider] Tracking initial page view (already loaded)');
-        tracker.trackPageView();
+        setTimeout(trackInitialView, 100);
       } else {
         window.addEventListener('load', () => {
-          console.log('[AnalyticsProvider] Tracking initial page view (on load)');
-          tracker.trackPageView();
+          setTimeout(trackInitialView, 100);
         }, { once: true });
       }
     }
