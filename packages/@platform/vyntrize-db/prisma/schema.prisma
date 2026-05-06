@@ -79,6 +79,7 @@ model CrmUser {
   pipelineAutoAssigns PipelineStage[]   @relation("PipelineAutoAssign")
   emailCampaigns      EmailCampaign[]   @relation("EmailCampaignAuthor")
   emailLogs           EmailLog[]        @relation("EmailLogUser")
+  approvedAgentActions AgentAction[]    @relation("AgentActionApprover")
 
   @@map("crm_users")
 }
@@ -182,6 +183,7 @@ model Lead {
   leadTasks       LeadTask[]
   emailTracking   EmailTracking[]
   emailLogs       EmailLog[]     @relation("EmailLogLead")
+  agentActions    AgentAction[]
 
   @@index([stage])
   @@index([score])
@@ -872,4 +874,111 @@ model CustomFieldValue {
   @@index([entityType, entityId])
   @@index([customFieldId])
   @@map("custom_field_values")
+}
+
+// ─── AI Agent System ──────────────────────────────────────────────────────────
+
+model AgentAction {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agentType     AgentType
+  actionType    ActionType
+  leadId        String
+  lead          Lead       @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  reasoning     String     @db.Text
+  status        ActionStatus @default(PENDING)
+  autonomyLevel AutonomyLevel
+
+  // Approval workflow
+  approvedBy    String?
+  approvedByUser CrmUser?  @relation(fields: [approvedBy], references: [id], name: "AgentActionApprover")
+  approvedAt    DateTime?
+  rejectedReason String?   @db.Text
+
+  // Execution
+  executedAt    DateTime?
+  executionError String?   @db.Text
+
+  // Metadata (JSON for flexibility)
+  metadata      Json?
+
+  @@index([leadId])
+  @@index([agentType])
+  @@index([status])
+  @@index([createdAt])
+  @@map("agent_actions")
+}
+
+model AgentRule {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agentType     AgentType
+  ruleName      String
+  ruleConfig    Json      // Configuration specific to the rule
+  autonomyLevel AutonomyLevel
+  isActive      Boolean   @default(true)
+  priority      Int       @default(5)
+
+  @@unique([agentType, ruleName])
+  @@index([agentType])
+  @@index([isActive])
+  @@map("agent_rules")
+}
+
+model AgentMetric {
+  id           Int      @id @default(autoincrement())
+  calculatedAt DateTime @default(now())
+
+  agentType    AgentType
+  metricName   String
+  metricValue  Float
+  metadata     Json?
+
+  @@index([agentType])
+  @@index([metricName])
+  @@index([calculatedAt])
+  @@map("agent_metrics")
+}
+
+// ─── Agent System Enums ───────────────────────────────────────────────────────
+
+enum AgentType {
+  LEAD_SCORING
+  TASK_AUTOMATION
+  STAGNATION_DETECTION
+  EMAIL_GENERATION
+  NEXT_BEST_ACTION
+  PREDICTIVE_ANALYTICS
+  STAGE_PROGRESSION
+  DRIP_CAMPAIGN
+  REVENUE_FORECASTING
+  OPENAI_PROVIDER
+}
+
+enum ActionType {
+  SCORE_UPDATE
+  TASK_CREATE
+  EMAIL_SEND
+  STAGE_CHANGE
+  ALERT
+  PREDICTION_UPDATE
+}
+
+enum ActionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXECUTED
+  FAILED
+}
+
+enum AutonomyLevel {
+  FULLY_AUTONOMOUS
+  SUGGEST_APPROVE
+  COPILOT
 }
