@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { ArrowRight, Home, Search, LifeBuoy } from 'lucide-react';
 
