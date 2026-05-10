@@ -3,7 +3,6 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
 declare global {
-    // eslint-disable-next-line no-var
     var __vyntrizeDb: PrismaClient | undefined;
 }
 
@@ -94,14 +93,17 @@ if (process.env.NODE_ENV !== 'production') {
 export const vyntrizeDb = baseClient.$extends({
     query: {
         contact: {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             async findMany({ args, query }: any) {
                 args.where = { deletedAt: null, ...args.where };
                 return query(args);
             },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             async findFirst({ args, query }: any) {
                 args.where = { deletedAt: null, ...args.where };
                 return query(args);
             },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             async count({ args, query }: any) {
                 args.where = { deletedAt: null, ...args.where };
                 return query(args);

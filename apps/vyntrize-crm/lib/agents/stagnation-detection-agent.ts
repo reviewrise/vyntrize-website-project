@@ -2,7 +2,7 @@
 
 import { Agent, AgentType, ActionType, AutonomyLevel, AgentContext, AgentActionResult, AgentConfig } from './base-agent';
 import { prisma } from '@/lib/prisma';
-import { LeadStage } from '@prisma/client';
+import { LeadStage } from '@platform/vyntrize-db';
 
 interface StagnationThreshold {
   stage: LeadStage;

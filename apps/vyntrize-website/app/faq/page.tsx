@@ -184,7 +184,6 @@ export default function FAQPage() {
                 border: '1px solid var(--color-border)', 
                 backgroundColor: 'var(--color-bg)',
                 color: 'var(--color-text)',
-                focusRingColor: 'var(--color-primary)'
               }}
             />
           </div>

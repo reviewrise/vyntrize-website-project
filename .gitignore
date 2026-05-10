@@ -25,3 +25,4 @@ packages/@platform/vyntrize-db/src/generated/
 .DS_Store
 *.log
 .turbo/
+*.tsbuildinfo
