@@ -59,7 +59,6 @@ function Toggle({ checked, disabled, onChange }: ToggleProps) {
                 }`}
             style={{
                 backgroundColor: checked ? 'var(--color-primary)' : 'var(--color-border)',
-                focusRingColor: 'var(--color-primary)',
             }}
         >
             <span

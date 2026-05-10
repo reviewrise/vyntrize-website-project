@@ -2,7 +2,7 @@
 
 import { Agent, AgentType, ActionType, AutonomyLevel, AgentContext, AgentActionResult, AgentConfig } from './base-agent';
 import { prisma } from '@/lib/prisma';
-import { LeadStage, TaskPriority } from '@prisma/client';
+import { LeadStage, TaskPriority } from '@platform/vyntrize-db';
 
 interface StageTaskConfig {
   stage: LeadStage;

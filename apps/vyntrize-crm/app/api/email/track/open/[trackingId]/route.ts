@@ -16,10 +16,17 @@ export async function GET(
 ) {
   try {
     const { trackingId } = await params;
+    const id = parseInt(trackingId, 10);
+    if (isNaN(id)) {
+      return new NextResponse(TRACKING_PIXEL, {
+        status: 200,
+        headers: { 'Content-Type': 'image/gif' },
+      });
+    }
 
     // Find email tracking record
     const tracking = await prisma.emailTracking.findUnique({
-      where: { id: trackingId },
+      where: { id },
       include: {
         lead: true,
       },
@@ -28,7 +35,7 @@ export async function GET(
     if (tracking) {
       // Update tracking record
       await prisma.emailTracking.update({
-        where: { id: trackingId },
+        where: { id },
         data: {
           openedAt: tracking.openedAt || new Date(), // Only set first open
           openCount: {
