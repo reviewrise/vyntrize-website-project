@@ -20,9 +20,14 @@ export async function GET(
       );
     }
 
+    const id = parseInt(trackingId, 10);
+    if (isNaN(id)) {
+      return NextResponse.redirect(targetUrl);
+    }
+
     // Find email tracking record
     const tracking = await prisma.emailTracking.findUnique({
-      where: { id: trackingId },
+      where: { id },
       include: {
         lead: true,
       },
@@ -31,7 +36,7 @@ export async function GET(
     if (tracking) {
       // Update tracking record
       await prisma.emailTracking.update({
-        where: { id: trackingId },
+        where: { id },
         data: {
           clickedAt: tracking.clickedAt || new Date(), // Only set first click
           clickCount: {

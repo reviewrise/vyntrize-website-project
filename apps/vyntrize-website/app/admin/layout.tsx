@@ -33,7 +33,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (!isAdminLoggedIn()) {
       router.replace('/admin/login');
     } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setChecked(true);
     }
   }, [pathname, router]);

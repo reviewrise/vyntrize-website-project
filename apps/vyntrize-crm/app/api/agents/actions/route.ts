@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
-import { AgentType, ActionStatus } from '@prisma/client';
+import { AgentType, ActionStatus } from '@platform/vyntrize-db';
 
 export async function GET(request: NextRequest) {
   try {

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Users, Plus, Search, Mail, Briefcase, EnvelopeIcon } from 'lucide-react';
+import { Users, Plus, Search, Mail, Briefcase } from 'lucide-react';
 import { Drawer } from '@/components/Drawer';
 import { createContact } from '@/lib/actions/contacts';
 import BulkEmailComposer from '@/components/BulkEmailComposer';
