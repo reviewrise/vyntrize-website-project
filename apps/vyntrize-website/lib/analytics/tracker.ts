@@ -13,9 +13,9 @@ import {
 } from './utils';
 
 export class AnalyticsTracker {
-  private config: Required<TrackerConfig>;
-  private sessionManager: SessionManager;
-  private visitorId: string;
+  private config!: Required<TrackerConfig>;
+  private sessionManager!: SessionManager;
+  private visitorId!: string;
   private eventQueue: AnalyticsEvent[] = [];
   private flushTimer: NodeJS.Timeout | null = null;
   private isInitialized = false;
