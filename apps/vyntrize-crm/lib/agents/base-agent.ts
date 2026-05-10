@@ -123,7 +123,7 @@ export abstract class Agent {
     const logData = {
       agentType: this.agentType,
       message,
-      ...(data && { data }),
+      ...(data !== undefined ? { data } : {}),
     };
     
     if (level === 'error') {

@@ -29,7 +29,7 @@ interface TrackingEvent {
 }
 
 class AnalyticsTracker {
-  private config: Required<AnalyticsConfig>;
+  private config!: Required<AnalyticsConfig>;
   private queue: TrackingEvent[] = [];
   private flushTimer: NodeJS.Timeout | null = null;
   private sessionId: string = '';
@@ -245,9 +245,21 @@ class AnalyticsTracker {
     }
   }
 
+  public getSessionId(): string {
+    return this.sessionId;
+  }
+
+  public getVisitorId(): string {
+    return this.visitorId;
+  }
+
+  public trackFormSubmit(formId: string, formData?: Record<string, any>) {
+    this.trackEvent(`form_submit:${formId}`, formData);
+  }
+
   public trackEvent(eventName: string, eventData?: Record<string, any>) {
     if (typeof window === 'undefined' || !this.initialized) return;
-    
+
     // Ensure we have a valid URL
     const url = window.location?.href;
     if (!url) {

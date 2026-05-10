@@ -34,6 +34,31 @@ export function AgentTypeBadge({ type }: AgentTypeBadgeProps) {
       color: '#06b6d4',
       label: 'Next Best Action',
     },
+    PREDICTIVE_ANALYTICS: {
+      icon: TrendingUp,
+      color: '#ec4899',
+      label: 'Predictive Analytics',
+    },
+    STAGE_PROGRESSION: {
+      icon: TrendingUp,
+      color: '#f97316',
+      label: 'Stage Progression',
+    },
+    DRIP_CAMPAIGN: {
+      icon: Mail,
+      color: '#8b5cf6',
+      label: 'Drip Campaign',
+    },
+    REVENUE_FORECASTING: {
+      icon: TrendingUp,
+      color: '#10b981',
+      label: 'Revenue Forecasting',
+    },
+    OPENAI_PROVIDER: {
+      icon: Lightbulb,
+      color: '#6366f1',
+      label: 'OpenAI Provider',
+    },
   };
 
   const agentConfig = config[type] || {
