@@ -2,8 +2,6 @@
 
 import { prisma } from '@/lib/prisma';
 
-// ─── Enums ────────────────────────────────────────────────────────────────────
-
 export enum AgentType {
   LEAD_SCORING = 'LEAD_SCORING',
   TASK_AUTOMATION = 'TASK_AUTOMATION',
@@ -39,8 +37,6 @@ export enum AutonomyLevel {
   COPILOT = 'COPILOT',                       // Suggest only, no execution
 }
 
-// ─── Interfaces ───────────────────────────────────────────────────────────────
-
 export interface AgentContext {
   leadId?: string;
   userId?: string;
@@ -63,8 +59,6 @@ export interface AgentConfig {
   priority?: 'HIGH' | 'MEDIUM' | 'LOW';
 }
 
-// ─── Base Agent Class ─────────────────────────────────────────────────────────
-
 export abstract class Agent {
   protected agentType: AgentType;
   protected enabled: boolean;
@@ -83,12 +77,12 @@ export abstract class Agent {
   }
 
   /**
-   * Execute agent logic - must be implemented by subclasses
+   * Execute agent logic
    */
   abstract execute(context: AgentContext): Promise<AgentActionResult>;
 
   /**
-   * Get agent configuration - must be implemented by subclasses
+   * Get agent configuration
    */
   abstract getConfig(): AgentConfig;
 
@@ -139,19 +133,5 @@ export abstract class Agent {
     } else {
       console.log('[Agent]', logData);
     }
-  }
-
-  /**
-   * Get agent type
-   */
-  getAgentType(): AgentType {
-    return this.agentType;
-  }
-
-  /**
-   * Check if agent is enabled
-   */
-  isAgentEnabled(): boolean {
-    return this.enabled;
   }
 }

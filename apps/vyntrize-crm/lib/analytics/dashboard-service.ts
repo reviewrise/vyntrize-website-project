@@ -31,6 +31,25 @@ export interface PageData {
   avgDuration: number;
 }
 
+export interface DeviceData {
+  deviceType: string;
+  sessions: number;
+  pageViews: number;
+  conversionRate: number;
+}
+
+export interface BrowserData {
+  browser: string;
+  sessions: number;
+  percentage: number;
+}
+
+export interface OSData {
+  os: string;
+  sessions: number;
+  percentage: number;
+}
+
 export class DashboardService {
   /**
    * Get dashboard metrics for a date range
@@ -249,6 +268,123 @@ export class DashboardService {
       default:
         return d.toISOString().split('T')[0];
     }
+  }
+
+  /**
+   * Get device breakdown statistics
+   */
+  static async getDeviceStats(startDate: Date, endDate: Date): Promise<DeviceData[]> {
+    const sessions = await vyntrizeDb.analyticsSession.findMany({
+      where: {
+        startedAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+    });
+
+    // Group by device type
+    const deviceMap = new Map<string, { sessions: number; pageViews: number; conversions: number }>();
+
+    sessions.forEach((session) => {
+      const device = session.deviceType || 'unknown';
+      const existing = deviceMap.get(device) || { sessions: 0, pageViews: 0, conversions: 0 };
+
+      deviceMap.set(device, {
+        sessions: existing.sessions + 1,
+        pageViews: existing.pageViews + session.pageViews,
+        conversions: existing.conversions + (session.converted ? 1 : 0),
+      });
+    });
+
+    // Convert to array and sort by sessions
+    const devices = Array.from(deviceMap.entries())
+      .map(([deviceType, data]) => ({
+        deviceType,
+        sessions: data.sessions,
+        pageViews: data.pageViews,
+        conversionRate:
+          data.sessions > 0
+            ? Math.round((data.conversions / data.sessions) * 10000) / 100
+            : 0,
+      }))
+      .sort((a, b) => b.sessions - a.sessions);
+
+    return devices;
+  }
+
+  /**
+   * Get browser breakdown statistics
+   */
+  static async getBrowserStats(startDate: Date, endDate: Date): Promise<BrowserData[]> {
+    const sessions = await vyntrizeDb.analyticsSession.findMany({
+      where: {
+        startedAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+    });
+
+    const totalSessions = sessions.length;
+    
+    // Group by browser
+    const browserMap = new Map<string, number>();
+
+    sessions.forEach((session) => {
+      const browser = session.browser || 'unknown';
+      browserMap.set(browser, (browserMap.get(browser) || 0) + 1);
+    });
+
+    // Convert to array and sort by sessions
+    const browsers = Array.from(browserMap.entries())
+      .map(([browser, sessions]) => ({
+        browser,
+        sessions,
+        percentage: totalSessions > 0 
+          ? Math.round((sessions / totalSessions) * 10000) / 100 
+          : 0,
+      }))
+      .sort((a, b) => b.sessions - a.sessions);
+
+    return browsers;
+  }
+
+  /**
+   * Get operating system breakdown statistics
+   */
+  static async getOSStats(startDate: Date, endDate: Date): Promise<OSData[]> {
+    const sessions = await vyntrizeDb.analyticsSession.findMany({
+      where: {
+        startedAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+    });
+
+    const totalSessions = sessions.length;
+    
+    // Group by OS
+    const osMap = new Map<string, number>();
+
+    sessions.forEach((session) => {
+      const os = session.os || 'unknown';
+      osMap.set(os, (osMap.get(os) || 0) + 1);
+    });
+
+    // Convert to array and sort by sessions
+    const osList = Array.from(osMap.entries())
+      .map(([os, sessions]) => ({
+        os,
+        sessions,
+        percentage: totalSessions > 0 
+          ? Math.round((sessions / totalSessions) * 10000) / 100 
+          : 0,
+      }))
+      .sort((a, b) => b.sessions - a.sessions);
+
+    return osList;
   }
 
   /**

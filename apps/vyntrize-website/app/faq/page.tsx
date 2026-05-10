@@ -157,29 +157,35 @@ export default function FAQPage() {
   });
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
+    <div className="flex flex-col min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
 
       {/* Hero */}
-      <section className="border-b border-slate-100 bg-slate-50/60 pt-20 pb-12 px-4 md:px-6">
+      <section className="pt-20 pb-12 px-4 md:px-6" style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
         <div className="container mx-auto max-w-6xl">
           <div className="github-badge mb-4">FAQ</div>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-4 leading-tight">
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 leading-tight" style={{ color: 'var(--color-text)' }}>
             Frequently asked questions
           </h1>
-          <p className="text-lg text-slate-500 max-w-xl mb-8">
+          <p className="text-lg max-w-xl mb-8" style={{ color: 'var(--color-text-muted)' }}>
             Everything you need to know about VyntRise. Can&apos;t find an answer?{' '}
-            <Link href="/support" className="text-blue-600 hover:underline">Reach our support team.</Link>
+            <Link href="/support" className="hover:underline" style={{ color: 'var(--color-primary)' }}>Reach our support team.</Link>
           </p>
 
           {/* Search */}
           <div className="relative max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: 'var(--color-text-subtle)' }} />
             <input
               type="text"
               placeholder="Search questions..."
               value={query}
               onChange={(e) => { setQuery(e.target.value); setOpenFaq(null); }}
-              className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+              className="w-full rounded-xl pl-10 pr-4 py-3 text-sm shadow-sm focus:outline-none focus:ring-2"
+              style={{ 
+                border: '1px solid var(--color-border)', 
+                backgroundColor: 'var(--color-bg)',
+                color: 'var(--color-text)',
+                focusRingColor: 'var(--color-primary)'
+              }}
             />
           </div>
         </div>
@@ -191,17 +197,31 @@ export default function FAQPage() {
 
           {/* Sidebar categories */}
           <aside className="md:w-52 shrink-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Categories</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--color-text-subtle)' }}>Categories</p>
             <nav className="flex flex-row md:flex-col gap-1 flex-wrap">
               {categories.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
                   onClick={() => { setActiveCategory(id); setOpenFaq(null); }}
                   className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-left transition-colors ${
-                    activeCategory === id
-                      ? 'bg-slate-900 text-white'
-                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                    activeCategory === id ? '' : ''
                   }`}
+                  style={{
+                    backgroundColor: activeCategory === id ? 'var(--color-primary)' : 'transparent',
+                    color: activeCategory === id ? '#ffffff' : 'var(--color-text-muted)'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeCategory !== id) {
+                      e.currentTarget.style.backgroundColor = 'var(--color-surface)';
+                      e.currentTarget.style.color = 'var(--color-text)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeCategory !== id) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = 'var(--color-text-muted)';
+                    }
+                  }}
                 >
                   <Icon className="h-3.5 w-3.5 shrink-0" />
                   {label}
@@ -213,10 +233,10 @@ export default function FAQPage() {
           {/* FAQ list */}
           <div className="flex-1 min-w-0">
             {filtered.length === 0 ? (
-              <div className="text-center py-16 text-slate-400">
+              <div className="text-center py-16" style={{ color: 'var(--color-text-muted)' }}>
                 <Search className="h-8 w-8 mx-auto mb-3 opacity-40" />
                 <p className="text-sm">No results found. Try a different search or{' '}
-                  <Link href="/support" className="text-blue-600 hover:underline">contact support</Link>.
+                  <Link href="/support" className="hover:underline" style={{ color: 'var(--color-primary)' }}>contact support</Link>.
                 </p>
               </div>
             ) : (
@@ -228,15 +248,15 @@ export default function FAQPage() {
                 className="space-y-2"
               >
                 {filtered.map((faq, i) => (
-                  <div key={i} className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+                  <div key={i} className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
                     <button
                       onClick={() => setOpenFaq(openFaq === i ? null : i)}
                       className="w-full flex items-center justify-between px-5 py-4 text-left gap-4"
                     >
-                      <span className="text-sm font-semibold text-slate-900">{faq.q}</span>
+                      <span className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{faq.q}</span>
                       {openFaq === i
-                        ? <ChevronUp className="h-4 w-4 text-slate-400 shrink-0" />
-                        : <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
+                        ? <ChevronUp className="h-4 w-4 shrink-0" style={{ color: 'var(--color-text-muted)' }} />
+                        : <ChevronDown className="h-4 w-4 shrink-0" style={{ color: 'var(--color-text-muted)' }} />
                       }
                     </button>
                     <AnimatePresence>
@@ -248,7 +268,7 @@ export default function FAQPage() {
                           transition={{ duration: 0.2, ease: 'easeOut' }}
                           className="overflow-hidden"
                         >
-                          <p className="px-5 pb-4 text-sm text-slate-500 leading-relaxed">{faq.a}</p>
+                          <p className="px-5 pb-4 text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{faq.a}</p>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -261,19 +281,25 @@ export default function FAQPage() {
       </section>
 
       {/* CTA */}
-      <section className="px-4 md:px-6 py-16 bg-slate-900 mt-auto">
+      <section className="px-4 md:px-6 py-16 mt-auto" style={{ backgroundColor: 'var(--color-primary)' }}>
         <div className="container mx-auto max-w-6xl flex flex-col md:flex-row items-center justify-between gap-8">
           <div>
             <h2 className="text-3xl font-extrabold text-white mb-3">Still have questions?</h2>
-            <p className="text-slate-400 max-w-md text-sm">
+            <p className="max-w-md text-sm text-white/80">
               Our team is happy to help. Reach out and we&apos;ll get back to you within one business day.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-            <Link href="/support" className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
+            <Link href="/support" className="inline-flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-white transition-colors" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'}
+            >
               Visit support <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/contact" className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/5 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors">
+            <Link href="/contact" className="inline-flex items-center gap-2 rounded-lg border px-6 py-3 text-sm font-semibold text-white transition-colors" style={{ borderColor: 'rgba(255,255,255,0.3)', backgroundColor: 'rgba(255,255,255,0.1)' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}
+            >
               Contact us
             </Link>
           </div>

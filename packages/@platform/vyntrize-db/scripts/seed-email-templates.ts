@@ -16,6 +16,7 @@ const templates = [
   // Welcome & Onboarding
   {
     name: 'Welcome Email',
+    type: 'WELCOME',
     subject: 'Welcome to {{companyName}}, {{firstName}}!',
     body: `
 <!DOCTYPE html>
@@ -97,6 +98,7 @@ const templates = [
   // Initial Outreach
   {
     name: 'Initial Outreach',
+    type: 'INITIAL_OUTREACH',
     subject: 'Quick question about {{companyName}}',
     body: `
 <!DOCTYPE html>
@@ -175,6 +177,7 @@ const templates = [
   // Follow-up After Meeting
   {
     name: 'Follow-up After Meeting',
+    type: 'FOLLOW_UP',
     subject: 'Great connecting with you, {{firstName}}!',
     body: `
 <!DOCTYPE html>
@@ -256,6 +259,7 @@ const templates = [
   // Monthly Newsletter
   {
     name: 'Monthly Newsletter',
+    type: 'NEWSLETTER',
     subject: '{{monthName}} Newsletter: {{headline}}',
     body: `
 <!DOCTYPE html>
@@ -354,6 +358,7 @@ const templates = [
   // Proposal Sent
   {
     name: 'Proposal Sent',
+    type: 'PROPOSAL',
     subject: 'Your custom proposal from {{companyName}}',
     body: `
 <!DOCTYPE html>
@@ -449,6 +454,7 @@ const templates = [
   // Re-engagement
   {
     name: 'Re-engagement Email',
+    type: 'RE_ENGAGEMENT',
     subject: 'We miss you, {{firstName}}!',
     body: `
 <!DOCTYPE html>
@@ -521,6 +527,134 @@ const templates = [
     },
     isShared: true,
   },
+
+  // Stage Change: Qualified
+  {
+    name: 'Qualified Lead Follow-up',
+    type: 'STAGE_CHANGE',
+    subject: 'Next steps for {{companyName}}',
+    body: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+          <tr>
+            <td style="padding: 40px 30px;">
+              <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
+                Hi {{firstName}},
+              </p>
+              
+              <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
+                Great news! Based on our conversation, I believe we're a great fit to help {{companyName}} achieve {{goal}}.
+              </p>
+              
+              <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
+                I'd like to schedule a deeper discovery call to understand your specific needs and show you how we can deliver results.
+              </p>
+              
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="{{calendarLink}}" style="display: inline-block; padding: 14px 32px; background-color: #667eea; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">Schedule Discovery Call</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="margin: 20px 0 0; color: #333333; font-size: 16px; line-height: 1.6;">
+                Looking forward to our next conversation!<br><br>
+                {{senderName}}
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `,
+    variables: {
+      firstName: 'Contact first name',
+      companyName: 'Company name',
+      goal: 'Their goal',
+      calendarLink: 'Calendar link',
+      senderName: 'Your name',
+    },
+    isShared: true,
+  },
+
+  // Engagement Response: Email Opened
+  {
+    name: 'Email Opened Follow-up',
+    type: 'ENGAGEMENT_RESPONSE',
+    subject: 'Following up on my last email',
+    body: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+          <tr>
+            <td style="padding: 40px 30px;">
+              <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
+                Hi {{firstName}},
+              </p>
+              
+              <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
+                I noticed you opened my recent email about {{topic}}. I wanted to follow up and see if you had any questions or if there's anything I can clarify.
+              </p>
+              
+              <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
+                {{additionalContext}}
+              </p>
+              
+              <p style="margin: 20px 0; color: #333333; font-size: 16px; line-height: 1.6;">
+                Would you be open to a quick call this week to discuss further?
+              </p>
+              
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="{{meetingLink}}" style="display: inline-block; padding: 14px 32px; background-color: #28a745; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">Book a Time</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="margin: 20px 0 0; color: #333333; font-size: 16px; line-height: 1.6;">
+                Best regards,<br>
+                {{senderName}}
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `,
+    variables: {
+      firstName: 'Contact first name',
+      topic: 'Email topic',
+      additionalContext: 'Additional context',
+      meetingLink: 'Meeting link',
+      senderName: 'Your name',
+    },
+    isShared: true,
+  },
 ];
 
 async function main() {
@@ -553,6 +687,7 @@ async function main() {
   console.log(`   - ${templates.length} templates created`);
   console.log(`   - All templates are shared (available to all users)`);
   console.log(`   - Templates include variable placeholders for personalization`);
+  console.log(`   - Templates are categorized by type for automation`);
 }
 
 main()

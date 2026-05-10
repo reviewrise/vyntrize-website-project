@@ -9,6 +9,9 @@ import {
   ClockIcon,
   ArrowPathRoundedSquareIcon,
   CursorArrowRaysIcon,
+  DevicePhoneMobileIcon,
+  ComputerDesktopIcon,
+  DeviceTabletIcon,
 } from '@heroicons/react/24/outline';
 
 interface DashboardData {
@@ -23,6 +26,22 @@ interface DashboardData {
   trends: Array<any>;
   topSources: Array<any>;
   topPages: Array<any>;
+  deviceStats: Array<{
+    deviceType: string;
+    sessions: number;
+    pageViews: number;
+    conversionRate: number;
+  }>;
+  browserStats: Array<{
+    browser: string;
+    sessions: number;
+    percentage: number;
+  }>;
+  osStats: Array<{
+    os: string;
+    sessions: number;
+    percentage: number;
+  }>;
   comparison?: {
     changes: {
       sessions: number;
@@ -244,6 +263,130 @@ export default function AnalyticsPage() {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* Device & Browser Analytics */}
+      {(data.deviceStats.length > 0 || data.browserStats.length > 0 || data.osStats.length > 0) && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Device Types */}
+          {data.deviceStats.length > 0 && (
+            <div className="rounded-2xl p-6" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+              <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--color-text)' }}>Device Types</h2>
+              <div className="space-y-4">
+                {data.deviceStats.map((device, index) => {
+                  const getDeviceIcon = (type: string) => {
+                    switch (type.toLowerCase()) {
+                      case 'mobile':
+                        return <DevicePhoneMobileIcon className="h-5 w-5" style={{ color: 'var(--color-primary)' }} />;
+                      case 'tablet':
+                        return <DeviceTabletIcon className="h-5 w-5" style={{ color: 'var(--color-primary)' }} />;
+                      case 'desktop':
+                      default:
+                        return <ComputerDesktopIcon className="h-5 w-5" style={{ color: 'var(--color-primary)' }} />;
+                    }
+                  };
+
+                  const totalSessions = data.deviceStats.reduce((sum, d) => sum + d.sessions, 0);
+                  const percentage = totalSessions > 0 ? (device.sessions / totalSessions) * 100 : 0;
+
+                  return (
+                    <div key={index} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: 'var(--color-raised)' }}>
+                      <div className="flex items-center gap-3">
+                        {getDeviceIcon(device.deviceType)}
+                        <div>
+                          <p className="text-sm font-semibold capitalize" style={{ color: 'var(--color-text)' }}>
+                            {device.deviceType}
+                          </p>
+                          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                            {device.sessions.toLocaleString()} sessions
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold" style={{ color: 'var(--color-primary)' }}>
+                          {percentage.toFixed(1)}%
+                        </p>
+                        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                          {device.conversionRate.toFixed(1)}% conv.
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Browsers */}
+          {data.browserStats.length > 0 && (
+            <div className="rounded-2xl p-6" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+              <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--color-text)' }}>Browsers</h2>
+              <div className="space-y-3">
+                {data.browserStats.map((browser, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+                          {browser.browser}
+                        </span>
+                        <span className="text-sm font-semibold" style={{ color: 'var(--color-primary)' }}>
+                          {browser.percentage.toFixed(1)}%
+                        </span>
+                      </div>
+                      <div className="w-full h-2 rounded-full" style={{ backgroundColor: 'var(--color-raised)' }}>
+                        <div
+                          className="h-2 rounded-full transition-all duration-300"
+                          style={{
+                            backgroundColor: 'var(--color-primary)',
+                            width: `${browser.percentage}%`,
+                          }}
+                        />
+                      </div>
+                      <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                        {browser.sessions.toLocaleString()} sessions
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Operating Systems */}
+          {data.osStats.length > 0 && (
+            <div className="rounded-2xl p-6" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+              <h2 className="text-xl font-bold mb-6" style={{ color: 'var(--color-text)' }}>Operating Systems</h2>
+              <div className="space-y-3">
+                {data.osStats.map((os, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+                          {os.os}
+                        </span>
+                        <span className="text-sm font-semibold" style={{ color: 'var(--color-primary)' }}>
+                          {os.percentage.toFixed(1)}%
+                        </span>
+                      </div>
+                      <div className="w-full h-2 rounded-full" style={{ backgroundColor: 'var(--color-raised)' }}>
+                        <div
+                          className="h-2 rounded-full transition-all duration-300"
+                          style={{
+                            backgroundColor: 'var(--color-primary)',
+                            width: `${os.percentage}%`,
+                          }}
+                        />
+                      </div>
+                      <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                        {os.sessions.toLocaleString()} sessions
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

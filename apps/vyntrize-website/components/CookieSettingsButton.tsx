@@ -7,7 +7,10 @@ export default function CookieSettingsButton() {
     return (
         <button
             onClick={openSettings}
-            className="hover:text-slate-400 transition-colors text-xs text-slate-600"
+            className="transition-colors text-xs"
+            style={{ color: 'var(--color-text-muted)' }}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-muted)'}
         >
             Cookie Settings
         </button>

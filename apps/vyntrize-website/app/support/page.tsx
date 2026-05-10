@@ -97,16 +97,16 @@ const slaTable = [
 
 export default function SupportPage() {
   return (
-    <div className="flex flex-col min-h-screen bg-white">
+    <div className="flex flex-col min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
 
       {/* Hero */}
-      <section className="border-b border-slate-100 bg-slate-50/60 pt-20 pb-12 px-4 md:px-6">
+      <section className="pt-20 pb-12 px-4 md:px-6" style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
         <div className="container mx-auto max-w-6xl">
           <div className="github-badge mb-4">SUPPORT</div>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-4 leading-tight">
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 leading-tight" style={{ color: 'var(--color-text)' }}>
             How can we help?
           </h1>
-          <p className="text-lg text-slate-500 max-w-xl">
+          <p className="text-lg max-w-xl" style={{ color: 'var(--color-text-muted)' }}>
             Find answers, reach our team, or browse resources — we&apos;re here whenever you need us.
           </p>
         </div>
@@ -115,8 +115,8 @@ export default function SupportPage() {
       {/* Contact channels */}
       <section className="px-4 md:px-6 py-14">
         <div className="container mx-auto max-w-6xl">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Get in touch</p>
-          <h2 className="text-2xl font-extrabold text-slate-900 mb-8">Contact our team</h2>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--color-text-subtle)' }}>Get in touch</p>
+          <h2 className="text-2xl font-extrabold mb-8" style={{ color: 'var(--color-text)' }}>Contact our team</h2>
           <div className="grid md:grid-cols-3 gap-5">
             {channels.map((ch, i) => (
               <motion.div
@@ -124,12 +124,13 @@ export default function SupportPage() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: i * 0.08 }}
-                className="relative rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col gap-4 hover:shadow-md transition-shadow"
+                className="relative rounded-2xl p-6 shadow-sm flex flex-col gap-4 hover:shadow-md transition-shadow"
+                style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
               >
                 {ch.badge && (
                   <span className={`absolute top-4 right-4 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                    ch.badge === 'Fastest' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
-                  }`}>
+                    ch.badge === 'Fastest' ? 'bg-blue-600 text-white' : ''
+                  }`} style={ch.badge !== 'Fastest' ? { backgroundColor: 'var(--color-surface)', color: 'var(--color-text-muted)' } : undefined}>
                     {ch.badge}
                   </span>
                 )}
@@ -137,8 +138,8 @@ export default function SupportPage() {
                   <ch.icon className="h-5 w-5" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-base font-bold text-slate-900 mb-1">{ch.title}</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">{ch.desc}</p>
+                  <h3 className="text-base font-bold mb-1" style={{ color: 'var(--color-text)' }}>{ch.title}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{ch.desc}</p>
                 </div>
                 <Link
                   href={ch.href}
@@ -153,20 +154,21 @@ export default function SupportPage() {
       </section>
 
       {/* System status + SLA */}
-      <section className="border-t border-slate-100 bg-slate-50/50 px-4 md:px-6 py-14">
+      <section className="px-4 md:px-6 py-14" style={{ borderTop: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
         <div className="container mx-auto max-w-6xl grid md:grid-cols-2 gap-10">
 
           {/* Status */}
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">System status</p>
-            <h2 className="text-xl font-extrabold text-slate-900 mb-6">All systems operational</h2>
-            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--color-text-subtle)' }}>System status</p>
+            <h2 className="text-xl font-extrabold mb-6" style={{ color: 'var(--color-text)' }}>All systems operational</h2>
+            <div className="rounded-2xl shadow-sm overflow-hidden" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
               {statusItems.map((item, i) => (
                 <div
                   key={item.label}
-                  className={`flex items-center justify-between px-5 py-3.5 ${i < statusItems.length - 1 ? 'border-b border-slate-100' : ''}`}
+                  className={`flex items-center justify-between px-5 py-3.5`}
+                  style={i < statusItems.length - 1 ? { borderBottom: '1px solid var(--color-border)' } : undefined}
                 >
-                  <span className="text-sm text-slate-700">{item.label}</span>
+                  <span className="text-sm" style={{ color: 'var(--color-text)' }}>{item.label}</span>
                   <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     Operational
@@ -176,7 +178,10 @@ export default function SupportPage() {
             </div>
             <a
               href="#"
-              className="inline-flex items-center gap-1.5 mt-4 text-xs text-slate-500 hover:text-slate-900 transition-colors"
+              className="inline-flex items-center gap-1.5 mt-4 text-xs transition-colors"
+              style={{ color: 'var(--color-text-muted)' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-muted)'}
             >
               View full status page <ExternalLink className="h-3 w-3" />
             </a>
@@ -184,29 +189,33 @@ export default function SupportPage() {
 
           {/* SLA table */}
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Response times</p>
-            <h2 className="text-xl font-extrabold text-slate-900 mb-6">Support SLA by plan</h2>
-            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-              <div className="grid grid-cols-4 bg-slate-50 border-b border-slate-100 px-5 py-2.5">
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--color-text-subtle)' }}>Response times</p>
+            <h2 className="text-xl font-extrabold mb-6" style={{ color: 'var(--color-text)' }}>Support SLA by plan</h2>
+            <div className="rounded-2xl shadow-sm overflow-hidden" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
+              <div className="grid grid-cols-4 px-5 py-2.5" style={{ backgroundColor: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)' }}>
                 {['Plan', 'Channel', 'Response', 'Hours'].map((h) => (
-                  <span key={h} className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{h}</span>
+                  <span key={h} className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--color-text-subtle)' }}>{h}</span>
                 ))}
               </div>
               {slaTable.map((row, i) => (
                 <div
                   key={row.plan}
-                  className={`grid grid-cols-4 px-5 py-3.5 items-center ${i < slaTable.length - 1 ? 'border-b border-slate-100' : ''}`}
+                  className={`grid grid-cols-4 px-5 py-3.5 items-center`}
+                  style={i < slaTable.length - 1 ? { borderBottom: '1px solid var(--color-border)' } : undefined}
                 >
-                  <span className="text-sm font-semibold text-slate-900">{row.plan}</span>
-                  <span className="text-xs text-slate-500">{row.channel}</span>
+                  <span className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{row.plan}</span>
+                  <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{row.channel}</span>
                   <span className="text-xs font-semibold text-blue-600">{row.time}</span>
-                  <span className="text-xs text-slate-500">{row.hours}</span>
+                  <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{row.hours}</span>
                 </div>
               ))}
             </div>
             <Link
               href="/pricing"
-              className="inline-flex items-center gap-1.5 mt-4 text-xs text-slate-500 hover:text-slate-900 transition-colors"
+              className="inline-flex items-center gap-1.5 mt-4 text-xs transition-colors"
+              style={{ color: 'var(--color-text-muted)' }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-muted)'}
             >
               Compare plans <ChevronRight className="h-3 w-3" />
             </Link>
@@ -215,10 +224,10 @@ export default function SupportPage() {
       </section>
 
       {/* Resources */}
-      <section className="px-4 md:px-6 py-14 border-t border-slate-100">
+      <section className="px-4 md:px-6 py-14" style={{ borderTop: '1px solid var(--color-border)' }}>
         <div className="container mx-auto max-w-6xl">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Self-serve</p>
-          <h2 className="text-2xl font-extrabold text-slate-900 mb-8">Resources & documentation</h2>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--color-text-subtle)' }}>Self-serve</p>
+          <h2 className="text-2xl font-extrabold mb-8" style={{ color: 'var(--color-text)' }}>Resources & documentation</h2>
           <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
             {resources.map((r, i) => (
               <motion.a
@@ -227,13 +236,16 @@ export default function SupportPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: i * 0.07 }}
-                className="group rounded-xl border border-slate-200 bg-white p-5 hover:shadow-md hover:border-slate-300 transition-all"
+                className="group rounded-xl p-5 hover:shadow-md transition-all"
+                style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
+                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--color-border)'}
+                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--color-border)'}
               >
-                <div className="h-9 w-9 rounded-lg bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                <div className="h-9 w-9 rounded-lg flex items-center justify-center mb-3 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors" style={{ backgroundColor: 'var(--color-surface)' }}>
                   <r.icon className="h-4.5 w-4.5 h-[18px] w-[18px]" />
                 </div>
-                <h3 className="text-sm font-bold text-slate-900 mb-1">{r.title}</h3>
-                <p className="text-xs text-slate-500 leading-relaxed">{r.desc}</p>
+                <h3 className="text-sm font-bold mb-1" style={{ color: 'var(--color-text)' }}>{r.title}</h3>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{r.desc}</p>
               </motion.a>
             ))}
           </div>
@@ -241,12 +253,12 @@ export default function SupportPage() {
       </section>
 
       {/* Popular topics */}
-      <section className="border-t border-slate-100 bg-slate-50/50 px-4 md:px-6 py-14">
+      <section className="px-4 md:px-6 py-14" style={{ borderTop: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
         <div className="container mx-auto max-w-6xl">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Quick answers</p>
-              <h2 className="text-2xl font-extrabold text-slate-900">Popular topics</h2>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--color-text-subtle)' }}>Quick answers</p>
+              <h2 className="text-2xl font-extrabold" style={{ color: 'var(--color-text)' }}>Popular topics</h2>
             </div>
             <Link href="/faq" className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors shrink-0">
               Browse all FAQs <ArrowRight className="h-4 w-4" />
@@ -257,10 +269,19 @@ export default function SupportPage() {
               <Link
                 key={topic.label}
                 href={topic.href}
-                className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-5 py-3.5 text-sm text-slate-700 hover:text-slate-900 hover:border-slate-300 hover:shadow-sm transition-all group"
+                className="flex items-center justify-between rounded-xl px-5 py-3.5 text-sm hover:shadow-sm transition-all group"
+                style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--color-border)';
+                  e.currentTarget.style.color = 'var(--color-text)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--color-border)';
+                  e.currentTarget.style.color = 'var(--color-text)';
+                }}
               >
                 <span>{topic.label}</span>
-                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-slate-600 transition-colors shrink-0" />
+                <ChevronRight className="h-4 w-4 transition-colors shrink-0" style={{ color: 'var(--color-text-subtle)' }} />
               </Link>
             ))}
           </div>

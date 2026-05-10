@@ -92,20 +92,20 @@ export default function Contact() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-[#0d1117]">
+    <div className="flex flex-col min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
 
       {/* Header */}
-      <section className="border-b border-slate-100 dark:border-[#21262d] bg-slate-50/60 dark:bg-[#161b22] pt-20 pb-12 px-4 md:px-6">
+      <section className="pt-20 pb-12 px-4 md:px-6" style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
         <div className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute left-1/2 top-0 -translate-x-1/2 h-[400px] w-[700px] rounded-full bg-[radial-gradient(ellipse_at_top,_#dbeafe_0%,_transparent_70%)] opacity-60 blur-3xl" />
           <div className="absolute inset-0 bg-[radial-gradient(circle,_#94a3b818_1px,_transparent_1px)] bg-[size:28px_28px]" />
         </div>
         <div className="container mx-auto max-w-6xl">
           <div className="github-badge mb-4">CONTACT</div>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-3 leading-tight">
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-3 leading-tight" style={{ color: 'var(--color-text)' }}>
             Let&apos;s talk about your goals
           </h1>
-          <p className="text-lg text-slate-500 max-w-xl">
+          <p className="text-lg max-w-xl" style={{ color: 'var(--color-text-muted)' }}>
             Tell us what you&apos;re working on. We&apos;ll come back with a concrete plan — not a sales pitch.
           </p>
         </div>
@@ -121,15 +121,16 @@ export default function Contact() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden"
+              className="rounded-2xl shadow-sm overflow-hidden"
+              style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
             >
               {submitted ? (
                 <div className="flex flex-col items-center justify-center py-24 px-8 text-center">
                   <div className="h-14 w-14 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mb-5">
                     <CheckCircle2 className="h-7 w-7 text-emerald-500" />
                   </div>
-                  <h2 className="text-2xl font-extrabold text-slate-900 mb-2">Message sent</h2>
-                  <p className="text-slate-500 text-sm max-w-sm mb-8">
+                  <h2 className="text-2xl font-extrabold mb-2" style={{ color: 'var(--color-text)' }}>Message sent</h2>
+                  <p className="text-sm max-w-sm mb-8" style={{ color: 'var(--color-text-muted)' }}>
                     We&apos;ll review your message and get back to you within a few hours. Check your inbox.
                   </p>
                   <button
@@ -137,7 +138,10 @@ export default function Contact() {
                       setSubmitted(false);
                       setLoading(false);
                     }}
-                    className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+                    className="text-sm font-semibold"
+                    style={{ color: 'var(--color-primary)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-primary-h)'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-primary)'}
                   >
                     Send another message
                   </button>
@@ -146,7 +150,7 @@ export default function Contact() {
                 <form onSubmit={handleSubmit} ref={formRef} className="p-7 space-y-6">
                   {/* Intent chips */}
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+                    <label className="block text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--color-text-subtle)' }}>
                       What are you interested in?
                     </label>
                     <div className="flex flex-wrap gap-2">
@@ -158,10 +162,24 @@ export default function Contact() {
                             key={intent.id}
                             type="button"
                             onClick={() => setSelected(intent.id)}
-                            className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all ${active
-                              ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
-                              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                              }`}
+                            className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all ${active ? 'shadow-sm' : ''}`}
+                            style={{
+                              borderColor: active ? 'var(--color-primary)' : 'var(--color-border)',
+                              backgroundColor: active ? 'var(--color-primary)' : 'var(--color-bg)',
+                              color: active ? '#ffffff' : 'var(--color-text-muted)'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!active) {
+                                e.currentTarget.style.borderColor = 'var(--color-border)';
+                                e.currentTarget.style.backgroundColor = 'var(--color-surface)';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!active) {
+                                e.currentTarget.style.borderColor = 'var(--color-border)';
+                                e.currentTarget.style.backgroundColor = 'var(--color-bg)';
+                              }
+                            }}
                           >
                             <IIcon className="h-3.5 w-3.5" />
                             {intent.label}
@@ -174,19 +192,29 @@ export default function Contact() {
                   {/* Name row */}
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label htmlFor="firstName" className="text-xs font-semibold text-slate-700">First name</label>
+                      <label htmlFor="firstName" className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>First name</label>
                       <input
                         type="text" id="firstName" name="firstName" required
                         placeholder="Alex"
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                        className="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all"
+                        style={{ 
+                          border: '1px solid var(--color-border)', 
+                          backgroundColor: 'var(--color-surface)',
+                          color: 'var(--color-text)'
+                        }}
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label htmlFor="lastName" className="text-xs font-semibold text-slate-700">Last name</label>
+                      <label htmlFor="lastName" className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>Last name</label>
                       <input
                         type="text" id="lastName" name="lastName" required
                         placeholder="Rivera"
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                        className="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all"
+                        style={{ 
+                          border: '1px solid var(--color-border)', 
+                          backgroundColor: 'var(--color-surface)',
+                          color: 'var(--color-text)'
+                        }}
                       />
                     </div>
                   </div>
@@ -194,39 +222,57 @@ export default function Contact() {
                   {/* Email + Company */}
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label htmlFor="email" className="text-xs font-semibold text-slate-700">Work email</label>
+                      <label htmlFor="email" className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>Work email</label>
                       <input
                         type="email" id="email" name="email" required
                         placeholder="alex@company.com"
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                        className="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all"
+                        style={{ 
+                          border: '1px solid var(--color-border)', 
+                          backgroundColor: 'var(--color-surface)',
+                          color: 'var(--color-text)'
+                        }}
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label htmlFor="company" className="text-xs font-semibold text-slate-700">Company</label>
+                      <label htmlFor="company" className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>Company</label>
                       <input
                         type="text" id="company" name="company"
                         placeholder="Acme Inc."
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                        className="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all"
+                        style={{ 
+                          border: '1px solid var(--color-border)', 
+                          backgroundColor: 'var(--color-surface)',
+                          color: 'var(--color-text)'
+                        }}
                       />
                     </div>
                   </div>
 
                   {/* Message */}
                   <div className="space-y-1.5">
-                    <label htmlFor="message" className="text-xs font-semibold text-slate-700">
+                    <label htmlFor="message" className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>
                       What&apos;s your biggest challenge right now?
                     </label>
                     <textarea
                       id="message" name="message" rows={4} required
                       placeholder="Describe what you're trying to solve or build..."
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"
+                      className="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all resize-none"
+                      style={{ 
+                        border: '1px solid var(--color-border)', 
+                        backgroundColor: 'var(--color-surface)',
+                        color: 'var(--color-text)'
+                      }}
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg py-3 text-sm font-semibold text-white transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: 'var(--color-primary)' }}
+                    onMouseEnter={(e) => !loading && (e.currentTarget.style.backgroundColor = 'var(--color-primary-h)')}
+                    onMouseLeave={(e) => !loading && (e.currentTarget.style.backgroundColor = 'var(--color-primary)')}
                   >
                     {loading ? (
                       <>
@@ -243,7 +289,7 @@ export default function Contact() {
                     )}
                   </button>
 
-                  <p className="text-center text-xs text-slate-400">
+                  <p className="text-center text-xs" style={{ color: 'var(--color-text-subtle)' }}>
                     No spam. No lock-in. We respond within 4 hours on business days.
                   </p>
                 </form>
@@ -261,9 +307,9 @@ export default function Contact() {
                 className="grid grid-cols-3 gap-3"
               >
                 {trust.map((t) => (
-                  <div key={t.label} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm text-center">
-                    <p className="text-lg font-extrabold text-blue-600">{t.value}</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">{t.label}</p>
+                  <div key={t.label} className="rounded-xl p-4 shadow-sm text-center" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
+                    <p className="text-lg font-extrabold" style={{ color: 'var(--color-primary)' }}>{t.value}</p>
+                    <p className="text-[10px] mt-0.5 leading-tight" style={{ color: 'var(--color-text-subtle)' }}>{t.label}</p>
                   </div>
                 ))}
               </motion.div>
@@ -273,9 +319,10 @@ export default function Contact() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.15 }}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                className="rounded-2xl p-6 shadow-sm"
+                style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
               >
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">What happens next</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--color-text-subtle)' }}>What happens next</p>
                 <div className="space-y-5">
                   {nextSteps.map((s) => (
                     <div key={s.step} className="flex gap-4">
@@ -283,8 +330,8 @@ export default function Contact() {
                         {s.step}
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">{s.title}</p>
-                        <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{s.detail}</p>
+                        <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{s.title}</p>
+                        <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{s.detail}</p>
                       </div>
                     </div>
                   ))}
@@ -296,23 +343,26 @@ export default function Contact() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                className="rounded-2xl p-6 shadow-sm"
+                style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
               >
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Email us directly</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--color-text-subtle)' }}>Email us directly</p>
                 <div className="space-y-2.5">
                   {emails.map((e) => (
                     <a
                       key={e.address}
                       href={`mailto:${e.address}`}
-                      className="flex items-center justify-between gap-3 group rounded-lg px-3 py-2 hover:bg-slate-50 transition-colors"
+                      className="flex items-center justify-between gap-3 group rounded-lg px-3 py-2 transition-colors"
+                      onMouseEnter={(ev) => ev.currentTarget.style.backgroundColor = 'var(--color-surface)'}
+                      onMouseLeave={(ev) => ev.currentTarget.style.backgroundColor = 'transparent'}
                     >
                       <div className="flex items-center gap-2.5">
-                        <div className="h-7 w-7 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:border-blue-200 group-hover:bg-blue-50 transition-colors shrink-0">
-                          <Mail className="h-3.5 w-3.5 text-slate-400 group-hover:text-blue-600 transition-colors" />
+                        <div className="h-7 w-7 rounded-lg flex items-center justify-center transition-colors shrink-0" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                          <Mail className="h-3.5 w-3.5 transition-colors" style={{ color: 'var(--color-text-muted)' }} />
                         </div>
-                        <span className="text-sm text-slate-700 group-hover:text-blue-600 transition-colors">{e.address}</span>
+                        <span className="text-sm transition-colors" style={{ color: 'var(--color-text)' }}>{e.address}</span>
                       </div>
-                      <span className="text-[10px] text-slate-400 shrink-0">{e.label}</span>
+                      <span className="text-[10px] shrink-0" style={{ color: 'var(--color-text-subtle)' }}>{e.label}</span>
                     </a>
                   ))}
                 </div>
@@ -323,16 +373,17 @@ export default function Contact() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.25 }}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                className="rounded-2xl p-6 shadow-sm"
+                style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
               >
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Office address</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--color-text-subtle)' }}>Office address</p>
                 <div className="flex items-start gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 mt-0.5">
-                    <MapPin className="h-4 w-4 text-slate-400" />
+                  <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                    <MapPin className="h-4 w-4" style={{ color: 'var(--color-text-muted)' }} />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-slate-900 mb-0.5">VyntRise LLC</p>
-                    <p className="text-xs text-slate-500 leading-relaxed">
+                    <p className="text-sm font-semibold mb-0.5" style={{ color: 'var(--color-text)' }}>VyntRise LLC</p>
+                    <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
                       205 Van Buren Street, Suite 120, #063<br />
                       Herndon, VA 20170<br />
                       United States
@@ -346,9 +397,10 @@ export default function Contact() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
-                className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5"
+                className="rounded-2xl p-5"
+                style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}
               >
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Business hours</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--color-text-subtle)' }}>Business hours</p>
                 <div className="space-y-2">
                   {[
                     { day: 'Mon – Fri', hours: '9:00 AM – 6:00 PM EST' },
@@ -356,8 +408,8 @@ export default function Contact() {
                     { day: 'Sunday', hours: 'Closed' },
                   ].map((r) => (
                     <div key={r.day} className="flex justify-between text-xs">
-                      <span className="text-slate-500">{r.day}</span>
-                      <span className={`font-semibold ${r.hours === 'Closed' ? 'text-slate-400' : 'text-slate-700'}`}>{r.hours}</span>
+                      <span style={{ color: 'var(--color-text-muted)' }}>{r.day}</span>
+                      <span className={`font-semibold`} style={{ color: r.hours === 'Closed' ? 'var(--color-text-subtle)' : 'var(--color-text)' }}>{r.hours}</span>
                     </div>
                   ))}
                 </div>

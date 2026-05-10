@@ -45,6 +45,33 @@ export async function createLead(formData: FormData) {
         },
     });
 
+    // Emit lead created event for agents
+    try {
+        const { eventBus, CRMEvent } = await import('@/lib/agents/event-bus');
+        const { agentRegistry } = await import('@/lib/agents/registry');
+        
+        // Ensure agents are registered (in case this runs before instrumentation)
+        if (!agentRegistry.isInitialized()) {
+            console.log('[createLead] Agent registry not initialized, initializing now...');
+            await agentRegistry.registerAllAgents();
+        }
+        
+        await eventBus.emitCRMEvent(CRMEvent.LEAD_CREATED, {
+            leadId: lead.id,
+            userId: session.userId,
+            metadata: {
+                title,
+                contactId,
+                companyId,
+                assigneeId,
+            },
+        });
+        console.log(`[createLead] Emitted LEAD_CREATED event for lead ${lead.id}`);
+    } catch (error) {
+        console.error('[createLead] Failed to emit lead created event:', error);
+        // Don't fail the lead creation if event emission fails
+    }
+
     revalidatePath('/pipeline');
     return { success: true, leadId: lead.id };
 }
@@ -97,6 +124,32 @@ export async function updateLeadStage(formData: FormData) {
             },
         }),
     ]);
+
+    // Emit stage change event for agents
+    try {
+        const { eventBus, CRMEvent } = await import('@/lib/agents/event-bus');
+        const { agentRegistry } = await import('@/lib/agents/registry');
+        
+        // Ensure agents are registered (in case this runs before instrumentation)
+        if (!agentRegistry.isInitialized()) {
+            console.log('[updateLeadStage] Agent registry not initialized, initializing now...');
+            await agentRegistry.registerAllAgents();
+        }
+        
+        await eventBus.emitCRMEvent(CRMEvent.STAGE_CHANGED, {
+            leadId: id,
+            userId: session.userId,
+            previousValue: prevStage,
+            newValue: stage,
+            metadata: {
+                closingNote,
+            },
+        });
+        console.log(`[updateLeadStage] Emitted STAGE_CHANGED event for lead ${id}: ${prevStage} → ${stage}`);
+    } catch (error) {
+        console.error('[updateLeadStage] Failed to emit stage change event:', error);
+        // Don't fail the stage update if event emission fails
+    }
 
     revalidatePath('/pipeline');
     revalidatePath(`/leads/${id}`);

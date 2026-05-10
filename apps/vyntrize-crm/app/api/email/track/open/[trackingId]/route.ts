@@ -1,11 +1,14 @@
-/**
- * Email Open Tracking Endpoint
- * GET /api/email/track/open/[trackingId]
- * Returns a 1x1 transparent GIF pixel
- */
+// GET /api/email/track/open/:trackingId - Track email opens
 
 import { NextRequest, NextResponse } from 'next/server';
-import { TrackingService } from '@/lib/email/tracking-service';
+import { prisma } from '@/lib/prisma';
+import { eventBus, CRMEvent } from '@/lib/agents/event-bus';
+
+// 1x1 transparent GIF pixel
+const TRACKING_PIXEL = Buffer.from(
+  'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
+  'base64'
+);
 
 export async function GET(
   request: NextRequest,
@@ -14,25 +17,45 @@ export async function GET(
   try {
     const { trackingId } = await params;
 
-    // Extract metadata
-    const ipAddress = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     'unknown';
-    const userAgent = request.headers.get('user-agent') || 'unknown';
-
-    // Record the open event (async, don't wait)
-    TrackingService.recordOpen(trackingId, {
-      ipAddress,
-      userAgent,
-      timestamp: new Date(),
-    }).catch(error => {
-      console.error('[Track Open] Error recording open:', error);
+    // Find email tracking record
+    const tracking = await prisma.emailTracking.findUnique({
+      where: { id: trackingId },
+      include: {
+        lead: true,
+      },
     });
 
-    // Return 1x1 transparent GIF
-    const pixel = TrackingService.getTrackingPixel();
+    if (tracking) {
+      // Update tracking record
+      await prisma.emailTracking.update({
+        where: { id: trackingId },
+        data: {
+          openedAt: tracking.openedAt || new Date(), // Only set first open
+          openCount: {
+            increment: 1,
+          },
+        },
+      });
 
-    return new NextResponse(pixel, {
+      // Emit EMAIL_OPENED event for agents
+      if (tracking.leadId) {
+        await eventBus.emitCRMEvent(CRMEvent.EMAIL_OPENED, {
+          leadId: tracking.leadId,
+          metadata: {
+            trackingId,
+            emailId: tracking.id,
+            timestamp: new Date().toISOString(),
+            openCount: tracking.openCount + 1,
+            firstOpen: !tracking.openedAt,
+          },
+        });
+
+        console.log(`[EmailTracking] Email opened: ${trackingId} for lead ${tracking.leadId}`);
+      }
+    }
+
+    // Always return tracking pixel (even if tracking record not found)
+    return new NextResponse(TRACKING_PIXEL, {
       status: 200,
       headers: {
         'Content-Type': 'image/gif',
@@ -42,14 +65,14 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('[Track Open] Error:', error);
+    console.error('[EmailTracking] Error tracking email open:', error);
     
-    // Still return pixel even on error
-    const pixel = TrackingService.getTrackingPixel();
-    return new NextResponse(pixel, {
+    // Still return tracking pixel on error
+    return new NextResponse(TRACKING_PIXEL, {
       status: 200,
       headers: {
         'Content-Type': 'image/gif',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
       },
     });
   }

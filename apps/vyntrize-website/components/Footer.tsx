@@ -59,8 +59,10 @@ export default function Footer() {
                   key={label}
                   href={href}
                   aria-label={label}
-                  className="h-8 w-8 rounded-lg flex items-center justify-center text-[10px] font-bold transition-colors hover:text-white"
+                  className="h-8 w-8 rounded-lg flex items-center justify-center text-[10px] font-bold transition-colors"
                   style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text)'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-muted)'}
                 >
                   {icon}
                 </a>
@@ -81,8 +83,10 @@ export default function Footer() {
                 <li key={l.label}>
                   <Link
                     href={l.href}
-                    className="text-sm transition-colors hover:text-white"
+                    className="text-sm transition-colors"
                     style={{ color: 'var(--color-text-muted)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text)'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-muted)'}
                   >
                     {l.label}
                   </Link>
@@ -104,8 +108,10 @@ export default function Footer() {
                 <li key={l.label}>
                   <Link
                     href={l.href}
-                    className="text-sm transition-colors hover:text-white"
+                    className="text-sm transition-colors"
                     style={{ color: 'var(--color-text-muted)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text)'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-muted)'}
                   >
                     {l.label}
                   </Link>
@@ -127,8 +133,10 @@ export default function Footer() {
                 <li key={l.label}>
                   <Link
                     href={l.href}
-                    className="text-sm transition-colors hover:text-white"
+                    className="text-sm transition-colors"
                     style={{ color: 'var(--color-text-muted)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text)'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-muted)'}
                   >
                     {l.label}
                   </Link>
@@ -145,9 +153,30 @@ export default function Footer() {
         >
           <p>© 2026 VyntRise LLC. All rights reserved.</p>
           <div className="flex items-center gap-5">
-            <Link href="/privacy" className="transition-colors hover:text-white">Privacy Policy</Link>
-            <Link href="/terms" className="transition-colors hover:text-white">Terms of Service</Link>
-            <Link href="/cookies" className="transition-colors hover:text-white">Cookie Policy</Link>
+            <Link 
+              href="/privacy" 
+              className="transition-colors"
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-subtle)'}
+            >
+              Privacy Policy
+            </Link>
+            <Link 
+              href="/terms" 
+              className="transition-colors"
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-subtle)'}
+            >
+              Terms of Service
+            </Link>
+            <Link 
+              href="/cookies" 
+              className="transition-colors"
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-subtle)'}
+            >
+              Cookie Policy
+            </Link>
             <CookieSettingsButton />
           </div>
         </div>

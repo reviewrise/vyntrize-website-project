@@ -230,10 +230,10 @@ const portfolioBar: Record<string, string> = {
   emerald: 'bg-emerald-500',
 };export default function AboutPage() {
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-[#0d1117]">
+    <div className="flex flex-col min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
 
       {/* ── 1. Hero ── */}
-      <section className="border-b border-slate-100 dark:border-[#21262d] bg-slate-50/40 dark:bg-[#161b22] pt-20 pb-14 px-4 md:px-6">
+      <section className="pt-20 pb-14 px-4 md:px-6" style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
         <div className="container mx-auto max-w-6xl">
           <div className="grid lg:grid-cols-2 gap-14 items-center">
 
@@ -244,25 +244,31 @@ const portfolioBar: Record<string, string> = {
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className="github-badge mb-5">OUR STORY</div>
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-5 leading-[1.05]">
+              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-5 leading-[1.05]" style={{ color: 'var(--color-text)' }}>
                 Helping businesses{' '}
                 <span className="bg-gradient-to-r from-blue-600 via-violet-500 to-blue-500 bg-clip-text text-transparent">
                   rise.
                 </span>
               </h1>
-              <p className="text-lg text-slate-500 dark:text-[#8b949e] leading-relaxed mb-8 max-w-lg">
+              <p className="text-lg leading-relaxed mb-8 max-w-lg" style={{ color: 'var(--color-text-muted)' }}>
                 VyntRise was built on a simple realization: small businesses are the backbone of the economy, yet most operate without the tools, insights, and systems they need to truly grow.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link
                   href="/contact"
-                  className="group inline-flex items-center gap-2 rounded-xl bg-slate-900 dark:bg-[#4B6CF7] px-6 py-3 text-sm font-bold text-white hover:bg-slate-700 dark:hover:bg-[#3d5ce0] transition-colors"
+                  className="group inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white transition-colors"
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary-h)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary)'}
                 >
                   Work with us <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
                 <Link
                   href="/services"
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-[#21262d] bg-white dark:bg-[#161b22] px-6 py-3 text-sm font-semibold text-slate-700 dark:text-[#e6edf3] hover:bg-slate-50 dark:hover:bg-[#0d1117] transition-colors"
+                  className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-colors"
+                  style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-bg)'}
                 >
                   See our services
                 </Link>
@@ -282,13 +288,14 @@ const portfolioBar: Record<string, string> = {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.45, delay: 0.2 + i * 0.08 }}
-                  className="rounded-2xl border border-slate-200 dark:border-[#21262d] bg-white dark:bg-[#161b22] p-5 shadow-sm"
+                  className="rounded-2xl p-5 shadow-sm"
+                  style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
                 >
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-[#8b949e] mb-2">{s.label}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-subtle)' }}>{s.label}</p>
                   <p className={`text-3xl font-extrabold ${s.color}`}>
                     <Counter to={s.to} suffix={s.suffix} prefix={s.prefix} />
                   </p>
-                  <p className="text-[11px] text-slate-400 mt-1">{s.context}</p>
+                  <p className="text-[11px] mt-1" style={{ color: 'var(--color-text-subtle)' }}>{s.context}</p>
                 </motion.div>
               ))}
             </motion.div>
@@ -297,13 +304,13 @@ const portfolioBar: Record<string, string> = {
       </section>
 
       {/* ── 2. Origin story ── */}
-      <section className="px-4 md:px-6 py-20 border-b border-slate-100 dark:border-[#21262d]">
+      <section className="px-4 md:px-6 py-20" style={{ borderBottom: '1px solid var(--color-border)' }}>
         <div className="container mx-auto max-w-4xl">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-[#8b949e] mb-4">How it started</p>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-8 leading-tight">
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--color-text-subtle)' }}>How it started</p>
+          <h2 className="text-3xl md:text-4xl font-extrabold mb-8 leading-tight" style={{ color: 'var(--color-text)' }}>
             We saw the gap. We set out to close it.
           </h2>
-          <div className="space-y-5 text-slate-600 dark:text-[#8b949e] leading-relaxed">
+          <div className="space-y-5 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
             <p>
               Behind every local shop, service provider, or startup is an entrepreneur working tirelessly — often managing everything alone. Despite their effort, many struggle with the same challenges: attracting the right customers, retaining them, and making data-driven decisions.
             </p>
@@ -311,7 +318,7 @@ const portfolioBar: Record<string, string> = {
               The tools that solve these problems exist. But they were built for enterprises with dedicated IT teams, six-figure budgets, and months to onboard. Small businesses were left with watered-down alternatives that didn&apos;t actually work.
             </p>
             <blockquote className="border-l-4 border-blue-500 pl-6 py-1 my-8">
-              <p className="text-xl font-bold text-slate-900 dark:text-white leading-snug">
+              <p className="text-xl font-bold leading-snug" style={{ color: 'var(--color-text)' }}>
                 &ldquo;We don&apos;t just provide tools. We create systems that work together to help businesses operate smarter, not harder.&rdquo;
               </p>
             </blockquote>
@@ -323,30 +330,32 @@ const portfolioBar: Record<string, string> = {
       </section>
 
       {/* ── 3. Mission + Vision ── */}
-      <section className="px-4 md:px-6 py-16 border-b border-slate-100 dark:border-[#21262d] bg-slate-50/40 dark:bg-[#161b22]">
+      <section className="px-4 md:px-6 py-16" style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
         <div className="container mx-auto max-w-6xl grid md:grid-cols-2 gap-5">
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4 }}
-            className="rounded-2xl border border-slate-200 dark:border-[#21262d] bg-white dark:bg-[#0d1117] p-8 shadow-sm"
+            className="rounded-2xl p-8 shadow-sm"
+            style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
           >
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-[#8b949e] mb-3">Our Mission</p>
-            <h3 className="text-xl font-extrabold text-slate-900 dark:text-white mb-4 leading-snug">
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--color-text-subtle)' }}>Our Mission</p>
+            <h3 className="text-xl font-extrabold mb-4 leading-snug" style={{ color: 'var(--color-text)' }}>
               Empower small businesses with the technology, insights, and systems they need to unlock their full potential.
             </h3>
-            <p className="text-sm text-slate-500 dark:text-[#8b949e] leading-relaxed">
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
               We believe growth should not be limited by size, resources, or technical knowledge. Every business deserves access to enterprise-grade tools — and the results that come with them.
             </p>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.1 }}
-            className="rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-sm"
+            className="rounded-2xl p-8 shadow-sm"
+            style={{ border: '1px solid var(--color-primary)', backgroundColor: 'var(--color-primary)' }}
           >
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">Our Vision</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/70 mb-3">Our Vision</p>
             <h3 className="text-xl font-extrabold text-white mb-6 leading-snug">
               A future where small businesses are no longer at a disadvantage.
             </h3>
             <ul className="space-y-3">
               {vision.map((v, i) => (
-                <li key={i} className="flex items-start gap-3 text-sm text-slate-400">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 shrink-0 mt-0.5">
+                <li key={i} className="flex items-start gap-3 text-sm text-white/80">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 shrink-0 mt-0.5">
                     <Check className="h-3 w-3 text-white" />
                   </span>
                   {v}
@@ -358,25 +367,28 @@ const portfolioBar: Record<string, string> = {
       </section>
 
       {/* ── 4. Principles ── */}
-      <section className="px-4 md:px-6 py-16 border-b border-slate-100 dark:border-[#21262d]">
+      <section className="px-4 md:px-6 py-16" style={{ borderBottom: '1px solid var(--color-border)' }}>
         <div className="container mx-auto max-w-6xl">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-[#8b949e] mb-2">How we think</p>
-          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white mb-10">The principles we build on</h2>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--color-text-subtle)' }}>How we think</p>
+          <h2 className="text-3xl font-extrabold mb-10" style={{ color: 'var(--color-text)' }}>The principles we build on</h2>
           <div className="grid sm:grid-cols-2 gap-4">
             {principles.map((p, i) => {
               const PIcon = p.icon;
               return (
                 <motion.div key={p.title} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }}
-                  className="rounded-xl border border-slate-200 dark:border-[#21262d] bg-white dark:bg-[#161b22] p-6 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-[#30363d] transition-all"
+                  className="rounded-xl p-6 shadow-sm hover:shadow-md transition-all"
+                  style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--color-primary)'}
+                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--color-border)'}
                 >
                   <div className="flex items-center gap-3 mb-4">
                     <div className={`h-9 w-9 rounded-lg border flex items-center justify-center ${p.color}`}>
                       <PIcon className="h-4 w-4" />
                     </div>
-                    <span className="font-mono text-[10px] text-slate-400 dark:text-[#8b949e]">{p.tag}</span>
+                    <span className="font-mono text-[10px]" style={{ color: 'var(--color-text-subtle)' }}>{p.tag}</span>
                   </div>
-                  <h3 className="font-bold text-slate-900 dark:text-white mb-2">{p.title}</h3>
-                  <p className="text-sm text-slate-500 dark:text-[#8b949e] leading-relaxed">{p.body}</p>
+                  <h3 className="font-bold mb-2" style={{ color: 'var(--color-text)' }}>{p.title}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{p.body}</p>
                 </motion.div>
               );
             })}

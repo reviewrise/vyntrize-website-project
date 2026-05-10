@@ -6,7 +6,7 @@ import {
     LayoutDashboard, Kanban, Users, Building2,
     Download, UserCog, LogOut, Globe, Briefcase,
     UserCircle, Settings, ChevronRight, BarChart2,
-    CheckSquare, Mail, Send,
+    CheckSquare, Mail, Send, Sparkles,
 } from 'lucide-react';
 import { logout } from '@/lib/actions/auth';
 
@@ -36,6 +36,10 @@ const WEBSITE_NAV = [
     { href: '/website/projects', label: 'Projects', icon: Briefcase },
     { href: '/website/team', label: 'Team', icon: UserCircle },
     { href: '/website/settings', label: 'Settings', icon: Settings },
+];
+
+const AI_AGENTS_NAV = [
+    { href: '/agents', label: 'Dashboard', icon: Sparkles },
 ];
 
 const ADMIN_NAV = [
@@ -116,6 +120,11 @@ export function Sidebar({ role, displayName, email }: SidebarProps) {
                 <SectionLabel label="Website" />
                 <div className="space-y-0.5">
                     {WEBSITE_NAV.map(item => <NavItem key={item.href} {...item} />)}
+                </div>
+
+                <SectionLabel label="AI Agents" />
+                <div className="space-y-0.5">
+                    {AI_AGENTS_NAV.map(item => <NavItem key={item.href} {...item} />)}
                 </div>
 
                 <SectionLabel label="Settings" />

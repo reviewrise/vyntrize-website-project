@@ -1,9 +1,7 @@
-// Event Bus for dispatching CRM events to agents
+// Event Bus for dispatching CRM events to registered agents
 
 import { EventEmitter } from 'events';
 import { Agent, AgentContext } from './base-agent';
-
-// ─── Event Types ──────────────────────────────────────────────────────────────
 
 export enum CRMEvent {
   LEAD_CREATED = 'lead_created',
@@ -23,8 +21,6 @@ export interface EventPayload {
   newValue?: unknown;
   metadata?: Record<string, unknown>;
 }
-
-// ─── Agent Event Bus ──────────────────────────────────────────────────────────
 
 class AgentEventBus extends EventEmitter {
   private agents: Map<CRMEvent, Agent[]> = new Map();
@@ -48,26 +44,34 @@ class AgentEventBus extends EventEmitter {
     console.log(`[EventBus] Emitting ${event}`, payload);
     
     const registeredAgents = this.agents.get(event) || [];
+    console.log(`[EventBus] Found ${registeredAgents.length} registered agent(s) for ${event}`);
+    
+    if (registeredAgents.length === 0) {
+      console.warn(`[EventBus] ⚠️  No agents registered for event: ${event}`);
+      return;
+    }
     
     // Execute agents in parallel (they handle their own errors)
     const promises = registeredAgents.map(async (agent) => {
       try {
-        // Skip if agent is disabled
-        if (!agent.isAgentEnabled()) {
-          console.log(`[EventBus] Skipping disabled agent ${agent.constructor.name}`);
-          return;
-        }
-
+        console.log(`[EventBus] Executing agent: ${agent.constructor.name}`);
+        
         const context: AgentContext = {
           leadId: payload.leadId,
           userId: payload.userId,
-          eventData: payload.metadata,
+          eventData: {
+            ...payload.metadata,
+            previousValue: payload.previousValue,
+            newValue: payload.newValue,
+          },
         };
         
         const result = await agent.execute(context);
         
         if (!result.success) {
           console.error(`[EventBus] Agent ${agent.constructor.name} failed:`, result.error);
+        } else {
+          console.log(`[EventBus] Agent ${agent.constructor.name} succeeded`);
         }
       } catch (error) {
         console.error(`[EventBus] Agent ${agent.constructor.name} threw error:`, error);
@@ -75,6 +79,7 @@ class AgentEventBus extends EventEmitter {
     });
 
     await Promise.allSettled(promises);
+    console.log(`[EventBus] Finished processing ${event} event`);
   }
 
   /**
@@ -82,20 +87,6 @@ class AgentEventBus extends EventEmitter {
    */
   getAgents(event: CRMEvent): Agent[] {
     return this.agents.get(event) || [];
-  }
-
-  /**
-   * Get all registered events
-   */
-  getRegisteredEvents(): CRMEvent[] {
-    return Array.from(this.agents.keys());
-  }
-
-  /**
-   * Clear all registered agents (useful for testing)
-   */
-  clearAgents() {
-    this.agents.clear();
   }
 }
 

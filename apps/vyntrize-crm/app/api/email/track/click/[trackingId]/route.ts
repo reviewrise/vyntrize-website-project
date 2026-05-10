@@ -1,11 +1,8 @@
-/**
- * Email Click Tracking Endpoint
- * GET /api/email/track/click/[trackingId]?url=...
- * Records click and redirects to original URL
- */
+// GET /api/email/track/click/:trackingId - Track email link clicks
 
 import { NextRequest, NextResponse } from 'next/server';
-import { TrackingService } from '@/lib/email/tracking-service';
+import { prisma } from '@/lib/prisma';
+import { eventBus, CRMEvent } from '@/lib/agents/event-bus';
 
 export async function GET(
   request: NextRequest,
@@ -14,45 +11,68 @@ export async function GET(
   try {
     const { trackingId } = await params;
     const searchParams = request.nextUrl.searchParams;
-    const url = searchParams.get('url');
+    const targetUrl = searchParams.get('url');
 
-    if (!url) {
+    if (!targetUrl) {
       return NextResponse.json(
-        { error: 'Missing url parameter' },
+        { error: 'Missing target URL' },
         { status: 400 }
       );
     }
 
-    // Extract metadata
-    const ipAddress = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     'unknown';
-    const userAgent = request.headers.get('user-agent') || 'unknown';
-
-    // Record the click event (async, don't wait)
-    TrackingService.recordClick(trackingId, url, {
-      ipAddress,
-      userAgent,
-      timestamp: new Date(),
-    }).catch(error => {
-      console.error('[Track Click] Error recording click:', error);
+    // Find email tracking record
+    const tracking = await prisma.emailTracking.findUnique({
+      where: { id: trackingId },
+      include: {
+        lead: true,
+      },
     });
 
-    // Redirect to original URL
-    return NextResponse.redirect(url, 302);
-  } catch (error) {
-    console.error('[Track Click] Error:', error);
-    
-    // Try to redirect anyway
-    const searchParams = request.nextUrl.searchParams;
-    const url = searchParams.get('url');
-    
-    if (url) {
-      return NextResponse.redirect(url, 302);
+    if (tracking) {
+      // Update tracking record
+      await prisma.emailTracking.update({
+        where: { id: trackingId },
+        data: {
+          clickedAt: tracking.clickedAt || new Date(), // Only set first click
+          clickCount: {
+            increment: 1,
+          },
+        },
+      });
+
+      // Emit EMAIL_CLICKED event for agents
+      if (tracking.leadId) {
+        await eventBus.emitCRMEvent(CRMEvent.EMAIL_CLICKED, {
+          leadId: tracking.leadId,
+          metadata: {
+            trackingId,
+            emailId: tracking.id,
+            targetUrl,
+            timestamp: new Date().toISOString(),
+            clickCount: tracking.clickCount + 1,
+            firstClick: !tracking.clickedAt,
+          },
+        });
+
+        console.log(`[EmailTracking] Email link clicked: ${trackingId} for lead ${tracking.leadId}, URL: ${targetUrl}`);
+      }
     }
 
+    // Redirect to target URL
+    return NextResponse.redirect(targetUrl);
+  } catch (error) {
+    console.error('[EmailTracking] Error tracking email click:', error);
+    
+    // Try to redirect to target URL even on error
+    const searchParams = request.nextUrl.searchParams;
+    const targetUrl = searchParams.get('url');
+    
+    if (targetUrl) {
+      return NextResponse.redirect(targetUrl);
+    }
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to track click' },
       { status: 500 }
     );
   }

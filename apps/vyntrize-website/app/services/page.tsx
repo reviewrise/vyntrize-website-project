@@ -152,16 +152,16 @@ export default function Services() {
   const Icon = current.icon;
 
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-[#0d1117]">
+    <div className="flex flex-col min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
 
       {/* Page header */}
-      <section className="border-b border-slate-100 dark:border-[#21262d] bg-slate-50/40 dark:bg-[#161b22] pt-20 pb-12 px-4 md:px-6">
+      <section className="pt-20 pb-12 px-4 md:px-6" style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
         <div className="container mx-auto max-w-6xl">
           <div className="github-badge mb-4">SERVICES</div>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-4 leading-tight">
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 leading-tight" style={{ color: 'var(--color-text)' }}>
             What we build for you
           </h1>
-          <p className="text-lg text-slate-500 dark:text-[#8b949e] max-w-xl">
+          <p className="text-lg max-w-xl" style={{ color: 'var(--color-text-muted)' }}>
             Five focused service lines. Each one a precision instrument for a specific growth problem.
           </p>
         </div>
@@ -173,7 +173,7 @@ export default function Services() {
 
           {/* Sidebar */}
           <nav className="lg:w-60 shrink-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-[#8b949e] mb-3 px-1">Services</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-3 px-1" style={{ color: 'var(--color-text-subtle)' }}>Services</p>
             <ul className="space-y-1">
               {services.map(s => {
                 const SIcon = s.icon;
@@ -182,8 +182,11 @@ export default function Services() {
                   <li key={s.id}>
                     <button onClick={() => setActive(s.id)}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${
-                        isActive ? 'bg-slate-900 dark:bg-[#4B6CF7] text-white shadow-sm' : 'text-slate-600 dark:text-[#8b949e] hover:bg-slate-100 dark:hover:bg-[#161b22] hover:text-slate-900 dark:hover:text-white'
+                        isActive ? 'text-white shadow-sm' : ''
                       }`}
+                      style={isActive ? { backgroundColor: 'var(--color-primary)' } : { color: 'var(--color-text-muted)' }}
+                      onMouseEnter={(e) => !isActive && (e.currentTarget.style.backgroundColor = 'var(--color-surface)', e.currentTarget.style.color = 'var(--color-text)')}
+                      onMouseLeave={(e) => !isActive && (e.currentTarget.style.backgroundColor = 'transparent', e.currentTarget.style.color = 'var(--color-text-muted)')}
                     >
                       <SIcon className="h-4 w-4 shrink-0" />
                       <span className="flex-1 truncate">{s.label}</span>
@@ -194,9 +197,9 @@ export default function Services() {
               })}
             </ul>
 
-            <div className="mt-8 rounded-xl border border-slate-200 dark:border-[#21262d] bg-white dark:bg-[#161b22] p-4 shadow-sm">
-              <p className="text-xs font-semibold text-slate-800 dark:text-white mb-1">Not sure where to start?</p>
-              <p className="text-xs text-slate-500 dark:text-[#8b949e] mb-3 leading-relaxed">We&apos;ll map the right services to your goals in a free 30-min call.</p>
+            <div className="mt-8 rounded-xl p-4 shadow-sm" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
+              <p className="text-xs font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Not sure where to start?</p>
+              <p className="text-xs mb-3 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>We&apos;ll map the right services to your goals in a free 30-min call.</p>
               <Link href="/contact" className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors">
                 Talk to us <ArrowRight className="h-3 w-3" />
               </Link>
@@ -209,23 +212,27 @@ export default function Services() {
               <motion.div key={active} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22, ease: 'easeOut' }} className="space-y-4">
 
                 {/* Header card */}
-                <div className="rounded-2xl border border-slate-200 dark:border-[#21262d] bg-white dark:bg-[#161b22] p-6 shadow-sm">
+                <div className="rounded-2xl p-6 shadow-sm" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
                   <div className="flex items-start justify-between gap-4 flex-wrap mb-4">
                     <div className="flex items-center gap-4">
                       <div className={`h-12 w-12 rounded-xl border flex items-center justify-center shrink-0 ${colorIcon[current.color]}`}>
                         <Icon className="h-6 w-6" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-[#8b949e] uppercase mb-0.5">{current.badge}</p>
-                        <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">{current.label}</h2>
+                        <p className="text-[10px] font-bold tracking-widest uppercase mb-0.5" style={{ color: 'var(--color-text-subtle)' }}>{current.badge}</p>
+                        <h2 className="text-xl font-extrabold" style={{ color: 'var(--color-text)' }}>{current.label}</h2>
                         <p className={`text-sm font-medium mt-0.5 ${colorText[current.color]}`}>{current.tagline}</p>
                       </div>
                     </div>
-                    <Link href={current.href} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 dark:bg-[#4B6CF7] px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 dark:hover:bg-[#3d5ce0] transition-colors shrink-0">
+                    <Link href={current.href} className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-colors shrink-0"
+                      style={{ backgroundColor: 'var(--color-primary)' }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary-h)'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary)'}
+                    >
                       Full details <ArrowRight className="h-4 w-4" />
                     </Link>
                   </div>
-                  <p className="text-sm text-slate-600 dark:text-[#8b949e] leading-relaxed">{current.description}</p>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{current.description}</p>
                 </div>
 
                 {/* Outcomes row */}
@@ -233,10 +240,10 @@ export default function Services() {
                   {current.outcomes.map(o => {
                     const OIcon = o.icon;
                     return (
-                      <div key={o.label} className="rounded-xl border border-slate-200 dark:border-[#21262d] bg-white dark:bg-[#161b22] p-4 shadow-sm">
+                      <div key={o.label} className="rounded-xl p-4 shadow-sm" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
                         <OIcon className={`h-4 w-4 mb-2 ${colorText[current.color]}`} />
                         <p className={`text-2xl font-extrabold ${colorText[current.color]}`}>{o.value}</p>
-                        <p className="text-[11px] text-slate-400 dark:text-[#8b949e] mt-0.5 leading-tight">{o.label}</p>
+                        <p className="text-[11px] mt-0.5 leading-tight" style={{ color: 'var(--color-text-subtle)' }}>{o.label}</p>
                       </div>
                     );
                   })}
@@ -244,25 +251,25 @@ export default function Services() {
 
                 {/* Capabilities + Before/After */}
                 <div className="grid md:grid-cols-2 gap-4">
-                  <div className="rounded-xl border border-slate-200 dark:border-[#21262d] bg-white dark:bg-[#161b22] p-5 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-[#8b949e] mb-4">Capabilities</p>
+                  <div className="rounded-xl p-5 shadow-sm" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--color-text-subtle)' }}>Capabilities</p>
                     <ul className="space-y-2.5">
                       {current.capabilities.map(c => (
-                        <li key={c} className="flex items-center gap-2.5 text-sm text-slate-700 dark:text-[#e6edf3]">
+                        <li key={c} className="flex items-center gap-2.5 text-sm" style={{ color: 'var(--color-text)' }}>
                           <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />{c}
                         </li>
                       ))}
                     </ul>
                   </div>
-                  <div className="rounded-xl border border-slate-200 dark:border-[#21262d] bg-white dark:bg-[#161b22] p-5 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-[#8b949e] mb-4">Before → After</p>
+                  <div className="rounded-xl p-5 shadow-sm" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--color-text-subtle)' }}>Before → After</p>
                     <div className="space-y-3">
                       {current.before.map(b => (
                         <div key={b.label} className="flex items-center justify-between text-sm">
-                          <span className="text-slate-500 dark:text-[#8b949e] text-xs">{b.label}</span>
+                          <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{b.label}</span>
                           <div className="flex items-center gap-2">
-                            <span className="text-slate-400 text-xs line-through">{b.from}</span>
-                            <ChevronRight className="h-3 w-3 text-slate-300 dark:text-[#30363d]" />
+                            <span className="text-xs line-through" style={{ color: 'var(--color-text-subtle)' }}>{b.from}</span>
+                            <ChevronRight className="h-3 w-3" style={{ color: 'var(--color-border)' }} />
                             <span className={`text-xs font-bold ${colorText[current.color]}`}>{b.to}</span>
                           </div>
                         </div>
@@ -272,28 +279,36 @@ export default function Services() {
                 </div>
 
                 {/* Testimonial */}
-                <div className="rounded-xl border border-slate-200 dark:border-[#21262d] bg-slate-50/60 dark:bg-[#161b22] p-5 flex items-start gap-4">
+                <div className="rounded-xl p-5 flex items-start gap-4" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
                   <div className={`h-9 w-9 rounded-full ${colorBar[current.color]} flex items-center justify-center text-white text-xs font-bold shrink-0`}>
                     {current.testimonial.name.split(' ').map(n => n[0]).join('')}
                   </div>
                   <div>
-                    <p className="text-sm text-slate-700 dark:text-[#e6edf3] leading-relaxed mb-1.5">&ldquo;{current.testimonial.quote}&rdquo;</p>
-                    <p className="text-xs font-semibold text-slate-900 dark:text-white">{current.testimonial.name}</p>
-                    <p className="text-[11px] text-slate-400 dark:text-[#8b949e]">{current.testimonial.role}</p>
+                    <p className="text-sm leading-relaxed mb-1.5" style={{ color: 'var(--color-text)' }}>&ldquo;{current.testimonial.quote}&rdquo;</p>
+                    <p className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>{current.testimonial.name}</p>
+                    <p className="text-[11px]" style={{ color: 'var(--color-text-subtle)' }}>{current.testimonial.role}</p>
                   </div>
                 </div>
 
                 {/* CTA */}
-                <div className="rounded-xl border border-slate-200 dark:border-[#21262d] bg-white dark:bg-[#161b22] p-5 flex items-center justify-between gap-4 flex-wrap shadow-sm">
+                <div className="rounded-xl p-5 flex items-center justify-between gap-4 flex-wrap shadow-sm" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
                   <div>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">Ready to get started with {current.label}?</p>
-                    <p className="text-xs text-slate-500 dark:text-[#8b949e] mt-0.5">No commitment — let&apos;s talk about your goals first.</p>
+                    <p className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>Ready to get started with {current.label}?</p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>No commitment — let&apos;s talk about your goals first.</p>
                   </div>
                   <div className="flex gap-2.5 shrink-0">
-                    <Link href="/contact" className="inline-flex items-center gap-2 rounded-xl bg-slate-900 dark:bg-[#4B6CF7] px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 dark:hover:bg-[#3d5ce0] transition-colors">
+                    <Link href="/contact" className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-colors"
+                      style={{ backgroundColor: 'var(--color-primary)' }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary-h)'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary)'}
+                    >
                       Get started <ArrowRight className="h-4 w-4" />
                     </Link>
-                    <Link href={current.href} className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-[#21262d] bg-white dark:bg-[#0d1117] px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-[#e6edf3] hover:bg-slate-50 dark:hover:bg-[#161b22] transition-colors">
+                    <Link href={current.href} className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors"
+                      style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface)'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-bg)'}
+                    >
                       Learn more
                     </Link>
                   </div>

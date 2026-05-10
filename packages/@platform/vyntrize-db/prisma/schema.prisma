@@ -575,6 +575,9 @@ model EmailTemplate {
   name      String
   subject   String
   body      String   @db.Text
+  
+  // Template type for categorization and automation
+  type      EmailTemplateType @default(GENERAL)
 
   // Template variables (e.g., {{firstName}}, {{companyName}})
   variables Json?
@@ -586,7 +589,20 @@ model EmailTemplate {
   emailLogs     EmailLog[]      @relation("EmailLogTemplate")
 
   @@index([userId])
+  @@index([type])
   @@map("email_templates")
+}
+
+enum EmailTemplateType {
+  WELCOME              // Welcome/onboarding emails
+  INITIAL_OUTREACH     // First contact emails
+  FOLLOW_UP            // Follow-up after meeting/call
+  PROPOSAL             // Proposal/quote emails
+  RE_ENGAGEMENT        // Re-engagement for inactive leads
+  STAGE_CHANGE         // Automated stage change emails
+  ENGAGEMENT_RESPONSE  // Response to email opens/clicks
+  NEWSLETTER           // Newsletter/update emails
+  GENERAL              // General purpose templates
 }
 
 // ─── CRM Enhancement: Email Tracking ──────────────────────────────────────────

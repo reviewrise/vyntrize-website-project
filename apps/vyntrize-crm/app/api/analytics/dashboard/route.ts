@@ -47,11 +47,14 @@ export async function GET(request: NextRequest) {
 
     // Fetch dashboard data
     console.log('[Dashboard API] Fetching metrics...');
-    const [metrics, trends, topSources, topPages, comparison] = await Promise.all([
+    const [metrics, trends, topSources, topPages, deviceStats, browserStats, osStats, comparison] = await Promise.all([
       DashboardService.getMetrics(startDate, endDate),
       DashboardService.getTrends(startDate, endDate, granularity),
       DashboardService.getTopSources(startDate, endDate, 10),
       DashboardService.getTopPages(startDate, endDate, 10),
+      DashboardService.getDeviceStats(startDate, endDate),
+      DashboardService.getBrowserStats(startDate, endDate),
+      DashboardService.getOSStats(startDate, endDate),
       includeComparison ? DashboardService.getComparison(startDate, endDate) : null,
     ]);
 
@@ -59,12 +62,18 @@ export async function GET(request: NextRequest) {
     console.log('[Dashboard API] Trends count:', trends.length);
     console.log('[Dashboard API] Top sources count:', topSources.length);
     console.log('[Dashboard API] Top pages count:', topPages.length);
+    console.log('[Dashboard API] Device stats count:', deviceStats.length);
+    console.log('[Dashboard API] Browser stats count:', browserStats.length);
+    console.log('[Dashboard API] OS stats count:', osStats.length);
 
     return NextResponse.json({
       metrics,
       trends,
       topSources,
       topPages,
+      deviceStats,
+      browserStats,
+      osStats,
       comparison,
       dateRange: {
         startDate: startDate.toISOString(),

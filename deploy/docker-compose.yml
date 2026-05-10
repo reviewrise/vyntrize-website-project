@@ -29,6 +29,20 @@ services:
       timeout: 5s
       retries: 5
 
+  vyntrize-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - vyntrize-redis-data:/data
+    networks:
+      - vyntrize-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   vyntrize-website:
     image: ghcr.io/reviewrise/vyntrize-website-project/vyntrize-website:latest
     restart: unless-stopped
@@ -53,6 +67,8 @@ services:
     environment:
       - NODE_ENV=production
       - CRM_DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@vyntrize-postgres:5432/${POSTGRES_DB}
+      - REDIS_HOST=vyntrize-redis
+      - REDIS_PORT=6379
     expose:
       - "3014"
     networks:
@@ -60,11 +76,14 @@ services:
     depends_on:
       vyntrize-postgres:
         condition: service_healthy
+      vyntrize-redis:
+        condition: service_healthy
 
 volumes:
   caddy-data:
   caddy-config:
   vyntrize-postgres-data:
+  vyntrize-redis-data:
 
 networks:
   vyntrize-net:

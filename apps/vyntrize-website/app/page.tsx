@@ -171,9 +171,9 @@ const barColor: Record<string, string> = {
 ───────────────────────────────────────── */
 function ServiceVisual({ service }: { service: typeof services[0] }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-7 flex flex-col gap-5">
+    <div className="rounded-2xl shadow-sm p-7 flex flex-col gap-5" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
       <div className="flex items-center justify-between">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Before → After</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--color-text-subtle)' }}>Before → After</p>
         <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${colorMap[service.color]}`}>
           {service.stat.value} {service.stat.label}
         </span>
@@ -185,28 +185,29 @@ function ServiceVisual({ service }: { service: typeof services[0] }) {
         return (
           <div key={row.label}>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-medium text-slate-600">{row.label}</span>
+              <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>{row.label}</span>
               <span className={`text-xs font-bold ${barColor[service.color].replace('bg-', 'text-')}`}>
                 {row.after}{row.unit}
               </span>
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-slate-400 w-10 shrink-0">Before</span>
-                <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                <span className="text-[10px] w-10 shrink-0" style={{ color: 'var(--color-text-subtle)' }}>Before</span>
+                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--color-surface)' }}>
                   <motion.div
                     initial={{ width: 0 }}
                     whileInView={{ width: `${beforePct}%` }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                    className="h-full rounded-full bg-slate-300"
+                    className="h-full rounded-full"
+                    style={{ backgroundColor: 'var(--color-border)' }}
                   />
                 </div>
-                <span className="text-[10px] text-slate-400 w-10 text-right shrink-0">{row.before}{row.unit}</span>
+                <span className="text-[10px] w-10 text-right shrink-0" style={{ color: 'var(--color-text-subtle)' }}>{row.before}{row.unit}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-slate-400 w-10 shrink-0">After</span>
-                <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                <span className="text-[10px] w-10 shrink-0" style={{ color: 'var(--color-text-subtle)' }}>After</span>
+                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--color-surface)' }}>
                   <motion.div
                     initial={{ width: 0 }}
                     whileInView={{ width: `${afterPct}%` }}
@@ -253,7 +254,7 @@ export default function Home() {
 
   return (
 
-    <div className="flex flex-col bg-white dark:bg-[#0d1117]">
+    <div className="flex flex-col" style={{ backgroundColor: 'var(--color-bg)' }}>
       <iframe
         id="agentops-chatbot-ab7b7522"
         src="https://animator-briskness-canister.ngrok-free.dev/embed/chatbot?org=d7b14163-e1b2-47bd-9c99-225458dc3381"
@@ -277,14 +278,14 @@ export default function Home() {
       {/* ── 2. Logo strip — removed ── */}
 
       {/* ── 3. How it works ── */}
-      <section className="px-4 md:px-6 py-24 border-b border-slate-100 dark:border-[#21262d]">
+      <section className="px-4 md:px-6 py-24" style={{ borderBottom: '1px solid var(--color-border)' }}>
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <div className="github-badge mb-4">HOW IT WORKS</div>
-            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-4">
+            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4" style={{ color: 'var(--color-text)' }}>
               Up and running in days, not months
             </h2>
-            <p className="text-lg text-slate-500 dark:text-[#8b949e] max-w-xl mx-auto">
+            <p className="text-lg max-w-xl mx-auto" style={{ color: 'var(--color-text-muted)' }}>
               No long onboarding. No engineering team required. Just results.
             </p>
           </div>
@@ -299,17 +300,18 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.12 }}
-                className="relative flex flex-col gap-5 rounded-2xl border border-slate-200 dark:border-[#21262d] bg-white dark:bg-[#161b22] p-7 shadow-sm hover:shadow-md transition-shadow"
+                className="relative flex flex-col gap-5 rounded-2xl p-7 shadow-sm hover:shadow-md transition-shadow"
+                style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
               >
                 <div className="flex items-center justify-between">
                   <div className={`h-10 w-10 rounded-xl border flex items-center justify-center ${stepColor[step.color]}`}>
                     <step.icon className="h-5 w-5" />
                   </div>
-                  <span className="text-3xl font-black text-slate-100 dark:text-[#21262d] font-mono">{step.n}</span>
+                  <span className="text-3xl font-black font-mono" style={{ color: 'var(--color-border)' }}>{step.n}</span>
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white mb-2">{step.title}</h3>
-                  <p className="text-sm text-slate-500 dark:text-[#8b949e] leading-relaxed">{step.body}</p>
+                  <h3 className="text-base font-bold mb-2" style={{ color: 'var(--color-text)' }}>{step.title}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{step.body}</p>
                 </div>
               </motion.div>
             ))}
@@ -318,7 +320,10 @@ export default function Home() {
           <div className="mt-10 text-center">
             <Link
               href="/contact"
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 dark:bg-[#4B6CF7] px-7 py-3.5 text-sm font-bold text-white hover:bg-slate-700 dark:hover:bg-[#3d5ce0] transition-colors shadow-md"
+              className="inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-sm font-bold text-white transition-colors shadow-md"
+              style={{ backgroundColor: 'var(--color-primary)' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary-h)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary)'}
             >
               Get started free <ArrowRight className="h-4 w-4" />
             </Link>
@@ -327,14 +332,14 @@ export default function Home() {
       </section>
 
       {/* ── 4. Bento feature grid ── */}
-      <section className="px-4 md:px-6 py-24 border-b border-slate-100 dark:border-[#21262d] bg-slate-50/40 dark:bg-[#0d1117]">
+      <section className="px-4 md:px-6 py-24" style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-14">
             <div className="github-badge mb-4">PLATFORM</div>
-            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-4">
+            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4" style={{ color: 'var(--color-text)' }}>
               Everything your business needs to scale
             </h2>
-            <p className="text-lg text-slate-500 dark:text-[#8b949e] max-w-2xl mx-auto">
+            <p className="text-lg max-w-2xl mx-auto" style={{ color: 'var(--color-text-muted)' }}>
               One platform. Five service lines. Measurable outcomes from day one.
             </p>
           </div>
@@ -345,22 +350,23 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }} transition={{ duration: 0.5 }}
-              className="col-span-2 row-span-2 rounded-2xl border border-slate-200 dark:border-[#21262d] bg-white dark:bg-[#161b22] shadow-sm p-7 flex flex-col justify-between group hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800 transition-all overflow-hidden"
+              className="col-span-2 row-span-2 rounded-2xl shadow-sm p-7 flex flex-col justify-between group hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800 transition-all overflow-hidden"
+              style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
             >
               <div>
                 <div className="h-11 w-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-5">
                   <Bot className="h-5 w-5" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Autonomous AI Agents</h3>
-                <p className="text-sm text-slate-500 dark:text-[#8b949e] leading-relaxed">Deploy agents that engage leads, answer questions, and complete workflows — without human intervention.</p>
+                <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--color-text)' }}>Autonomous AI Agents</h3>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>Deploy agents that engage leads, answer questions, and complete workflows — without human intervention.</p>
               </div>
               {/* Animated bar chart — whileInView */}
-              <div className="mt-4 rounded-xl bg-slate-50 border border-slate-100 p-4">
+              <div className="mt-4 rounded-xl p-4" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tasks automated this week</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text-subtle)' }}>Tasks automated this week</span>
                   <span className="text-xs font-bold text-emerald-600">↑ 12%</span>
                 </div>
-                <p className="text-2xl font-extrabold text-slate-900 mb-3">1,284,091</p>
+                <p className="text-2xl font-extrabold mb-3" style={{ color: 'var(--color-text)' }}>1,284,091</p>
                 <div className="flex items-end gap-1 h-10">
                   {[40, 55, 45, 70, 60, 85, 75].map((h, i) => (
                     <div key={i} className="flex-1 rounded-sm bg-blue-50 overflow-hidden" style={{ height: '100%' }}>
@@ -434,17 +440,17 @@ export default function Home() {
       </section>
 
       {/* ── 5. Services tabs ── */}
-      <section className="px-4 md:px-6 py-24 border-b border-slate-100 dark:border-[#21262d]">
+      <section className="px-4 md:px-6 py-24" style={{ borderBottom: '1px solid var(--color-border)' }}>
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-12">
             <div className="github-badge mb-4">SERVICES</div>
-            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-4">
+            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4" style={{ color: 'var(--color-text)' }}>
               Five ways we grow your business
             </h2>
           </div>
 
           {/* Tab bar */}
-          <div className="flex gap-0 overflow-x-auto pb-px mb-10 border-b border-slate-100 dark:border-[#21262d]">
+          <div className="flex gap-0 overflow-x-auto pb-px mb-10" style={{ borderBottom: '1px solid var(--color-border)' }}>
             {services.map((s) => {
               const SIcon = s.icon;
               const isActive = s.id === activeService;
@@ -452,8 +458,10 @@ export default function Home() {
                 <button
                   key={s.id}
                   onClick={() => setActiveService(s.id)}
-                  className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold whitespace-nowrap border-b-2 -mb-px transition-all ${isActive ? `${tabAccent[s.color]}` : 'border-transparent text-slate-400 hover:text-slate-700'
-                    }`}
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold whitespace-nowrap border-b-2 -mb-px transition-all ${isActive ? `${tabAccent[s.color]}` : 'border-transparent'}`}
+                  style={{ color: isActive ? undefined : 'var(--color-text-muted)' }}
+                  onMouseEnter={(e) => !isActive && (e.currentTarget.style.color = 'var(--color-text)')}
+                  onMouseLeave={(e) => !isActive && (e.currentTarget.style.color = 'var(--color-text-muted)')}
                 >
                   <SIcon className="h-4 w-4" />
                   {s.label}
@@ -478,11 +486,11 @@ export default function Home() {
                   <CIcon className="h-3.5 w-3.5" />
                   {current.label}
                 </div>
-                <h3 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-4 leading-tight">{current.headline}</h3>
-                <p className="text-slate-500 leading-relaxed mb-6">{current.body}</p>
+                <h3 className="text-2xl md:text-3xl font-extrabold mb-4 leading-tight" style={{ color: 'var(--color-text)' }}>{current.headline}</h3>
+                <p className="leading-relaxed mb-6" style={{ color: 'var(--color-text-muted)' }}>{current.body}</p>
                 <ul className="space-y-2.5 mb-8">
                   {current.points.map(p => (
-                    <li key={p} className="flex items-center gap-2.5 text-sm text-slate-700">
+                    <li key={p} className="flex items-center gap-2.5 text-sm" style={{ color: 'var(--color-text)' }}>
                       <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
                       {p}
                     </li>
@@ -490,7 +498,10 @@ export default function Home() {
                 </ul>
                 <Link
                   href={current.href}
-                  className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 transition-colors"
+                  className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-colors"
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary-h)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary)'}
                 >
                   Explore {current.label} <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -600,27 +611,27 @@ export default function Home() {
       </section>
 
       {/* ── 8. Why VyntRise comparison ── */}
-      <section className="px-4 md:px-6 py-24 border-b border-slate-100 dark:border-[#21262d]">
+      <section className="px-4 md:px-6 py-24" style={{ borderBottom: '1px solid var(--color-border)' }}>
         <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-12">
             <div className="github-badge mb-4">WHY VYNTRISE</div>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-4">Built different</h2>
-            <p className="text-slate-500 dark:text-[#8b949e] max-w-md mx-auto text-sm">
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-4" style={{ color: 'var(--color-text)' }}>Built different</h2>
+            <p className="max-w-md mx-auto text-sm" style={{ color: 'var(--color-text-muted)' }}>
               Most agencies sell retainers. We sell outcomes.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 dark:border-[#21262d] bg-white dark:bg-[#161b22] shadow-sm overflow-hidden">
+          <div className="rounded-2xl shadow-sm overflow-hidden" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
             {/* Header */}
-            <div className="grid grid-cols-[1fr_140px_140px] border-b border-slate-100 dark:border-[#21262d] bg-slate-50 dark:bg-[#0d1117] px-6 py-3.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">What you get</span>
+            <div className="grid grid-cols-[1fr_140px_140px] px-6 py-3.5" style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text-subtle)' }}>What you get</span>
               <div className="flex items-center justify-center gap-1.5">
-                <div className="h-4 w-4 rounded bg-slate-900 flex items-center justify-center">
+                <div className="h-4 w-4 rounded flex items-center justify-center" style={{ backgroundColor: 'var(--color-primary)' }}>
                   <Zap className="h-2.5 w-2.5 text-white" />
                 </div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-900">VyntRise</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text)' }}>VyntRise</span>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center">Typical Agency</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-center" style={{ color: 'var(--color-text-subtle)' }}>Typical Agency</span>
             </div>
 
             {comparisons.map((row, i) => (
@@ -630,21 +641,25 @@ export default function Home() {
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.3, delay: i * 0.04 }}
-                className={`grid grid-cols-[1fr_140px_140px] px-6 py-3.5 items-center border-b border-slate-50 dark:border-[#21262d] last:border-0 ${i % 2 === 0 ? 'bg-white dark:bg-[#161b22]' : 'bg-slate-50/30 dark:bg-[#0d1117]'}`}
+                className={`grid grid-cols-[1fr_140px_140px] px-6 py-3.5 items-center last:border-0`}
+                style={{ 
+                  borderBottom: '1px solid var(--color-border-muted)',
+                  backgroundColor: i % 2 === 0 ? 'var(--color-bg)' : 'var(--color-surface)'
+                }}
               >
-                <span className="text-sm text-slate-700 dark:text-[#e6edf3]">{row.label}</span>
+                <span className="text-sm" style={{ color: 'var(--color-text)' }}>{row.label}</span>
                 {/* VyntRise column — highlighted */}
                 <div className="flex justify-center">
                   {row.us
                     ? <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500"><Check className="h-3.5 w-3.5 text-white" /></span>
-                    : <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100"><X className="h-3.5 w-3.5 text-slate-400" /></span>
+                    : <span className="flex h-6 w-6 items-center justify-center rounded-full" style={{ backgroundColor: 'var(--color-surface)' }}><X className="h-3.5 w-3.5" style={{ color: 'var(--color-text-subtle)' }} /></span>
                   }
                 </div>
                 {/* Agency column */}
                 <div className="flex justify-center">
                   {!row.us
                     ? <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100"><Check className="h-3.5 w-3.5 text-emerald-600" /></span>
-                    : <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100"><X className="h-3.5 w-3.5 text-slate-400" /></span>
+                    : <span className="flex h-6 w-6 items-center justify-center rounded-full" style={{ backgroundColor: 'var(--color-surface)' }}><X className="h-3.5 w-3.5" style={{ color: 'var(--color-text-subtle)' }} /></span>
                   }
                 </div>
               </motion.div>
