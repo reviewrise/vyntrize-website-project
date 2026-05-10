@@ -445,7 +445,9 @@ const portfolioBar: Record<string, string> = {
                     {member.photo ? (
                       <Image src={member.photo} alt={member.name} width={96} height={96} className="rounded-full object-cover w-full h-full" style={{ outline: '4px solid var(--color-raised)' }} />
                     ) : (
-                      <InitialsAvatar initials={member.initials} name={member.name} size={96} className="rounded-full" style={{ outline: '4px solid var(--color-raised)' }} />
+                      <div style={{ outline: '4px solid var(--color-raised)', borderRadius: '9999px', display: 'inline-flex' }}>
+                        <InitialsAvatar initials={member.initials} name={member.name} size={96} className="rounded-full" />
+                      </div>
                     )}
                   </div>
                   <div>
