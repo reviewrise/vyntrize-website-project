@@ -1,5 +1,7 @@
 'use client';
 
+'use client';
+
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import { ArrowLeft, ArrowRight, Bot, Users, Database, Settings, Zap, Shield, Activity, CheckCircle2, Star } from 'lucide-react';

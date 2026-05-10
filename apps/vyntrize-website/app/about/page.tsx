@@ -172,7 +172,7 @@ const team = [
     initials: 'AL',
     color: 'bg-indigo-500',
     tag: 'Engineering',
-    photo: '/images/teams/2026-04-07 18.00.52.jpg',
+    photo: '/images/teams/Abel Legesse.jpg',
     linkedin: '#',
   },
 ];
@@ -397,27 +397,28 @@ const portfolioBar: Record<string, string> = {
       </section>
 
       {/* ── 5. Timeline ── */}
-      <section className="px-4 md:px-6 py-16 border-b border-slate-100 dark:border-[#21262d] bg-slate-50/40 dark:bg-[#161b22]">
+      <section className="px-4 md:px-6 py-16" style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
         <div className="container mx-auto max-w-6xl">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-[#8b949e] mb-2">Our journey</p>
-          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white mb-12">From idea to impact</h2>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--color-text-subtle)' }}>Our journey</p>
+          <h2 className="text-3xl font-extrabold mb-12" style={{ color: 'var(--color-text)' }}>From idea to impact</h2>
           <div className="relative">
-            <div className="absolute left-[88px] top-0 bottom-0 w-px bg-slate-200 dark:bg-[#21262d] hidden md:block" />
+            <div className="absolute left-[88px] top-0 bottom-0 w-px hidden md:block" style={{ backgroundColor: 'var(--color-border)' }} />
             <div className="space-y-8">
               {milestones.map((m, i) => (
                 <motion.div key={m.year} initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.07 }} className="flex gap-6 items-start">
                   <div className="shrink-0 w-[88px] text-right hidden md:block">
-                    <span className={`text-sm font-extrabold font-mono ${m.year === '2026' ? 'text-blue-600' : 'text-slate-400 dark:text-[#8b949e]'}`}>{m.year}</span>
+                    <span className={`text-sm font-extrabold font-mono ${m.year === '2026' ? 'text-blue-600' : ''}`} style={m.year !== '2026' ? { color: 'var(--color-text-subtle)' } : {}}>{m.year}</span>
                   </div>
                   <div className="relative hidden md:flex items-center justify-center shrink-0">
-                    <div className={`h-3 w-3 rounded-full border-2 border-white dark:border-[#161b22] shadow-sm ${m.year === '2026' ? 'bg-blue-600' : 'bg-slate-300 dark:bg-[#30363d]'}`} />
+                    <div className={`h-3 w-3 rounded-full shadow-sm ${m.year === '2026' ? 'bg-blue-600' : ''}`}
+                      style={m.year !== '2026' ? { backgroundColor: 'var(--color-raised)', border: '2px solid var(--color-border)' } : { border: '2px solid var(--color-bg)' }} />
                   </div>
-                  <div className="flex-1 rounded-xl border border-slate-200 dark:border-[#21262d] bg-white dark:bg-[#0d1117] p-5 shadow-sm">
+                  <div className="flex-1 rounded-xl p-5 shadow-sm" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
                     <div className="flex items-center gap-3 mb-1.5">
-                      <span className="md:hidden text-xs font-bold font-mono text-slate-400 dark:text-[#8b949e]">{m.year}</span>
-                      <span className="text-sm font-bold text-slate-900 dark:text-white">{m.label}</span>
+                      <span className="md:hidden text-xs font-bold font-mono" style={{ color: 'var(--color-text-subtle)' }}>{m.year}</span>
+                      <span className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>{m.label}</span>
                     </div>
-                    <p className="text-sm text-slate-500 dark:text-[#8b949e] leading-relaxed">{m.body}</p>
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{m.body}</p>
                   </div>
                 </motion.div>
               ))}
@@ -426,68 +427,38 @@ const portfolioBar: Record<string, string> = {
         </div>
       </section>
 
-      {/* ── 6. Industries ── */}
-      <section className="px-4 md:px-6 py-16 border-b border-slate-100 dark:border-[#21262d]">
-        <div className="container mx-auto max-w-6xl">
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-[#8b949e] mb-2">Who we serve</p>
-              <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white mb-5">Built for builders</h2>
-              <p className="text-slate-500 dark:text-[#8b949e] text-sm leading-relaxed mb-6 max-w-md">
-                VyntRise is designed for the people who show up every day and do the work — entrepreneurs, operators, and owners who want smarter, more efficient growth without the enterprise price tag.
-              </p>
-              <Link href="/solutions" className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
-                See industry solutions <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {industries.map((ind, i) => {
-                const IIcon = ind.icon;
-                return (
-                  <motion.div key={ind.label} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35, delay: i * 0.07 }}
-                    className="rounded-xl border border-slate-200 dark:border-[#21262d] bg-white dark:bg-[#161b22] p-4 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-[#30363d] transition-all"
-                  >
-                    <div className={`h-8 w-8 rounded-lg border flex items-center justify-center mb-3 ${ind.color}`}>
-                      <IIcon className="h-4 w-4" />
-                    </div>
-                    <p className="text-xs font-semibold text-slate-700 dark:text-[#e6edf3] leading-tight">{ind.label}</p>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ── 7. Team ── */}
-      <section className="px-4 md:px-6 py-16 border-b border-slate-100 dark:border-[#21262d]">
+      <section className="px-4 md:px-6 py-16" style={{ borderBottom: '1px solid var(--color-border)' }}>
         <div className="container mx-auto max-w-6xl">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-[#8b949e] mb-2">The people</p>
-          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white mb-10">Meet the team</h2>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--color-text-subtle)' }}>The people</p>
+          <h2 className="text-3xl font-extrabold mb-10" style={{ color: 'var(--color-text)' }}>Meet the team</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {team.map((member, i) => (
               <motion.div key={member.name} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }}
-                className="rounded-2xl border border-slate-200 dark:border-[#21262d] bg-white dark:bg-[#161b22] p-6 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-[#30363d] transition-all"
+                className="rounded-2xl p-6 shadow-sm hover:shadow-md transition-all"
+                style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
+                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--color-raised)'}
+                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--color-border)'}
               >
                 <div className="flex flex-col items-center text-center mb-4">
                   <div className="relative h-24 w-24 mb-3 shrink-0">
                     {member.photo ? (
-                      <Image src={member.photo} alt={member.name} width={96} height={96} className="rounded-full object-cover ring-4 ring-slate-100 dark:ring-[#21262d] w-full h-full" />
+                      <Image src={member.photo} alt={member.name} width={96} height={96} className="rounded-full object-cover w-full h-full" style={{ outline: '4px solid var(--color-raised)' }} />
                     ) : (
-                      <InitialsAvatar initials={member.initials} name={member.name} size={96} className="rounded-full ring-4 ring-slate-100 dark:ring-[#21262d]" />
+                      <InitialsAvatar initials={member.initials} name={member.name} size={96} className="rounded-full" style={{ outline: '4px solid var(--color-raised)' }} />
                     )}
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">{member.name}</p>
-                    <p className="text-xs text-slate-500 dark:text-[#8b949e] mt-0.5">{member.title}</p>
+                    <p className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>{member.name}</p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{member.title}</p>
                   </div>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-[#8b949e] leading-relaxed mb-4 text-center">{member.bio}</p>
+                <p className="text-xs leading-relaxed mb-4 text-center" style={{ color: 'var(--color-text-muted)' }}>{member.bio}</p>
                 <div className="flex items-center justify-between">
-                  <span className="inline-flex items-center rounded-full bg-slate-100 dark:bg-[#21262d] border border-slate-200 dark:border-[#30363d] px-2.5 py-0.5 text-[10px] font-semibold text-slate-600 dark:text-[#8b949e]">
+                  <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold" style={{ backgroundColor: 'var(--color-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
                     {member.tag}
                   </span>
-                  <a href={member.linkedin} aria-label={`${member.name} on LinkedIn`} className="text-slate-400 hover:text-blue-600 transition-colors">
+                  <a href={member.linkedin} aria-label={`${member.name} on LinkedIn`} className="hover:text-blue-500 transition-colors" style={{ color: 'var(--color-text-subtle)' }}>
                     <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                     </svg>
@@ -496,14 +467,15 @@ const portfolioBar: Record<string, string> = {
               </motion.div>
             ))}
             <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: team.length * 0.08 }}
-              className="rounded-2xl border border-dashed border-slate-300 dark:border-[#30363d] bg-slate-50/60 dark:bg-[#161b22] p-6 flex flex-col items-center justify-center text-center gap-3"
+              className="rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-3"
+              style={{ border: '1px dashed var(--color-border)', backgroundColor: 'var(--color-surface)' }}
             >
-              <div className="h-14 w-14 rounded-full bg-white dark:bg-[#0d1117] border border-slate-200 dark:border-[#21262d] flex items-center justify-center text-slate-400 text-2xl shadow-sm">+</div>
+              <div className="h-14 w-14 rounded-full flex items-center justify-center text-2xl shadow-sm" style={{ backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-subtle)' }}>+</div>
               <div>
-                <p className="text-sm font-bold text-slate-900 dark:text-white mb-1">We&apos;re hiring</p>
-                <p className="text-xs text-slate-500 dark:text-[#8b949e] leading-relaxed">Join a team building AI tools that actually move the needle for real businesses.</p>
+                <p className="text-sm font-bold mb-1" style={{ color: 'var(--color-text)' }}>We&apos;re hiring</p>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>Join a team building AI tools that actually move the needle for real businesses.</p>
               </div>
-              <Link href="/contact" className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+              <Link href="/contact" className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-500 transition-colors">
                 View open roles <ArrowRight className="h-3 w-3" />
               </Link>
             </motion.div>
@@ -512,20 +484,20 @@ const portfolioBar: Record<string, string> = {
       </section>
 
       {/* ── 8. Built different ── */}
-      <section className="px-4 md:px-6 py-16 border-b border-slate-100 bg-slate-50/40">
+      <section className="px-4 md:px-6 py-16" style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
         <div className="container mx-auto max-w-4xl">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Built different</p>
-          <h2 className="text-3xl font-extrabold text-slate-900 mb-10">VyntRise vs. the typical agency</h2>
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <div className="grid grid-cols-[1fr_130px_130px] border-b border-slate-100 bg-slate-50 px-6 py-3.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">What you get</span>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--color-text-subtle)' }}>Built different</p>
+          <h2 className="text-3xl font-extrabold mb-10" style={{ color: 'var(--color-text)' }}>VyntRise vs. the typical agency</h2>
+          <div className="rounded-2xl shadow-sm overflow-hidden" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
+            <div className="grid grid-cols-[1fr_130px_130px] px-6 py-3.5" style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text-subtle)' }}>What you get</span>
               <div className="flex items-center justify-center gap-1.5">
-                <div className="h-4 w-4 rounded bg-slate-900 flex items-center justify-center">
+                <div className="h-4 w-4 rounded flex items-center justify-center" style={{ backgroundColor: 'var(--color-text)' }}>
                   <Zap className="h-2.5 w-2.5 text-white" />
                 </div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-900">VyntRise</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text)' }}>VyntRise</span>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center">Typical Agency</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-center" style={{ color: 'var(--color-text-subtle)' }}>Typical Agency</span>
             </div>
             {comparison.map((row, i) => (
               <motion.div
@@ -534,19 +506,23 @@ const portfolioBar: Record<string, string> = {
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.3, delay: i * 0.04 }}
-                className={`grid grid-cols-[1fr_130px_130px] px-6 py-3.5 items-center border-b border-slate-50 last:border-0 ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}
+                className="grid grid-cols-[1fr_130px_130px] px-6 py-3.5 items-center"
+                style={{
+                  borderBottom: i < comparison.length - 1 ? '1px solid var(--color-border-muted)' : 'none',
+                  backgroundColor: i % 2 === 0 ? 'var(--color-bg)' : 'var(--color-surface)',
+                }}
               >
-                <span className="text-sm text-slate-700">{row.label}</span>
+                <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>{row.label}</span>
                 <div className="flex justify-center">
                   {row.us
                     ? <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500"><Check className="h-3.5 w-3.5 text-white" /></span>
-                    : <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100"><X className="h-3.5 w-3.5 text-slate-400" /></span>
+                    : <span className="flex h-6 w-6 items-center justify-center rounded-full" style={{ backgroundColor: 'var(--color-raised)' }}><X className="h-3.5 w-3.5" style={{ color: 'var(--color-text-subtle)' }} /></span>
                   }
                 </div>
                 <div className="flex justify-center">
                   {!row.us
                     ? <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100"><Check className="h-3.5 w-3.5 text-emerald-600" /></span>
-                    : <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100"><X className="h-3.5 w-3.5 text-slate-400" /></span>
+                    : <span className="flex h-6 w-6 items-center justify-center rounded-full" style={{ backgroundColor: 'var(--color-raised)' }}><X className="h-3.5 w-3.5" style={{ color: 'var(--color-text-subtle)' }} /></span>
                   }
                 </div>
               </motion.div>
@@ -556,7 +532,7 @@ const portfolioBar: Record<string, string> = {
       </section>
 
       {/* ── 9. CTA ── */}
-      <section className="relative overflow-hidden bg-slate-900 px-4 md:px-6 py-24">
+      <section className="relative overflow-hidden px-4 md:px-6 py-24" style={{ backgroundColor: 'var(--color-text)' }}>
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute left-1/2 top-0 -translate-x-1/2 h-[400px] w-[700px] rounded-full bg-blue-600/15 blur-[80px]" />
           <div className="absolute left-1/4 bottom-0 h-[300px] w-[500px] rounded-full bg-violet-600/10 blur-[80px]" />
@@ -564,12 +540,12 @@ const portfolioBar: Record<string, string> = {
         <div className="relative container mx-auto max-w-4xl text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 mb-8">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-            <span className="text-xs font-semibold text-slate-300">14-day free trial · No credit card</span>
+            <span className="text-xs font-semibold text-white/60">14-day free trial · No credit card</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-extrabold text-white leading-tight mb-5 tracking-tight">
             Ready to rise?
           </h2>
-          <p className="text-slate-400 text-lg max-w-xl mx-auto mb-10 leading-relaxed">
+          <p className="text-white/50 text-lg max-w-xl mx-auto mb-10 leading-relaxed">
             Tell us where you are and where you want to go. We&apos;ll map the path and get you there.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -586,7 +562,7 @@ const portfolioBar: Record<string, string> = {
               Explore services
             </Link>
           </div>
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500">
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-xs text-white/30">
             {['SOC 2 certified', 'GDPR compliant', '99.9% uptime SLA', 'Cancel anytime'].map(t => (
               <div key={t} className="flex items-center gap-1.5">
                 <Check className="h-3.5 w-3.5 text-emerald-500" />

@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import CookieSettingsButton from '@/components/CookieSettingsButton';
 import VyntriseLogo from '@/components/VyntriseLogo';
@@ -12,8 +14,6 @@ const serviceLinks = [
 
 const companyLinks = [
   { label: 'About', href: '/about' },
-  { label: 'Solutions', href: '/solutions' },
-  { label: 'Pricing', href: '/pricing' },
   { label: 'Contact', href: '/contact' },
 ];
 
