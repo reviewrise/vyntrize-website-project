@@ -28,8 +28,7 @@ const CRM_NAV = [
 ];
 
 const SETTINGS_NAV = [
-    { href: '/settings/pipeline', label: 'Pipeline Stages', icon: Settings },
-    { href: '/settings/ai-providers', label: 'AI Providers', icon: Cpu },
+    { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
 const WEBSITE_NAV = [
