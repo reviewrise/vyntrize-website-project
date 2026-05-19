@@ -40,7 +40,7 @@ docker run --rm \
     pnpm exec prisma generate && \
     
     echo '🚀 Pushing schema to database...' && \
-    pnpm exec prisma db push --skip-generate --accept-data-loss && \
+    pnpm exec prisma db push --accept-data-loss && \
     
     echo '🌱 Running seed script...' && \
     pnpm exec tsx seed.ts
