@@ -31,7 +31,7 @@ docker run --rm \
     corepack enable && corepack prepare pnpm@9 --activate && \
     
     echo '📦 Installing dependencies...' && \
-    pnpm add prisma@7.8.0 @prisma/client@7.8.0 @prisma/config@7.8.0 dotenv bcryptjs tsx @types/node && \
+    pnpm add prisma@7.8.0 @prisma/client@7.8.0 @prisma/config@7.8.0 dotenv bcryptjs tsx @types/node pg @types/pg @prisma/adapter-pg@7.8.0 && \
     
     echo '📦 Copying Prisma schema without custom output...' && \
     mkdir -p prisma && \
