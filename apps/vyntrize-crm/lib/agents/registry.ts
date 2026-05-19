@@ -10,6 +10,7 @@ import { NextBestActionAgent } from './next-best-action-agent';
 import { StageProgressionAgent } from './stage-progression-agent';
 import { DripCampaignAgent } from './drip-campaign-agent';
 import { WorkflowRuleEngine } from './workflow-rule-engine';
+import { TaskExecutionAgent } from './implementations/task-execution-agent';
 
 class AgentRegistry {
   private initialized = false;
@@ -140,6 +141,11 @@ class AgentRegistry {
         // On-demand: also available for manual triggering
         jobScheduler.registerAgent('WorkflowRuleEngine', workflowRuleEngine);
       }
+
+      // ── Task Execution Agent ──────────────────────────────────────────────
+      const taskExecutionAgent = new TaskExecutionAgent();
+      eventBus.registerAgent(CRMEvent.TASK_APPROVED, taskExecutionAgent);
+      jobScheduler.registerAgent('TaskExecutionAgent', taskExecutionAgent);
 
       this.initialized = true;
       console.log('[AgentRegistry] All agents registered successfully');

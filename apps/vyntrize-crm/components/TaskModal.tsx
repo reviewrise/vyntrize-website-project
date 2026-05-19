@@ -11,6 +11,8 @@ interface Task {
   status: string;
   priority: string;
   dueDate: string | null;
+  taskType?: string;
+  payload?: any;
   lead: {
     id: string;
     title: string;
@@ -35,6 +37,10 @@ export default function TaskModal({ task, leadId, onClose, onSaved }: TaskModalP
   const [priority, setPriority] = useState('MEDIUM');
   const [status, setStatus] = useState('PENDING');
   const [dueDate, setDueDate] = useState('');
+  const [taskType, setTaskType] = useState('MANUAL');
+  const [taskPayload, setTaskPayload] = useState<any>(null);
+  const [resolving, setResolving] = useState(false);
+  const [approving, setApproving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -52,6 +58,8 @@ export default function TaskModal({ task, leadId, onClose, onSaved }: TaskModalP
       setPriority(task.priority);
       setStatus(task.status);
       setDueDate(task.dueDate ? task.dueDate.split('T')[0] : '');
+      setTaskType(task.taskType || 'MANUAL');
+      setTaskPayload(task.payload || null);
     } else if (leadId) {
       setSelectedLeadId(leadId);
     }
@@ -150,6 +158,40 @@ export default function TaskModal({ task, leadId, onClose, onSaved }: TaskModalP
       alert(error instanceof Error ? error.message : 'Failed to delete task');
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleAiResolve = async () => {
+    if (!task) return;
+    setResolving(true);
+    try {
+      const response = await fetch(`/api/crm/tasks/${task.id}/resolve`, {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Failed to resolve task');
+      const data = await response.json();
+      setTaskType(data.task.taskType);
+      setTaskPayload(data.task.payload);
+    } catch (error) {
+      alert('AI Resolution failed');
+    } finally {
+      setResolving(false);
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!task) return;
+    setApproving(true);
+    try {
+      const response = await fetch(`/api/crm/tasks/${task.id}/approve`, {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Failed to approve task');
+      onSaved(); // Close and refresh
+    } catch (error) {
+      alert('Approval failed');
+    } finally {
+      setApproving(false);
     }
   };
 
@@ -316,6 +358,50 @@ export default function TaskModal({ task, leadId, onClose, onSaved }: TaskModalP
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                         />
                       </div>
+
+                      {task && taskType === 'MANUAL' && (
+                        <div className="mt-4 p-4 border border-blue-200 bg-blue-50 rounded-md">
+                          <h4 className="text-sm font-medium text-blue-900 mb-2">Automate this task</h4>
+                          <p className="text-xs text-blue-700 mb-3">
+                            Let AI draft the action (e.g. write the email or prepare the status update) based on the task description.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={handleAiResolve}
+                            disabled={resolving || !description}
+                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                          >
+                            {resolving ? 'Drafting...' : 'AI Resolve ⚡'}
+                          </button>
+                        </div>
+                      )}
+
+                      {task && taskType !== 'MANUAL' && taskPayload && (
+                        <div className="mt-4 p-4 border border-emerald-200 bg-emerald-50 rounded-md">
+                          <h4 className="text-sm font-medium text-emerald-900 mb-2">
+                            AI Proposed Action: {taskType}
+                          </h4>
+                          <div className="text-xs text-emerald-800 bg-white p-2 rounded border border-emerald-100 mb-3">
+                            {taskType === 'EMAIL' ? (
+                              <>
+                                <div><strong>To:</strong> {taskPayload.to}</div>
+                                <div><strong>Subject:</strong> {taskPayload.subject}</div>
+                                <div className="mt-1 line-clamp-3 text-gray-500">{taskPayload.body?.replace(/<[^>]+>/g, '')}</div>
+                              </>
+                            ) : (
+                              <pre>{JSON.stringify(taskPayload, null, 2)}</pre>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleApprove}
+                            disabled={approving || status === 'COMPLETED' || status === 'IN_PROGRESS'}
+                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
+                          >
+                            {approving ? 'Executing...' : 'Approve & Execute ✨'}
+                          </button>
+                        </div>
+                      )}
 
                       <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse gap-2">
                         <button

@@ -2,11 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 import {
     LayoutDashboard, Kanban, Users, Building2,
-    Download, UserCog, LogOut, Globe, Briefcase,
+    Download, UserCog, LogOut, Briefcase,
     UserCircle, Settings, ChevronRight, BarChart2,
-    CheckSquare, Mail, Send, Sparkles, Cpu,
+    CheckSquare, Mail, Send, Sparkles, Inbox,
+    FileText, GitBranch, ChevronDown,
 } from 'lucide-react';
 import { logout } from '@/lib/actions/auth';
 
@@ -22,9 +24,14 @@ const CRM_NAV = [
     { href: '/contacts', label: 'Contacts', icon: Users },
     { href: '/companies', label: 'Companies', icon: Building2 },
     { href: '/tasks', label: 'Tasks', icon: CheckSquare },
-    { href: '/campaigns', label: 'Campaigns', icon: Send },
-    { href: '/email-templates', label: 'Email Templates', icon: Mail },
     { href: '/analytics', label: 'Analytics', icon: BarChart2 },
+];
+
+const EMAIL_NAV = [
+    { href: '/campaigns', label: 'Campaigns', icon: Send },
+    { href: '/email-templates', label: 'Templates', icon: FileText },
+    { href: '/email/logs', label: 'Logs', icon: Inbox },
+    { href: '/settings/pipeline/automation', label: 'Drip Sequences', icon: GitBranch },
 ];
 
 const SETTINGS_NAV = [
@@ -47,15 +54,22 @@ const ADMIN_NAV = [
     { href: '/admin/users', label: 'Users', icon: UserCog },
 ];
 
-function NavItem({ href, label, icon: Icon }: { href: string; label: string; icon: React.ElementType }) {
+function NavItem({ href, label, icon: Icon, indent = false }: {
+    href: string;
+    label: string;
+    icon: React.ElementType;
+    indent?: boolean;
+}) {
     const pathname = usePathname();
     const active = pathname === href || pathname.startsWith(href + '/');
 
     return (
         <Link
             href={href}
-            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[0.8125rem] font-medium transition-all group"
+            className="flex items-center gap-2.5 py-2 rounded-lg text-[0.8125rem] font-medium transition-all group"
             style={{
+                paddingLeft: indent ? '1.75rem' : '0.75rem',
+                paddingRight: '0.75rem',
                 backgroundColor: active ? 'var(--color-primary-soft)' : 'transparent',
                 color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
             }}
@@ -75,6 +89,41 @@ function SectionLabel({ label }: { label: string }) {
         >
             {label}
         </p>
+    );
+}
+
+function EmailSection() {
+    const pathname = usePathname();
+    const isEmailActive = EMAIL_NAV.some(item =>
+        pathname === item.href || pathname.startsWith(item.href + '/')
+    );
+    const [open, setOpen] = useState(isEmailActive);
+
+    return (
+        <div>
+            <button
+                onClick={() => setOpen(o => !o)}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[0.8125rem] font-medium transition-all"
+                style={{
+                    backgroundColor: isEmailActive ? 'var(--color-primary-soft)' : 'transparent',
+                    color: isEmailActive ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                }}
+            >
+                <Mail className="h-[15px] w-[15px] flex-shrink-0" />
+                <span>Email</span>
+                <ChevronDown
+                    className="h-3 w-3 ml-auto transition-transform duration-200"
+                    style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                />
+            </button>
+            {open && (
+                <div className="space-y-0.5 mt-0.5">
+                    {EMAIL_NAV.map(item => (
+                        <NavItem key={item.href} {...item} indent />
+                    ))}
+                </div>
+            )}
+        </div>
     );
 }
 
@@ -115,6 +164,7 @@ export function Sidebar({ role, displayName, email }: SidebarProps) {
                 <SectionLabel label="CRM" />
                 <div className="space-y-0.5">
                     {CRM_NAV.map(item => <NavItem key={item.href} {...item} />)}
+                    <EmailSection />
                 </div>
 
                 <SectionLabel label="Website" />

@@ -19,12 +19,15 @@ export enum CRMEvent {
   EMAIL_REPLIED = 'email_replied',
   TASK_COMPLETED = 'task_completed',
   CONTACT_CREATED = 'contact_created',
+  TASK_CREATED = 'task_created',
+  TASK_APPROVED = 'task_approved',
 }
 
 export interface EventPayload {
   leadId?: string;
   contactId?: string;
   userId?: string;
+  taskId?: number;
   previousValue?: unknown;
   newValue?: unknown;
   metadata?: Record<string, unknown>;
@@ -92,6 +95,7 @@ class AgentEventBus extends EventEmitter {
         ...payload.metadata,
         previousValue: payload.previousValue,
         newValue: payload.newValue,
+        taskId: payload.taskId,
         event,
       },
     });
