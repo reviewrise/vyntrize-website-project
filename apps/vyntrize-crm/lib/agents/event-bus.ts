@@ -8,7 +8,7 @@
 //   so the app still works during local development without Redis.
 
 import { EventEmitter } from 'events';
-import { Agent, AgentContext } from './base-agent';
+import { Agent, AgentContext, AgentType } from './base-agent';
 
 export enum CRMEvent {
   LEAD_CREATED = 'lead_created',
@@ -43,7 +43,7 @@ class AgentEventBus extends EventEmitter {
     }
     this.agents.get(event)!.push(agent);
     
-    console.log(`[EventBus] Registered ${agent.constructor.name} for ${event}`);
+    console.log(`[EventBus] Registered ${agent.getConfig().agentType} for ${event}`);
   }
 
   /**
@@ -97,16 +97,16 @@ class AgentEventBus extends EventEmitter {
     });
 
     // Phase 1: scoring agents run sequentially first to prevent race conditions
-    const scoringAgents = registeredAgents.filter(a => a.constructor.name === 'LeadScoringAgent');
-    const otherAgents = registeredAgents.filter(a => a.constructor.name !== 'LeadScoringAgent');
+    const scoringAgents = registeredAgents.filter(a => a.getConfig().agentType === AgentType.LEAD_SCORING);
+    const otherAgents = registeredAgents.filter(a => a.getConfig().agentType !== AgentType.LEAD_SCORING);
 
     for (const agent of scoringAgents) {
       try {
-        console.log(`[EventBus] Phase 1 — Executing ${agent.constructor.name}`);
+        console.log(`[EventBus] Phase 1 — Executing ${agent.getConfig().agentType}`);
         const result = await agent.execute(buildContext());
-        if (!result.success) console.warn(`[EventBus] ${agent.constructor.name} failed:`, result.error);
+        if (!result.success) console.warn(`[EventBus] ${agent.getConfig().agentType} failed:`, result.error);
       } catch (err) {
-        console.error(`[EventBus] ${agent.constructor.name} threw:`, err);
+        console.error(`[EventBus] ${agent.getConfig().agentType} threw:`, err);
       }
     }
 
@@ -114,15 +114,15 @@ class AgentEventBus extends EventEmitter {
     await Promise.allSettled(
       otherAgents.map(async (agent) => {
         try {
-          console.log(`[EventBus] Phase 2 — Executing ${agent.constructor.name}`);
+          console.log(`[EventBus] Phase 2 — Executing ${agent.getConfig().agentType}`);
           const result = await agent.execute(buildContext());
           if (!result.success) {
-            console.error(`[EventBus] Agent ${agent.constructor.name} failed:`, result.error);
+            console.error(`[EventBus] Agent ${agent.getConfig().agentType} failed:`, result.error);
           } else {
-            console.log(`[EventBus] Agent ${agent.constructor.name} succeeded`);
+            console.log(`[EventBus] Agent ${agent.getConfig().agentType} succeeded`);
           }
         } catch (error) {
-          console.error(`[EventBus] Agent ${agent.constructor.name} threw error:`, error);
+          console.error(`[EventBus] Agent ${agent.getConfig().agentType} threw error:`, error);
         }
       })
     );
