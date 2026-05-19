@@ -12,13 +12,8 @@ echo "⚠️  This will delete all users from the crm_users table!"
 echo "Press Ctrl+C to cancel, or Enter to continue..."
 read
 
-# Step 1: Clean the crm_users table
-echo "🗑️  Deleting all users from crm_users table..."
-docker exec -it deploy-vyntrize-postgres-1 psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -c "DELETE FROM crm_users;"
+# Step 1: Initialize Database
 
-echo "✅ Users table cleaned"
-
-# Step 2: Run seed script
 echo ""
 echo "🌱 Seeding CRM users..."
 
@@ -43,6 +38,9 @@ docker run --rm \
     
     echo '📦 Generating Prisma client...' && \
     pnpm exec prisma generate && \
+    
+    echo '🚀 Pushing schema to database...' && \
+    pnpm exec prisma db push --skip-generate --accept-data-loss && \
     
     echo '🌱 Running seed script...' && \
     pnpm exec tsx seed.ts
