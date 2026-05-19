@@ -23,6 +23,7 @@ docker run --rm \
   -e VYNTRIZE_DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@vyntrize-postgres:5432/${POSTGRES_DB}" \
   -v "$(pwd)/standalone-seed.ts:/app/seed.ts:ro" \
   -v "$(pwd)/../packages/@platform/vyntrize-db/prisma:/app/prisma-source:ro" \
+  -v "$(pwd)/../packages/@platform/vyntrize-db/prisma.config.ts:/app/prisma.config.ts:ro" \
   -w /app \
   node:22-alpine \
   sh -c "
@@ -30,7 +31,7 @@ docker run --rm \
     corepack enable && corepack prepare pnpm@9 --activate && \
     
     echo '📦 Installing dependencies...' && \
-    pnpm add prisma@7.8.0 @prisma/client@7.8.0 bcryptjs tsx @types/node && \
+    pnpm add prisma@7.8.0 @prisma/client@7.8.0 @prisma/config@7.8.0 dotenv bcryptjs tsx @types/node && \
     
     echo '📦 Copying Prisma schema without custom output...' && \
     mkdir -p prisma && \
