@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { KanbanBoard } from '@/components/KanbanBoard';
@@ -40,6 +40,15 @@ export function PipelineClient({ leads, contacts, users }: Props) {
         setDrawerOpen(false);
         router.refresh();
     }
+
+    // Auto-refresh the pipeline every 10 seconds to show background automation changes
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            router.refresh();
+        }, 10000); // 10 seconds
+        
+        return () => clearInterval(intervalId);
+    }, [router]);
 
     return (
         <>

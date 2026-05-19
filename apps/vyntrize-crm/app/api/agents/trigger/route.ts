@@ -7,6 +7,10 @@ import { LeadScoringAgent } from '@/lib/agents/lead-scoring-agent';
 import { StagnationDetectionAgent } from '@/lib/agents/stagnation-detection-agent';
 import { EmailGenerationAgent } from '@/lib/agents/email-generation-agent';
 import { NextBestActionAgent } from '@/lib/agents/next-best-action-agent';
+import { StageProgressionAgent } from '@/lib/agents/stage-progression-agent';
+import { DripCampaignAgent } from '@/lib/agents/drip-campaign-agent';
+import { WorkflowRuleEngine } from '@/lib/agents/workflow-rule-engine';
+import { CRMEvent } from '@/lib/agents/event-bus';
 
 interface TriggerBody {
   agentType: AgentType;
@@ -49,6 +53,31 @@ export async function POST(request: NextRequest) {
       case AgentType.NEXT_BEST_ACTION:
         agent = new NextBestActionAgent();
         break;
+      case AgentType.STAGE_PROGRESSION:
+        agent = new StageProgressionAgent();
+        break;
+      case AgentType.DRIP_CAMPAIGN:
+        agent = new DripCampaignAgent();
+        break;
+      case AgentType.WORKFLOW_RULE: {
+        // Workflow Rule Engine needs an event type — use lead_updated for manual trigger
+        const engine = new WorkflowRuleEngine();
+        const result = await engine.execute({
+          leadId: body.leadId,
+          userId: session.userId,
+          eventData: { event: CRMEvent.LEAD_UPDATED },
+        });
+        return NextResponse.json({
+          success: result.success,
+          agentType: body.agentType,
+          leadId: body.leadId,
+          result: {
+            actionId: result.actionId,
+            reasoning: result.reasoning,
+            metadata: result.metadata,
+          },
+        });
+      }
       default:
         return NextResponse.json(
           { error: `Agent type ${body.agentType} is not supported for manual triggering` },

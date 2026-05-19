@@ -2,6 +2,8 @@
 
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
+import { eventBus, CRMEvent } from '@/lib/agents/event-bus';
+import { initializeAgentSystem } from '@/lib/agents/init';
 
 async function requireAdmin() {
     const session = await getSession();
@@ -39,8 +41,16 @@ export async function runImport(): Promise<{ success: boolean; summary?: ImportS
         let leadsCreated = 0;
         let skipped = 0;
 
+        // Ensure agents are initialized before emitting events
+        await initializeAgentSystem();
+
+        // Collect created lead IDs to emit events after all transactions complete
+        const createdLeadIds: string[] = [];
+
         for (const submission of unimported) {
             try {
+                let createdLeadId: string | null = null;
+
                 await prisma.$transaction(async tx => {
                     // Find or create contact
                     const existingContact = await tx.contact.findUnique({
@@ -88,6 +98,9 @@ export async function runImport(): Promise<{ success: boolean; summary?: ImportS
                     });
                     leadsCreated++;
 
+                    // Capture lead ID outside transaction scope for event emission
+                    createdLeadId = lead.id;
+
                     // Log original message as a NOTE activity
                     await tx.activity.create({
                         data: {
@@ -108,9 +121,41 @@ export async function runImport(): Promise<{ success: boolean; summary?: ImportS
                         },
                     });
                 });
+
+                // Emit LEAD_CREATED event AFTER the transaction commits
+                // so agents can safely query the lead from the database
+                if (createdLeadId) {
+                    createdLeadIds.push(createdLeadId);
+                }
             } catch (err) {
                 console.error(`Failed to import submission ${submission.id}:`, err);
                 skipped++;
+            }
+        }
+
+        // Fire LEAD_CREATED events for all successfully imported leads
+        // Done after the loop so the import summary is accurate even if agent processing fails
+        for (const leadId of createdLeadIds) {
+            try {
+                await eventBus.emitCRMEvent(CRMEvent.LEAD_CREATED, {
+                    leadId,
+                    userId: session.userId,
+                    metadata: { source: 'import' },
+                });
+                
+                // Also emit STAGE_CHANGED so that automations triggering on "stage_entered: NEW" (like Drip Sequences) catch imported leads
+                await eventBus.emitCRMEvent(CRMEvent.STAGE_CHANGED, {
+                    leadId,
+                    userId: session.userId,
+                    previousValue: null,
+                    newValue: 'NEW',
+                    metadata: { source: 'import' },
+                });
+                
+                console.log(`[Import] Emitted LEAD_CREATED and STAGE_CHANGED for lead ${leadId}`);
+            } catch (err) {
+                // Agent errors must not fail the import
+                console.error(`[Import] Failed to emit LEAD_CREATED for lead ${leadId}:`, err);
             }
         }
 

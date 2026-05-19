@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { eventBus, CRMEvent } from '@/lib/agents/event-bus';
+import { TrackingService } from '@/lib/email/tracking-service';
 
 // 1x1 transparent GIF pixel
 const TRACKING_PIXEL = Buffer.from(
@@ -17,48 +18,50 @@ export async function GET(
   try {
     const { trackingId } = await params;
     const id = parseInt(trackingId, 10);
-    if (isNaN(id)) {
-      return new NextResponse(TRACKING_PIXEL, {
-        status: 200,
-        headers: { 'Content-Type': 'image/gif' },
-      });
-    }
-
-    // Find email tracking record
-    const tracking = await prisma.emailTracking.findUnique({
-      where: { id },
-      include: {
-        lead: true,
-      },
-    });
-
-    if (tracking) {
-      // Update tracking record
-      await prisma.emailTracking.update({
+    if (!isNaN(id) && trackingId === id.toString()) {
+      // Find email tracking record
+      const tracking = await prisma.emailTracking.findUnique({
         where: { id },
-        data: {
-          openedAt: tracking.openedAt || new Date(), // Only set first open
-          openCount: {
-            increment: 1,
-          },
+        include: {
+          lead: true,
         },
       });
 
-      // Emit EMAIL_OPENED event for agents
-      if (tracking.leadId) {
-        await eventBus.emitCRMEvent(CRMEvent.EMAIL_OPENED, {
-          leadId: tracking.leadId,
-          metadata: {
-            trackingId,
-            emailId: tracking.id,
-            timestamp: new Date().toISOString(),
-            openCount: tracking.openCount + 1,
-            firstOpen: !tracking.openedAt,
+      if (tracking) {
+        // Update tracking record
+        await prisma.emailTracking.update({
+          where: { id },
+          data: {
+            openedAt: tracking.openedAt || new Date(), // Only set first open
+            openCount: {
+              increment: 1,
+            },
           },
         });
 
-        console.log(`[EmailTracking] Email opened: ${trackingId} for lead ${tracking.leadId}`);
+        // Emit EMAIL_OPENED event for agents
+        if (tracking.leadId) {
+          await eventBus.emitCRMEvent(CRMEvent.EMAIL_OPENED, {
+            leadId: tracking.leadId,
+            metadata: {
+              trackingId,
+              emailId: tracking.id,
+              timestamp: new Date().toISOString(),
+              openCount: tracking.openCount + 1,
+              firstOpen: !tracking.openedAt,
+            },
+          });
+
+          console.log(`[EmailTracking] Email opened: ${trackingId} for lead ${tracking.leadId}`);
+        }
       }
+    } else {
+      // Handle string tracking IDs via TrackingService (e.g., drip_, trk_)
+      await TrackingService.recordOpen(trackingId, {
+        ipAddress: request.headers.get('x-forwarded-for') || undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
+        timestamp: new Date(),
+      });
     }
 
     // Always return tracking pixel (even if tracking record not found)

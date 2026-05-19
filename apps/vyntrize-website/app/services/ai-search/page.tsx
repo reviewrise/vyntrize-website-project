@@ -214,20 +214,23 @@ export default function AISearchService() {
       </section>
 
       {/* CTA */}
-      <section className="relative overflow-hidden bg-slate-900 px-4 md:px-6 py-20">
+      <section className="relative overflow-hidden px-4 md:px-6 py-20" style={{ backgroundColor: 'var(--color-primary)' }}>
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute left-1/2 top-0 -translate-x-1/2 h-[300px] w-[600px] rounded-full bg-blue-600/15 blur-[80px]" />
+          <div className="absolute left-1/2 top-0 -translate-x-1/2 h-[300px] w-[600px] rounded-full bg-white/10 blur-[80px]" />
         </div>
         <div className="relative container mx-auto max-w-6xl flex flex-col md:flex-row items-center justify-between gap-8">
           <div>
             <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">Ready to dominate search?</h2>
-            <p className="text-slate-400 text-sm max-w-md">Let&apos;s build your unbreakable online reputation and drive more qualified traffic.</p>
+            <p className="text-white/70 text-sm max-w-md">Let&apos;s build your unbreakable online reputation and drive more qualified traffic.</p>
           </div>
           <div className="flex gap-3 shrink-0">
-            <Link href="/contact" className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-500 transition-colors shadow-lg shadow-blue-900/30">
+            <Link href="/contact" className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold transition-colors shadow-lg" style={{ color: 'var(--color-primary)' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.9)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
+            >
               Get started <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/services" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors">
+            <Link href="/services" className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white hover:bg-white/20 transition-colors">
               All services
             </Link>
           </div>

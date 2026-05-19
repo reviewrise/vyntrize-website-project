@@ -238,40 +238,9 @@ export default function Home() {
   {/* Vyntrise — Agent Ops booking chatbot */ }
 
 
-  useEffect(() => {
-    const iframe = document.getElementById("agentops-chatbot-ab7b7522") as HTMLIFrameElement | null;
-    if (!iframe) return;
-    const onMessage = (event: MessageEvent) => {
-      if (!event.data || event.source !== iframe.contentWindow) return;
-      if (event.data.type !== "agentops-chatbot-state") return;
-      const open = Boolean(event.data.open);
-      iframe.style.width = open ? "400px" : "80px";
-      iframe.style.height = open ? "min(820px, 100dvh)" : "80px";
-    };
-    window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
-  }, []);
-
   return (
 
     <div className="flex flex-col" style={{ backgroundColor: 'var(--color-bg)' }}>
-      <iframe
-        id="agentops-chatbot-ab7b7522"
-        src="https://animator-briskness-canister.ngrok-free.dev/embed/chatbot?org=d7b14163-e1b2-47bd-9c99-225458dc3381"
-        title="Booking assistant"
-        style={{
-          position: "fixed",
-          right: 16,
-          bottom: 16,
-          width: 80,
-          height: 80,
-          maxWidth: "calc(100vw - 32px)",
-          border: 0,
-          background: "transparent",
-          zIndex: 2147483647,
-        }}
-        loading="lazy"
-      />
       {/* ── 1. Hero ── */}
       <Hero />
 
@@ -388,14 +357,15 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 }}
-              className="col-span-1 rounded-2xl border border-slate-200 dark:border-[#21262d] bg-white dark:bg-[#161b22] shadow-sm p-5 flex flex-col justify-between hover:shadow-md hover:border-violet-200 dark:hover:border-violet-800 transition-all"
+              className="col-span-1 rounded-2xl shadow-sm p-5 flex flex-col justify-between hover:shadow-md transition-all"
+              style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
             >
               <div className="h-9 w-9 rounded-lg bg-violet-50 dark:bg-violet-900/30 border border-violet-100 dark:border-violet-800 flex items-center justify-center text-violet-600">
                 <TrendingUp className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-[#8b949e] mb-1">Avg. reputation lift</p>
-                <p className="text-3xl font-extrabold text-slate-900 dark:text-white">+1.2★</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--color-text-subtle)' }}>Avg. reputation lift</p>
+                <p className="text-3xl font-extrabold" style={{ color: 'var(--color-text)' }}>+1.2★</p>
               </div>
             </motion.div>
 
@@ -403,14 +373,15 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.15 }}
-              className="col-span-1 rounded-2xl border border-slate-200 dark:border-[#21262d] bg-white dark:bg-[#161b22] shadow-sm p-5 flex flex-col justify-between hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-800 transition-all"
+              className="col-span-1 rounded-2xl shadow-sm p-5 flex flex-col justify-between hover:shadow-md transition-all"
+              style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
             >
               <div className="h-9 w-9 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 flex items-center justify-center text-emerald-600">
                 <Clock className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-[#8b949e] mb-1">First results in</p>
-                <p className="text-2xl font-extrabold text-slate-900 dark:text-white">&lt; 30 days</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--color-text-subtle)' }}>First results in</p>
+                <p className="text-2xl font-extrabold" style={{ color: 'var(--color-text)' }}>&lt; 30 days</p>
               </div>
             </motion.div>
 
@@ -418,7 +389,8 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.2 }}
-              className="col-span-2 rounded-2xl border border-slate-200 bg-slate-900 shadow-sm p-6 flex flex-col justify-between hover:shadow-md transition-all"
+              className="col-span-2 rounded-2xl shadow-sm p-6 flex flex-col justify-between hover:shadow-md transition-all"
+              style={{ border: '1px solid var(--color-border)', backgroundColor: '#0f172a' }}
             >
               <div className="h-9 w-9 rounded-lg bg-white/10 flex items-center justify-center text-white">
                 <ShieldCheck className="h-4 w-4" />

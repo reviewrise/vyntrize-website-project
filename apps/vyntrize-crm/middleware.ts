@@ -3,7 +3,7 @@ import { getIronSession } from 'iron-session';
 import { SessionData, getSessionOptions } from './lib/session';
 
 const ADMIN_ONLY_PATHS = ['/admin', '/import'];
-const PUBLIC_PATHS = ['/login', '/api/health'];
+const PUBLIC_PATHS = ['/login', '/api/health', '/api/email/track'];
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;

@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { eventBus, CRMEvent } from '@/lib/agents/event-bus';
+import { TrackingService } from '@/lib/email/tracking-service';
 
 export async function GET(
   request: NextRequest,
@@ -21,46 +22,51 @@ export async function GET(
     }
 
     const id = parseInt(trackingId, 10);
-    if (isNaN(id)) {
-      return NextResponse.redirect(targetUrl);
-    }
-
-    // Find email tracking record
-    const tracking = await prisma.emailTracking.findUnique({
-      where: { id },
-      include: {
-        lead: true,
-      },
-    });
-
-    if (tracking) {
-      // Update tracking record
-      await prisma.emailTracking.update({
+    if (!isNaN(id) && trackingId === id.toString()) {
+      // Find email tracking record
+      const tracking = await prisma.emailTracking.findUnique({
         where: { id },
-        data: {
-          clickedAt: tracking.clickedAt || new Date(), // Only set first click
-          clickCount: {
-            increment: 1,
-          },
+        include: {
+          lead: true,
         },
       });
 
-      // Emit EMAIL_CLICKED event for agents
-      if (tracking.leadId) {
-        await eventBus.emitCRMEvent(CRMEvent.EMAIL_CLICKED, {
-          leadId: tracking.leadId,
-          metadata: {
-            trackingId,
-            emailId: tracking.id,
-            targetUrl,
-            timestamp: new Date().toISOString(),
-            clickCount: tracking.clickCount + 1,
-            firstClick: !tracking.clickedAt,
+      if (tracking) {
+        // Update tracking record
+        await prisma.emailTracking.update({
+          where: { id },
+          data: {
+            clickedAt: tracking.clickedAt || new Date(), // Only set first click
+            clickCount: {
+              increment: 1,
+            },
           },
         });
 
-        console.log(`[EmailTracking] Email link clicked: ${trackingId} for lead ${tracking.leadId}, URL: ${targetUrl}`);
+        // Emit EMAIL_CLICKED event for agents
+        if (tracking.leadId) {
+          await eventBus.emitCRMEvent(CRMEvent.EMAIL_CLICKED, {
+            leadId: tracking.leadId,
+            metadata: {
+              trackingId,
+              emailId: tracking.id,
+              targetUrl,
+              timestamp: new Date().toISOString(),
+              clickCount: tracking.clickCount + 1,
+              firstClick: !tracking.clickedAt,
+            },
+          });
+
+          console.log(`[EmailTracking] Email link clicked: ${trackingId} for lead ${tracking.leadId}, URL: ${targetUrl}`);
+        }
       }
+    } else {
+      // Handle string tracking IDs via TrackingService (e.g., drip_, trk_)
+      await TrackingService.recordClick(trackingId, targetUrl, {
+        ipAddress: request.headers.get('x-forwarded-for') || undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
+        timestamp: new Date(),
+      });
     }
 
     // Redirect to target URL

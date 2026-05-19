@@ -128,17 +128,61 @@ jobs:
             set -e
             echo "Navigating to deployment directory..."
             cd "${{ secrets.DEPLOY_PATH }}" || { echo "ERROR: Directory ${{ secrets.DEPLOY_PATH }} does not exist"; exit 1; }
-            
+
             echo "Pulling latest code from repository..."
             git pull origin main || { echo "ERROR: Failed to pull latest code"; exit 1; }
-            
+
             echo "Navigating to deploy directory..."
             cd deploy
-            
+
+            echo "Writing .env from CI secrets..."
+            cat > .env << 'EOF'
+            # ─── Session ──────────────────────────────────────────────────────────────────
+            SESSION_SECRET=${{ secrets.SESSION_SECRET }}
+
+            # ─── Database ─────────────────────────────────────────────────────────────────
+            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+
+            # ─── Email (SMTP) ──────────────────────────────────────────────────────────────
+            SMTP_HOST=${{ secrets.SMTP_HOST }}
+            SMTP_PORT=${{ secrets.SMTP_PORT }}
+            SMTP_SECURE=${{ secrets.SMTP_SECURE }}
+            SMTP_USER=${{ secrets.SMTP_USER }}
+            SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
+            EMAIL_FROM_ADDRESS=${{ secrets.EMAIL_FROM_ADDRESS }}
+            EMAIL_FROM_NAME=${{ secrets.EMAIL_FROM_NAME }}
+            EMAIL_REPLY_TO=${{ secrets.EMAIL_REPLY_TO }}
+
+            # ─── Email Tracking ───────────────────────────────────────────────────────────
+            EMAIL_TRACKING_DOMAIN=${{ secrets.EMAIL_TRACKING_DOMAIN }}
+            EMAIL_TRACKING_ENABLED=true
+
+            # ─── AI Agents ────────────────────────────────────────────────────────────────
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+
+            # ─── Agent Feature Flags ──────────────────────────────────────────────────────
+            AGENT_LEAD_SCORING_ENABLED=true
+            AGENT_TASK_AUTOMATION_ENABLED=true
+            AGENT_STAGNATION_DETECTION_ENABLED=true
+            AGENT_EMAIL_GENERATION_ENABLED=true
+            AGENT_NEXT_BEST_ACTION_ENABLED=true
+            AGENT_STAGE_PROGRESSION_ENABLED=true
+            AGENT_DRIP_CAMPAIGN_ENABLED=true
+            AGENT_WORKFLOW_RULE_ENABLED=true
+            AGENT_JOB_CONCURRENCY=5
+            EOF
+
             echo "Pulling latest Docker images..."
             docker compose pull
-            
+
             echo "Starting services..."
             docker compose up -d --remove-orphans
-            
+
+            echo "Cleaning up dangling images..."
+            docker image prune -f
+
             echo "✅ Deployment completed successfully!"
+

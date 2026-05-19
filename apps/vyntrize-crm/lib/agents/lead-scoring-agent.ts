@@ -38,6 +38,15 @@ export class LeadScoringAgent extends Agent {
               },
             },
           },
+          activities: {
+            where: {
+              type: 'EMAIL',
+              body: { contains: '**Customer Replied:**' },
+              createdAt: {
+                gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+              },
+            },
+          },
           leadTasks: {
             where: {
               status: 'COMPLETED',
@@ -137,9 +146,13 @@ export class LeadScoringAgent extends Agent {
    */
   private calculateFactors(lead: any): ScoringFactors {
     // Email engagement
-    const emailOpens = lead.emailTracking.filter((e: any) => e.openedAt).length;
-    const emailClicks = lead.emailTracking.filter((e: any) => e.clickedAt).length;
-    const emailReplies = lead.emailTracking.filter((e: any) => e.repliedAt).length;
+    const emailOpens = lead.emailTracking?.filter((e: any) => e.openedAt).length || 0;
+    const emailClicks = lead.emailTracking?.filter((e: any) => e.clickedAt).length || 0;
+    
+    // Count replies from both legacy tracking and new activity logs
+    const legacyReplies = lead.emailTracking?.filter((e: any) => e.repliedAt).length || 0;
+    const activityReplies = lead.activities?.length || 0;
+    const emailReplies = legacyReplies + activityReplies;
 
     // Email logs (new email system)
     const emailLogOpens = lead.emailLogs.filter((e: any) => e.openedAt).length;

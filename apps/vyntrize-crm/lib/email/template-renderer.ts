@@ -216,41 +216,92 @@ export class TemplateRenderer {
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       line-height: 1.6;
-      color: #333;
+      color: #333333;
+      background-color: #f9fafb;
+      margin: 0;
+      padding: 40px 20px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .email-wrapper {
       max-width: 600px;
       margin: 0 auto;
-      padding: 20px;
+    }
+    .email-header {
+      text-align: center;
+      padding-bottom: 24px;
+    }
+    .email-header h1 {
+      margin: 0;
+      color: #111827;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
     }
     .email-container {
       background-color: #ffffff;
-      border-radius: 8px;
-      padding: 30px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      border: 1px solid #f3f4f6;
+    }
+    .email-body {
+      font-size: 16px;
+      color: #374151;
+    }
+    .email-body p {
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    .email-body p:last-child {
+      margin-bottom: 0;
     }
     .email-footer {
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #eee;
-      font-size: 12px;
-      color: #666;
+      margin-top: 32px;
+      padding-top: 32px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 13px;
+      color: #6b7280;
       text-align: center;
     }
+    .email-footer p {
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
     a {
-      color: #0066cc;
+      color: #2563eb;
       text-decoration: none;
+      font-weight: 500;
     }
     a:hover {
       text-decoration: underline;
     }
+    .logo-placeholder {
+      display: inline-block;
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    }
   </style>
 </head>
 <body>
-  <div class="email-container">
-    ${content}
-  </div>
-  <div class="email-footer">
-    <p>This email was sent from Vyntrize CRM</p>
-    <p><a href="{{unsubscribeUrl}}">Unsubscribe</a></p>
+  <div class="email-wrapper">
+    <div class="email-header">
+      <div class="logo-placeholder"></div>
+      <h1>Vyntrize CRM</h1>
+    </div>
+    <div class="email-container">
+      <div class="email-body">
+        ${content}
+      </div>
+      <div class="email-footer">
+        <p>This email was sent securely by Vyntrize CRM on behalf of your team.</p>
+        <p><a href="{{unsubscribeUrl}}">Unsubscribe from these emails</a></p>
+      </div>
+    </div>
   </div>
 </body>
 </html>

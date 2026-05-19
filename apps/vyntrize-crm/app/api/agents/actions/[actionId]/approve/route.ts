@@ -3,6 +3,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
+import { stageProgressionAgent } from '@/lib/agents/stage-progression-agent';
+import { dripCampaignAgent } from '@/lib/agents/drip-campaign-agent';
 
 export async function POST(
   request: NextRequest,
@@ -46,6 +48,18 @@ export async function POST(
     });
 
     console.log(`[API] Action ${actionId} approved by user ${session.userId}`);
+
+    // Dispatch post-approval side effects based on action type
+    try {
+      if (action.actionType === 'STAGE_CHANGE') {
+        await stageProgressionAgent.applyApprovedAction(actionId);
+      } else if (action.actionType === 'DRIP_ENROLL') {
+        await dripCampaignAgent.applyApprovedEnrollment(actionId);
+      }
+    } catch (sideEffectError) {
+      // Log but don't fail the approval — the action is already marked APPROVED
+      console.error(`[API] Post-approval side effect failed for action ${actionId}:`, sideEffectError);
+    }
 
     return NextResponse.json({
       success: true,

@@ -124,6 +124,21 @@ export function ManualTriggerModal({ onClose, onSuccess }: ManualTriggerModalPro
       label: 'Next Best Action', 
       description: 'Recommend the optimal next step for this lead' 
     },
+    {
+      type: 'STAGE_PROGRESSION',
+      label: 'Stage Progression',
+      description: 'Evaluate stage progression criteria and advance lead if conditions are met',
+    },
+    {
+      type: 'DRIP_CAMPAIGN',
+      label: 'Drip Campaign',
+      description: 'Process due drip sequence steps and check stop conditions for this lead',
+    },
+    {
+      type: 'WORKFLOW_RULE',
+      label: 'Workflow Rules',
+      description: 'Evaluate all active workflow rules against this lead (lead_updated event)',
+    },
   ];
 
   return (

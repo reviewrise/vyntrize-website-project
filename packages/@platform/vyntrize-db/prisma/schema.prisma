@@ -171,7 +171,10 @@ model Lead {
   campaign    String?
   utmContent  String?
   utmTerm     String?
-  
+
+  // Pipeline Automation
+  manualOverride Boolean @default(false)
+
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -184,6 +187,7 @@ model Lead {
   emailTracking   EmailTracking[]
   emailLogs       EmailLog[]     @relation("EmailLogLead")
   agentActions    AgentAction[]
+  dripEnrollments DripEnrollment[]
 
   @@index([stage])
   @@index([score])
@@ -726,8 +730,8 @@ model EmailLog {
   campaign    EmailCampaign? @relation(fields: [campaignId], references: [id])
   templateId  Int?
   template    EmailTemplate? @relation(fields: [templateId], references: [id], name: "EmailLogTemplate")
-  userId      String
-  user        CrmUser  @relation(fields: [userId], references: [id], name: "EmailLogUser")
+  userId      String?
+  user        CrmUser?  @relation(fields: [userId], references: [id], name: "EmailLogUser")
   
   // Events
   events      EmailEvent[]
@@ -892,6 +896,101 @@ model CustomFieldValue {
   @@map("custom_field_values")
 }
 
+// ─── Pipeline Automation: Stage Progression Rules ─────────────────────────────
+
+model StageProgressionRule {
+  id            String        @id @default(cuid())
+  fromStage     LeadStage
+  toStage       LeadStage
+  criteria      Json
+  autonomyLevel AutonomyLevel
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([fromStage, isActive])
+  @@map("stage_progression_rules")
+}
+
+// ─── Pipeline Automation: Drip Sequences ──────────────────────────────────────
+
+model DripSequence {
+  id             String        @id @default(cuid())
+  name           String
+  description    String?
+  triggerType    String
+  triggerConfig  Json
+  stopConditions Json
+  autonomyLevel  AutonomyLevel
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  steps       DripStep[]
+  enrollments DripEnrollment[]
+
+  @@map("drip_sequences")
+}
+
+// ─── Pipeline Automation: Drip Steps ─────────────────────────────────────────
+
+model DripStep {
+  id              String       @id @default(cuid())
+  sequenceId      String
+  sequence        DripSequence @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  stepOrder       Int
+  delayHours      Int
+  subjectTemplate String
+  bodyTemplate    String       @db.Text
+  branchCondition String
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([sequenceId, stepOrder])
+  @@map("drip_steps")
+}
+
+// ─── Pipeline Automation: Drip Enrollments ───────────────────────────────────
+
+model DripEnrollment {
+  id               String               @id @default(cuid())
+  leadId           String
+  lead             Lead                 @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  sequenceId       String
+  sequence         DripSequence         @relation(fields: [sequenceId], references: [id])
+  currentStepIndex Int                  @default(0)
+  status           DripEnrollmentStatus @default(ACTIVE)
+  enrolledAt       DateTime             @default(now())
+  lastStepSentAt   DateTime?
+  stoppedReason    String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  @@index([leadId])
+  @@index([status])
+  @@index([sequenceId])
+  @@map("drip_enrollments")
+}
+
+// ─── Pipeline Automation: Workflow Rules ──────────────────────────────────────
+
+model WorkflowRule {
+  id            String        @id @default(cuid())
+  name          String
+  description   String?
+  triggerEvent  String
+  conditions    Json
+  actions       Json
+  autonomyLevel AutonomyLevel
+  isActive      Boolean       @default(true)
+  priority      Int           @default(100)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([triggerEvent, isActive])
+  @@map("workflow_rules")
+}
+
 // ─── AI Agent System ──────────────────────────────────────────────────────────
 
 model AgentAction {
@@ -920,6 +1019,9 @@ model AgentAction {
 
   // Metadata (JSON for flexibility)
   metadata      Json?
+
+  // AI Feedback loop — stores user-corrected email text for few-shot personalisation
+  correctedText String?   @db.Text
 
   @@index([leadId])
   @@index([agentType])
@@ -974,6 +1076,7 @@ enum AgentType {
   DRIP_CAMPAIGN
   REVENUE_FORECASTING
   OPENAI_PROVIDER
+  WORKFLOW_RULE
 }
 
 enum ActionType {
@@ -983,6 +1086,8 @@ enum ActionType {
   STAGE_CHANGE
   ALERT
   PREDICTION_UPDATE
+  DRIP_ENROLL
+  RULE_EXECUTION
 }
 
 enum ActionStatus {
@@ -997,4 +1102,10 @@ enum AutonomyLevel {
   FULLY_AUTONOMOUS
   SUGGEST_APPROVE
   COPILOT
+}
+
+enum DripEnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  STOPPED
 }

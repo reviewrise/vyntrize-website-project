@@ -291,24 +291,27 @@ export default function SupportPage() {
       </section>
 
       {/* CTA */}
-      <section className="px-4 md:px-6 py-16 bg-slate-900">
+      <section className="px-4 md:px-6 py-16" style={{ backgroundColor: 'var(--color-primary)' }}>
         <div className="container mx-auto max-w-6xl flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex items-start gap-4">
-            <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+            <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 mt-0.5">
               <LifeBuoy className="h-5 w-5 text-white" />
             </div>
             <div>
               <h2 className="text-2xl font-extrabold text-white mb-2">Need hands-on help?</h2>
-              <p className="text-slate-400 text-sm max-w-md">
+              <p className="text-white/70 text-sm max-w-md">
                 Our team can walk you through setup, troubleshoot issues, or help you get more out of VyntRise.
               </p>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-            <Link href="/contact" className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
+            <Link href="/contact" className="inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold transition-colors" style={{ color: 'var(--color-primary)' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.9)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
+            >
               Contact support <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/pricing" className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/5 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors">
+            <Link href="/pricing" className="inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white hover:bg-white/20 transition-colors">
               <Clock className="h-4 w-4" /> View SLA plans
             </Link>
           </div>
