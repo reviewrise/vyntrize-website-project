@@ -522,6 +522,14 @@ model LeadNote {
 
 // ─── CRM Enhancement: Tasks ───────────────────────────────────────────────────
 
+enum TaskActionType {
+  MANUAL
+  EMAIL
+  SMS
+  STATUS_UPDATE
+  WEBHOOK
+}
+
 model LeadTask {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
@@ -544,6 +552,11 @@ model LeadTask {
 
   dueDate     DateTime?
   completedAt DateTime?
+
+  // Hybrid Automation Fields
+  taskType    TaskActionType @default(MANUAL)
+  payload     Json?
+  executionLog Json?
 
   @@index([leadId])
   @@index([assignedToId])

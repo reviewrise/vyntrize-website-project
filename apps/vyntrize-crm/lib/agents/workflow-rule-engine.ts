@@ -53,7 +53,7 @@ export class WorkflowRuleEngine extends Agent {
     }
 
     try {
-      await this.evaluateRules(event, leadId, eventData);
+      await this.evaluateRules(event, leadId, eventData, context);
       return {
         success: true,
         reasoning: `Evaluated workflow rules for event "${event}" on lead ${leadId}`,
@@ -73,7 +73,8 @@ export class WorkflowRuleEngine extends Agent {
   private async evaluateRules(
     event: string,
     leadId: string,
-    eventData: Record<string, unknown>
+    eventData: Record<string, unknown>,
+    context: AgentContext
   ): Promise<void> {
     // 1. Query active rules matching the trigger event, ordered by priority ASC
     const rules = await prisma.workflowRule.findMany({
@@ -143,7 +144,7 @@ export class WorkflowRuleEngine extends Agent {
           await this.executeAction(lead as Lead, action, {
             id: rule.id,
             name: rule.name,
-          });
+          }, context);
           actionsExecuted++;
         } catch (err) {
           this.log('error', 'Action execution failed', {
@@ -290,12 +291,25 @@ export class WorkflowRuleEngine extends Agent {
   private async executeAction(
     lead: Lead,
     action: RuleAction,
-    rule: { id: string; name: string }
+    rule: { id: string; name: string },
+    context: AgentContext
   ): Promise<void> {
     switch (action.type) {
       case 'send_email': {
         const emailAgent = new EmailGenerationAgent();
-        await emailAgent.execute({ leadId: lead.id });
+        const { templateHint } = (action.config || {}) as { templateHint?: string };
+        const result = await emailAgent.execute({ 
+          leadId: lead.id,
+          eventData: {
+            ...context.eventData,
+            templateHint,
+            triggeredByRule: rule.id,  // bypass stage-change filter & throttling
+            ruleName: rule.name,
+          }
+        });
+        if (!result.success) {
+          throw new Error(`EmailGenerationAgent failed: ${result.error || result.reasoning}`);
+        }
         break;
       }
 

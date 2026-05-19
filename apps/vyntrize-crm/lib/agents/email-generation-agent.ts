@@ -37,7 +37,11 @@ export class EmailGenerationAgent extends Agent {
       const trigger = this.determineTrigger(context);
 
       // Check if this trigger should generate an email
-      if (trigger.type === 'stage_change') {
+      // Skip the stage-change filter when called from a workflow rule — the rule
+      // itself represents explicit user intent, so we should always generate.
+      const calledFromRule = !!(context.eventData?.triggeredByRule);
+
+      if (trigger.type === 'stage_change' && !calledFromRule) {
         const shouldTrigger = this.shouldTriggerForStageChange(
           trigger.data?.previousStage as string,
           trigger.data?.newStage as string
@@ -75,23 +79,26 @@ export class EmailGenerationAgent extends Agent {
       }
 
       // Check throttling rules (pass trigger type for engagement-based adjustments)
-      const throttlingService = getEmailThrottlingService();
-      const canGenerate = await throttlingService.canGenerateEmail(
-        context.leadId,
-        trigger.type
-      );
+      // Skip throttling when explicitly triggered from a workflow rule
+      if (!calledFromRule) {
+        const throttlingService = getEmailThrottlingService();
+        const canGenerate = await throttlingService.canGenerateEmail(
+          context.leadId,
+          trigger.type
+        );
 
-      if (!canGenerate.allowed) {
-        this.log('info', 'Email generation throttled', {
-          leadId: context.leadId,
-          reason: canGenerate.reason,
-          nextAvailableTime: canGenerate.nextAvailableTime,
-        });
-        return {
-          success: false,
-          error: 'Throttled',
-          reasoning: canGenerate.reason || 'Email generation rate limit reached',
-        };
+        if (!canGenerate.allowed) {
+          this.log('info', 'Email generation throttled', {
+            leadId: context.leadId,
+            reason: canGenerate.reason,
+            nextAvailableTime: canGenerate.nextAvailableTime,
+          });
+          return {
+            success: false,
+            error: 'Throttled',
+            reasoning: canGenerate.reason || 'Email generation rate limit reached',
+          };
+        }
       }
 
       // Continue with email generation
