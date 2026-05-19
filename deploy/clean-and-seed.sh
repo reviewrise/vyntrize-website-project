@@ -20,6 +20,7 @@ echo "🌱 Seeding CRM users..."
 docker run --rm \
   --network review-rise-monorepo_reviewrise-network \
   -e CRM_DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@vyntrize-postgres:5432/${POSTGRES_DB}" \
+  -e VYNTRIZE_DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@vyntrize-postgres:5432/${POSTGRES_DB}" \
   -v "$(pwd)/standalone-seed.ts:/app/seed.ts:ro" \
   -v "$(pwd)/../packages/@platform/vyntrize-db/prisma:/app/prisma-source:ro" \
   -w /app \
@@ -35,6 +36,7 @@ docker run --rm \
     mkdir -p prisma && \
     cp /app/prisma-source/schema.prisma prisma/schema.prisma && \
     sed -i '/output.*=.*\"..\/src\/generated\/client\"/d' prisma/schema.prisma && \
+    sed -i '/provider = "postgresql"/a \  url = env("CRM_DATABASE_URL")' prisma/schema.prisma && \
     
     echo '📦 Generating Prisma client...' && \
     pnpm exec prisma generate && \
