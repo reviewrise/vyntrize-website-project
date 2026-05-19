@@ -47,12 +47,12 @@ class AgentRegistry {
         '0 0 * * *', // Daily at midnight
         {}
       );
-      jobScheduler.registerAgent(leadScoringAgent);
+      jobScheduler.registerAgent('LeadScoringAgent', leadScoringAgent);
 
       // Register Task Automation Agent
       // Event-driven: create tasks when stage changes
       eventBus.registerAgent(CRMEvent.STAGE_CHANGED, taskAutomationAgent);
-      jobScheduler.registerAgent(taskAutomationAgent);
+      jobScheduler.registerAgent('TaskAutomationAgent', taskAutomationAgent);
 
       // Register Stagnation Detection Agent
       // Scheduled: daily scan for stagnant leads
@@ -61,7 +61,7 @@ class AgentRegistry {
         '0 9 * * *', // Daily at 9 AM
         {}
       );
-      jobScheduler.registerAgent(stagnationDetectionAgent);
+      jobScheduler.registerAgent('StagnationDetectionAgent', stagnationDetectionAgent);
 
       // Register Email Generation Agent
       // Event-driven: generate emails on stage changes and engagement
@@ -71,11 +71,11 @@ class AgentRegistry {
       eventBus.registerAgent(CRMEvent.EMAIL_REPLIED, emailGenerationAgent);
       
       // On-demand: also available for manual triggering
-      jobScheduler.registerAgent(emailGenerationAgent);
+      jobScheduler.registerAgent('EmailGenerationAgent', emailGenerationAgent);
 
       // Register Next Best Action Agent
       // On-demand only (triggered manually)
-      jobScheduler.registerAgent(nextBestActionAgent);
+      jobScheduler.registerAgent('NextBestActionAgent', nextBestActionAgent);
 
       // ── Stage Progression Agent ──────────────────────────────────────────
       if (process.env.AGENT_STAGE_PROGRESSION_ENABLED === 'false') {
@@ -96,7 +96,7 @@ class AgentRegistry {
           '0 2 * * *',
           {}
         );
-        jobScheduler.registerAgent(stageProgressionAgent);
+        jobScheduler.registerAgent('StageProgressionAgent', stageProgressionAgent);
       }
 
       // ── Drip Campaign Agent ───────────────────────────────────────────────
@@ -119,7 +119,7 @@ class AgentRegistry {
           '*/5 * * * *',
           {}
         );
-        jobScheduler.registerAgent(dripCampaignAgent);
+        jobScheduler.registerAgent('DripCampaignAgent', dripCampaignAgent);
       }
 
       // ── Workflow Rule Engine ──────────────────────────────────────────────
@@ -138,7 +138,7 @@ class AgentRegistry {
         eventBus.registerAgent(CRMEvent.TASK_COMPLETED, workflowRuleEngine);
 
         // On-demand: also available for manual triggering
-        jobScheduler.registerAgent(workflowRuleEngine);
+        jobScheduler.registerAgent('WorkflowRuleEngine', workflowRuleEngine);
       }
 
       this.initialized = true;

@@ -73,9 +73,9 @@ class AgentJobScheduler {
   /**
    * Register an agent for job execution
    */
-  registerAgent(agent: Agent) {
-    this.agents.set(agent.constructor.name, agent);
-    console.log(`[JobScheduler] Registered agent: ${agent.constructor.name}`);
+  registerAgent(agentType: string, agent: Agent) {
+    this.agents.set(agentType, agent);
+    console.log(`[JobScheduler] Registered agent: ${agentType}`);
   }
 
   /**
