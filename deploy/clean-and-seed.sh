@@ -23,10 +23,10 @@ docker run --rm \
   -v "$(pwd)/standalone-seed.ts:/app/seed.ts:ro" \
   -v "$(pwd)/../packages/@platform/vyntrize-db/prisma:/app/prisma-source:ro" \
   -w /app \
-  node:20-alpine \
+  node:22-alpine \
   sh -c "
     echo '📦 Setting up environment...' && \
-    corepack enable && corepack prepare pnpm@latest --activate && \
+    corepack enable && corepack prepare pnpm@9 --activate && \
     
     echo '📦 Installing dependencies...' && \
     pnpm add prisma@7.8.0 @prisma/client@7.8.0 bcryptjs tsx @types/node && \
