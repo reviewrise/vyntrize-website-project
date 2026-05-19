@@ -85,6 +85,7 @@ export async function GET(
         sentBy: email.user,
         events: email.events,
         trackingId: email.trackingId,
+        errorMessage: email.errorMessage,
       })),
       pagination: {
         page,

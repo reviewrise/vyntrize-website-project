@@ -19,11 +19,12 @@ interface Email {
   clickedAt?: string;
   openCount: number;
   clickCount: number;
+  errorMessage?: string;
   template?: {
     id: number;
     name: string;
   };
-  sentBy: {
+  sentBy?: {
     id: string;
     displayName: string;
     email: string;
@@ -85,13 +86,13 @@ export default function EmailHistory({ id, type }: EmailHistoryProps) {
     return <EnvelopeIcon className="h-5 w-5 text-gray-400" />;
   };
 
-  const getStatusText = (email: Email) => {
-    if (email.status === 'BOUNCED') return 'Bounced';
-    if (email.status === 'FAILED') return 'Failed';
-    if (email.clickedAt) return `Clicked (${email.clickCount}x)`;
-    if (email.openedAt) return `Opened (${email.openCount}x)`;
-    if (email.status === 'SENT') return 'Sent';
-    return email.status;
+  const getStatusBadge = (email: Email) => {
+    if (email.status === 'FAILED') return { label: 'Failed to Send', color: '#ef4444', bg: 'rgba(239,68,68,0.1)' };
+    if (email.status === 'BOUNCED') return { label: 'Bounced', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' };
+    if (email.clickedAt) return { label: `Clicked (${email.clickCount}x)`, color: '#10b981', bg: 'rgba(16,185,129,0.1)' };
+    if (email.openedAt) return { label: `Opened (${email.openCount}x)`, color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' };
+    if (email.status === 'SENT' || email.status === 'DELIVERED') return { label: 'Sent', color: '#6b7280', bg: 'rgba(107,114,128,0.1)' };
+    return { label: email.status, color: '#6b7280', bg: 'rgba(107,114,128,0.1)' };
   };
 
   const formatDate = (dateString: string) => {
@@ -186,8 +187,17 @@ export default function EmailHistory({ id, type }: EmailHistoryProps) {
             <p className="mt-2 text-sm text-gray-500">No emails sent yet</p>
           </div>
         ) : (
-          emails.map((email) => (
-            <div key={email.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+          emails.map((email) => {
+            const badge = getStatusBadge(email);
+            return (
+            <div
+              key={email.id}
+              className="px-6 py-4 transition-colors"
+              style={{
+                borderLeft: email.status === 'FAILED' ? '3px solid #ef4444' : email.status === 'BOUNCED' ? '3px solid #f59e0b' : '3px solid transparent',
+                backgroundColor: email.status === 'FAILED' ? 'rgba(239,68,68,0.02)' : undefined,
+              }}
+            >
               <div className="flex items-start gap-4">
                 {/* Status Icon */}
                 <div className="flex-shrink-0 mt-1">
@@ -207,36 +217,46 @@ export default function EmailHistory({ id, type }: EmailHistoryProps) {
                             {email.template.name}
                           </span>
                         )}
-                        Sent by {email.sentBy.displayName}
+                        {email.sentBy ? `Sent by ${email.sentBy.displayName}` : 'Sent by agent'}
                       </p>
                     </div>
                     <div className="flex-shrink-0 text-right">
                       <p className="text-xs text-gray-500">{formatDate(email.sentAt)}</p>
-                      <p className="text-xs font-medium text-gray-700 mt-1">
-                        {getStatusText(email)}
-                      </p>
+                      <span
+                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mt-1"
+                        style={{ color: badge.color, backgroundColor: badge.bg }}
+                      >
+                        {badge.label}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Additional Info */}
+                  {/* Error message for FAILED emails */}
+                  {email.status === 'FAILED' && email.errorMessage && (
+                    <div
+                      className="mt-2 rounded-md px-3 py-2 text-xs"
+                      style={{ backgroundColor: 'rgba(239,68,68,0.08)', color: '#b91c1c', border: '1px solid rgba(239,68,68,0.2)' }}
+                    >
+                      <span className="font-semibold">Error: </span>{email.errorMessage}
+                    </div>
+                  )}
+
+                  {/* Additional Info for opened/clicked */}
                   {(email.openedAt || email.clickedAt) && (
                     <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
                       {email.openedAt && (
-                        <span>
-                          First opened {formatDate(email.openedAt)}
-                        </span>
+                        <span>First opened {formatDate(email.openedAt)}</span>
                       )}
                       {email.clickedAt && (
-                        <span>
-                          First clicked {formatDate(email.clickedAt)}
-                        </span>
+                        <span>First clicked {formatDate(email.clickedAt)}</span>
                       )}
                     </div>
                   )}
                 </div>
               </div>
             </div>
-          ))
+            );
+          })
         )}
       </div>
 

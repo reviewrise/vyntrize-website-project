@@ -115,16 +115,16 @@ export default function SolutionsPage() {
   const Icon = current.icon;
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
+    <div className="flex flex-col min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
 
       {/* Header */}
-      <section className="border-b border-slate-100 bg-slate-50/60 pt-20 pb-12 px-4 md:px-6">
+      <section className="pt-20 pb-12 px-4 md:px-6" style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
         <div className="container mx-auto max-w-6xl">
           <div className="github-badge mb-4">INDUSTRY SOLUTIONS</div>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-4">
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4" style={{ color: 'var(--color-text)' }}>
             Built for your industry
           </h1>
-          <p className="text-lg text-slate-500 max-w-2xl">
+          <p className="text-lg max-w-2xl" style={{ color: 'var(--color-text-muted)' }}>
             The same AI platform, configured for the specific challenges and compliance requirements of your sector.
           </p>
         </div>
@@ -137,7 +137,7 @@ export default function SolutionsPage() {
 
             {/* Sidebar */}
             <nav className="lg:w-64 shrink-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3 px-2">Industries</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-3 px-2" style={{ color: 'var(--color-text-subtle)' }}>Industries</p>
               <ul className="space-y-1">
                 {industries.map((ind) => {
                   const IIcon = ind.icon;
@@ -146,8 +146,23 @@ export default function SolutionsPage() {
                     <li key={ind.id}>
                       <button
                         onClick={() => setActive(ind.id)}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${isActive ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
-                          }`}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left"
+                        style={{
+                          backgroundColor: isActive ? 'var(--color-primary)' : 'transparent',
+                          color: isActive ? '#ffffff' : 'var(--color-text-muted)',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isActive) {
+                            e.currentTarget.style.backgroundColor = 'var(--color-surface)';
+                            e.currentTarget.style.color = 'var(--color-text)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isActive) {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = 'var(--color-text-muted)';
+                          }
+                        }}
                       >
                         <IIcon className="h-4 w-4 shrink-0" />
                         <span className="flex-1">{ind.label}</span>
@@ -158,10 +173,10 @@ export default function SolutionsPage() {
                 })}
               </ul>
 
-              <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs font-semibold text-slate-700 mb-1">Don&apos;t see your industry?</p>
-                <p className="text-xs text-slate-500 mb-3">Our solutions adapt to any sector. Let&apos;s talk.</p>
-                <Link href="/contact" className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700">
+              <div className="mt-8 rounded-xl p-4" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
+                <p className="text-xs font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Don&apos;t see your industry?</p>
+                <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>Our solutions adapt to any sector. Let&apos;s talk.</p>
+                <Link href="/contact" className="inline-flex items-center gap-1.5 text-xs font-semibold" style={{ color: 'var(--color-primary)' }}>
                   Get a custom solution <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
@@ -179,15 +194,15 @@ export default function SolutionsPage() {
                   className="space-y-5"
                 >
                   {/* Panel header */}
-                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <div className="rounded-2xl p-6 shadow-sm" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
                     <div className="flex items-start justify-between gap-4 flex-wrap">
                       <div className="flex items-center gap-4">
                         <div className={`h-12 w-12 rounded-xl border flex items-center justify-center ${colorMap[current.color]}`}>
                           <Icon className="h-6 w-6" />
                         </div>
                         <div>
-                          <h2 className="text-xl font-bold text-slate-900">{current.label}</h2>
-                          <p className="text-sm text-slate-500 mt-0.5">{current.tagline}</p>
+                          <h2 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>{current.label}</h2>
+                          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{current.tagline}</p>
                         </div>
                       </div>
                       <Link
@@ -197,26 +212,26 @@ export default function SolutionsPage() {
                         Get started <ArrowRight className="h-4 w-4" />
                       </Link>
                     </div>
-                    <p className="mt-4 text-slate-600 text-sm leading-relaxed max-w-2xl">{current.description}</p>
+                    <p className="mt-4 text-sm leading-relaxed max-w-2xl" style={{ color: 'var(--color-text-muted)' }}>{current.description}</p>
                   </div>
 
                   {/* Stats */}
                   <div className="grid grid-cols-3 gap-4">
                     {current.stats.map((s) => (
-                      <div key={s.label} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">{s.label}</p>
-                        <p className="text-2xl font-extrabold text-slate-900">{s.value}</p>
+                      <div key={s.label} className="rounded-xl p-4 shadow-sm" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
+                        <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-subtle)' }}>{s.label}</p>
+                        <p className="text-2xl font-extrabold" style={{ color: 'var(--color-text)' }}>{s.value}</p>
                       </div>
                     ))}
                   </div>
 
                   {/* Challenges + Solutions */}
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Common Challenges</p>
+                    <div className="rounded-xl p-5 shadow-sm" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
+                      <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--color-text-subtle)' }}>Common Challenges</p>
                       <ul className="space-y-3">
                         {current.challenges.map((c) => (
-                          <li key={c} className="flex items-start gap-3 text-sm text-slate-600">
+                          <li key={c} className="flex items-start gap-3 text-sm" style={{ color: 'var(--color-text-muted)' }}>
                             <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-rose-400 shrink-0" />
                             {c}
                           </li>
@@ -224,13 +239,13 @@ export default function SolutionsPage() {
                       </ul>
                     </div>
 
-                    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">How We Solve It</p>
+                    <div className="rounded-xl p-5 shadow-sm" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
+                      <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--color-text-subtle)' }}>How We Solve It</p>
                       <ul className="space-y-3">
                         {current.solutions.map((s) => {
                           const SIcon = s.icon;
                           return (
-                            <li key={s.label} className="flex items-center gap-3 text-sm text-slate-700">
+                            <li key={s.label} className="flex items-center gap-3 text-sm" style={{ color: 'var(--color-text)' }}>
                               <div className={`h-7 w-7 rounded-lg border flex items-center justify-center shrink-0 ${colorMap[current.color]}`}>
                                 <SIcon className="h-3.5 w-3.5" />
                               </div>
@@ -250,7 +265,10 @@ export default function SolutionsPage() {
                     </div>
                     <Link
                       href="/contact"
-                      className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 transition-colors shrink-0"
+                      className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors shrink-0"
+                      style={{ backgroundColor: 'var(--color-primary)' }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary-h)'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary)'}
                     >
                       Talk to us <ArrowRight className="h-4 w-4" />
                     </Link>
@@ -264,24 +282,30 @@ export default function SolutionsPage() {
       </section>
 
       {/* All industries quick grid */}
-      <section className="border-t border-slate-100 bg-slate-50/60 px-4 md:px-6 py-16">
+      <section className="px-4 md:px-6 py-16" style={{ borderTop: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
         <div className="container mx-auto max-w-6xl">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-6">All Industries</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-6" style={{ color: 'var(--color-text-subtle)' }}>All Industries</p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {industries.map((ind) => {
               const IIcon = ind.icon;
+              const isActive = ind.id === active;
               return (
                 <button
                   key={ind.id}
                   onClick={() => { setActive(ind.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  className={`group rounded-xl border bg-white p-5 shadow-sm text-left hover:shadow-md transition-all hover:ring-2 ${ind.id === active ? 'ring-2 ring-slate-900' : 'ring-transparent'
-                    }`}
+                  className="group rounded-xl p-5 shadow-sm text-left hover:shadow-md transition-all"
+                  style={{
+                    border: `1px solid ${isActive ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                    backgroundColor: 'var(--color-bg)',
+                    outline: isActive ? '2px solid var(--color-primary)' : 'none',
+                    outlineOffset: '-1px',
+                  }}
                 >
                   <div className={`h-9 w-9 rounded-lg border flex items-center justify-center mb-3 ${colorMap[ind.color]}`}>
                     <IIcon className="h-4 w-4" />
                   </div>
-                  <p className="font-semibold text-sm text-slate-900 mb-1">{ind.label}</p>
-                  <p className="text-xs text-slate-500">{ind.tagline}</p>
+                  <p className="font-semibold text-sm mb-1" style={{ color: 'var(--color-text)' }}>{ind.label}</p>
+                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{ind.tagline}</p>
                 </button>
               );
             })}

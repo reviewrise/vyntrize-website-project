@@ -2,6 +2,7 @@ import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
 import { ThemeToggle } from '@/components/ThemeProvider';
+import { NotificationCenter } from '@/components/NotificationCenter';
 
 export default async function CrmLayout({ children }: { children: React.ReactNode }) {
     const session = await getSession();
@@ -18,12 +19,13 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Top bar */}
                 <header
-                    className="h-14 flex items-center justify-end px-6 flex-shrink-0"
+                    className="h-14 flex items-center justify-end gap-2 px-6 flex-shrink-0"
                     style={{
                         backgroundColor: 'var(--color-surface)',
                         borderBottom: '1px solid var(--color-border)',
                     }}
                 >
+                    <NotificationCenter />
                     <ThemeToggle />
                 </header>
 

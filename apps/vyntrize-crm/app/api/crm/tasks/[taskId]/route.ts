@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { vyntrizeDb } from '@platform/vyntrize-db';
 import { getSession } from '@/lib/session';
+import { eventBus, CRMEvent } from '@/lib/agents/event-bus';
 
 // PATCH - Update a task
 export async function PATCH(
@@ -96,6 +97,15 @@ export async function PATCH(
         },
       },
     });
+
+    if (status === 'COMPLETED' && existingTask.status !== 'COMPLETED' && updatedTask.leadId) {
+      await eventBus.emitCRMEvent(CRMEvent.TASK_COMPLETED, {
+        leadId: updatedTask.leadId,
+        previousValue: existingTask.status,
+        newValue: 'COMPLETED',
+        metadata: { taskId: updatedTask.id, taskTitle: updatedTask.title },
+      });
+    }
 
     return NextResponse.json({ task: updatedTask });
   } catch (error) {

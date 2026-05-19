@@ -221,6 +221,19 @@ export class EmailGenerationAgent extends Agent {
       };
     }
 
+    // Check if this is an email replied event
+    if (context.eventData?.eventType === 'email_replied' || context.eventData?.replyText) {
+      return {
+        type: 'engagement',
+        reason: 'Lead replied to email - high intent, requires prompt response',
+        data: {
+          ...context.eventData,
+          engagementType: 'email_replied',
+          replyText: context.eventData?.replyText,
+        },
+      };
+    }
+
     // Check if this is an email clicked event
     if (context.eventData?.emailClicked || context.eventData?.eventType === 'email_clicked') {
       return {
@@ -321,8 +334,8 @@ export class EmailGenerationAgent extends Agent {
       return false;
     }
 
-    // For email clicks, always trigger (high intent)
-    if (engagementType === 'email_clicked') {
+    // For email clicks or replies, always trigger (high intent)
+    if (engagementType === 'email_clicked' || engagementType === 'email_replied') {
       return true;
     }
 
@@ -407,7 +420,37 @@ export class EmailGenerationAgent extends Agent {
   }
 
   /**
-   * Generate email using AI
+   * Fetch the most recent user-corrected email examples for few-shot learning.
+   * Returns an array of { subject, body } objects from AgentAction.correctedText.
+   */
+  private async fetchFewShotExamples(limit = 5): Promise<{ subject: string; body: string }[]> {
+    try {
+      const corrections = await prisma.agentAction.findMany({
+        where: {
+          agentType: AgentType.EMAIL_GENERATION,
+          correctedText: { not: null },
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: limit,
+        select: { correctedText: true },
+      });
+
+      return corrections
+        .map((a) => {
+          try {
+            return JSON.parse(a.correctedText!) as { subject: string; body: string };
+          } catch {
+            return null;
+          }
+        })
+        .filter((x): x is { subject: string; body: string } => x !== null && !!(x.subject || x.body));
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Generate email using AI with few-shot personalisation
    */
   private async generateEmail(
     context: string,
@@ -416,26 +459,38 @@ export class EmailGenerationAgent extends Agent {
     template?: any,
     lead?: any
   ): Promise<EmailDraft> {
-    // Enhance system prompt based on trigger type
+    // ── Fetch user's past corrections for few-shot learning ────────────────
+    const fewShotExamples = await this.fetchFewShotExamples(5);
+
+    // ── Build system prompt ────────────────────────────────────────────────
     let systemPrompt = `You are a professional sales email writer. Generate personalized, engaging emails that drive action. Keep emails concise (150-200 words), use a ${tone} tone, and include a clear call-to-action.`;
-    
-    let promptContext = context;
-    
-    // Add template context if available
+
+    if (fewShotExamples.length > 0) {
+      systemPrompt += `\n\nIMPORTANT — the user has previously corrected your drafts. Study these examples and EXACTLY mimic their tone, sentence structure, vocabulary, and style:\n`;
+      fewShotExamples.forEach((ex, i) => {
+        systemPrompt += `\n--- Example ${i + 1} ---\nSubject: ${ex.subject}\n${ex.body}\n`;
+      });
+      systemPrompt += `\n--- End of examples ---\nYour output must sound as if the same person wrote those examples.`;
+    }
+
     if (template) {
       systemPrompt += ` Use the following template as a structural guide, but personalize the content based on the lead's context. Template subject: "${template.subject}". Maintain professional email formatting.`;
     }
-    
-    // Add engagement-specific context
+
+    let promptContext = context;
+
+    // ── Add engagement-specific context ───────────────────────────────────
     if (trigger?.type === 'engagement') {
       const engagementType = trigger.data?.engagementType;
-      
       if (engagementType === 'email_clicked') {
         systemPrompt += ' The lead just clicked a link in your email, showing high interest. Strike while the iron is hot with a timely follow-up.';
         promptContext += '\n\n**IMPORTANT**: This lead just clicked a link in your recent email. They are actively engaged RIGHT NOW. Your follow-up should acknowledge their interest and provide the next logical step.';
       } else if (engagementType === 'email_opened') {
         systemPrompt += ' The lead recently opened your email. Follow up while you have their attention.';
         promptContext += '\n\n**IMPORTANT**: This lead recently opened your email. They are showing interest. Your follow-up should build on the previous message and move the conversation forward.';
+      } else if (engagementType === 'email_replied') {
+        systemPrompt += ' The lead just replied to your previous email. Acknowledge their reply and provide a helpful, human-sounding response.';
+        promptContext += `\n\n**IMPORTANT**: The lead just replied with this message:\n"${trigger.data?.replyText}"\n\nDraft a direct, helpful response to their inquiry.`;
       }
     }
 
@@ -468,14 +523,12 @@ Remember:
     if (template && lead) {
       const templateService = getEmailTemplateService();
       const variables = templateService.extractLeadVariables(lead);
-      
       const merged = templateService.mergeAIContentWithTemplate(
         template,
         aiDraft.subject,
         aiDraft.body,
         variables
       );
-
       return merged;
     }
 

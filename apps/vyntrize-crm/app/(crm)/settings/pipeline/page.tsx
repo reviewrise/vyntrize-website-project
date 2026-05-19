@@ -1,5 +1,6 @@
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import PipelineSettings from '@/components/PipelineSettings';
 
 export default async function PipelineSettingsPage() {
@@ -34,6 +35,19 @@ export default async function PipelineSettingsPage() {
 
       <div className="mt-8">
         <PipelineSettings />
+      </div>
+
+      <div className="mt-8">
+        <Link
+          href="/settings/pipeline/automation"
+          className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white"
+          style={{ backgroundColor: 'var(--color-primary)' }}
+        >
+          ⚡ Pipeline Automation Settings
+        </Link>
+        <p className="mt-2 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+          Configure stage progression rules, drip email sequences, and workflow automations.
+        </p>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { KanbanColumn } from './KanbanColumn';
 import { updateLeadStage } from '@/lib/actions/leads';
@@ -36,6 +36,11 @@ export function KanbanBoard({ initialLeads }: KanbanBoardProps) {
     } | null>(null);
     const [closingNote, setClosingNote] = useState('');
     const [error, setError] = useState<string | null>(null);
+
+    // Keep internal state in sync with server changes (auto-refresh)
+    useEffect(() => {
+        setLeads(initialLeads);
+    }, [initialLeads]);
 
     const getLeadsByStage = (stage: string) =>
         leads.filter((l) => l.stage === stage);

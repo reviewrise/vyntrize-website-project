@@ -18,25 +18,24 @@ export async function initializeAgentSystem(): Promise<void> {
     try {
       console.log('[AgentSystem] Initializing agent system...');
 
-      // Check required environment variables
-      // Note: OPENAI_API_KEY and GEMINI_API_KEY are optional - agents will work without AI providers
-      const requiredEnvVars = ['REDIS_HOST', 'REDIS_PORT'];
-      const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
-
-      if (missingEnvVars.length > 0) {
-        console.warn(
-          `[AgentSystem] Missing environment variables: ${missingEnvVars.join(', ')}. Agent system will be disabled.`
-        );
-        return;
-      }
-
       // Warn about missing AI provider keys (but don't block initialization)
       if (!process.env.OPENAI_API_KEY && !process.env.GEMINI_API_KEY) {
         console.warn('[AgentSystem] No AI provider keys configured. AI-powered agents (Email Generation, Next Best Action) will not be available.');
       }
 
-      // Register all agents
+      // Register all agents with the event bus
       await agentRegistry.registerAllAgents();
+
+      // If Redis is configured, start the BullMQ queue worker so events
+      // are processed persistently (survives server restarts + retries on failure)
+      if (process.env.REDIS_URL) {
+        console.log('[AgentSystem] REDIS_URL detected — starting BullMQ agent worker...');
+        const { startAgentWorker } = await import('@/lib/queues/agentWorker');
+        startAgentWorker();
+        console.log('[AgentSystem] ✅ BullMQ agent worker started (queue-first mode)');
+      } else {
+        console.warn('[AgentSystem] ⚠️ No REDIS_URL — agents will run in-memory (events may be lost on restart).');
+      }
 
       console.log('[AgentSystem] Agent system initialized successfully');
     } catch (error) {

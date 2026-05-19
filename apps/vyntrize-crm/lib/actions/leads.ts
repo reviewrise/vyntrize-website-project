@@ -196,6 +196,28 @@ export async function updateLeadDeal(formData: FormData) {
 
     await prisma.lead.update({ where: { id }, data: updates });
 
+    // Emit lead updated event for agents
+    try {
+        const { eventBus, CRMEvent } = await import('@/lib/agents/event-bus');
+        const { agentRegistry } = await import('@/lib/agents/registry');
+        
+        if (!agentRegistry.isInitialized()) {
+            console.log('[updateLeadDeal] Agent registry not initialized, initializing now...');
+            await agentRegistry.registerAllAgents();
+        }
+        
+        await eventBus.emitCRMEvent(CRMEvent.LEAD_UPDATED, {
+            leadId: id,
+            userId: session.userId,
+            metadata: {
+                updates,
+            },
+        });
+        console.log(`[updateLeadDeal] Emitted LEAD_UPDATED event for lead ${id}`);
+    } catch (error) {
+        console.error('[updateLeadDeal] Failed to emit lead updated event:', error);
+    }
+
     revalidatePath('/pipeline');
     revalidatePath(`/leads/${id}`);
     return { success: true };

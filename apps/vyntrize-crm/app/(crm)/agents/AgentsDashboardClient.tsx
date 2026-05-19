@@ -8,9 +8,15 @@ import { FilterControls } from './components/FilterControls';
 import { ActionList } from './components/ActionList';
 import { ActionDetailModal } from './components/ActionDetailModal';
 import { ManualTriggerModal } from './components/ManualTriggerModal';
+import { EmailTestPanel } from './components/EmailTestPanel';
+import { RoiAnalyticsTab } from './components/RoiAnalyticsTab';
 import type { AgentAction, HealthStatus, MetricsResponse, FilterState, PaginationInfo } from '@/types/agent-dashboard';
 
+type ActiveTab = 'agents' | 'email' | 'roi';
+
 export function AgentsDashboardClient() {
+  const [activeTab, setActiveTab] = useState<ActiveTab>('agents');
+
   // State management
   const [actions, setActions] = useState<AgentAction[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
@@ -182,6 +188,13 @@ export function AgentsDashboardClient() {
     return (
       <div className="space-y-8">
         <DashboardHeader onRefresh={handleRefresh} onTrigger={handleTrigger} />
+        <div
+          className="flex gap-1 p-1 rounded-xl w-fit"
+          style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+        >
+          <button className="px-4 py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: 'var(--color-primary)', color: '#fff' }}>🤖 Agents</button>
+          <button className="px-4 py-2 rounded-lg text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>✉️ Email</button>
+        </div>
         <div className="animate-pulse space-y-6">
           <div className="h-32 bg-gray-200 rounded-2xl"></div>
           <div className="h-48 bg-gray-200 rounded-2xl"></div>
@@ -195,6 +208,13 @@ export function AgentsDashboardClient() {
     return (
       <div className="space-y-8">
         <DashboardHeader onRefresh={handleRefresh} onTrigger={handleTrigger} />
+        <div
+          className="flex gap-1 p-1 rounded-xl w-fit"
+          style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+        >
+          <button className="px-4 py-2 rounded-lg text-sm font-medium" style={{ backgroundColor: 'var(--color-primary)', color: '#fff' }}>🤖 Agents</button>
+          <button className="px-4 py-2 rounded-lg text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>✉️ Email</button>
+        </div>
         <div className="rounded-2xl p-12 text-center" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
           <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-text)' }}>
             Failed to Load Dashboard
@@ -220,60 +240,99 @@ export function AgentsDashboardClient() {
         refreshing={refreshing}
       />
 
-      {/* Enhanced Health Status Widget */}
-      <HealthStatusWidget health={health} loading={loading} />
+      {/* ── Tab Navigation ──────────────────────────────────────────────── */}
+      <div
+        className="flex gap-1 p-1 rounded-xl w-fit"
+        style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+      >
+        {(
+          [
+            { id: 'agents', label: '🤖 Agents', title: 'Agent actions & health' },
+            { id: 'email',  label: '✉️ Email',  title: 'Test email delivery' },
+            { id: 'roi',    label: '📊 ROI',    title: 'AI vs manual performance' },
+          ] as { id: ActiveTab; label: string; title: string }[]
+        ).map((tab) => (
+          <button
+            key={tab.id}
+            title={tab.title}
+            onClick={() => setActiveTab(tab.id)}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            style={
+              activeTab === tab.id
+                ? { backgroundColor: 'var(--color-primary)', color: '#fff' }
+                : { color: 'var(--color-text-muted)' }
+            }
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-      {/* Metrics Summary */}
-      {metrics && (
-        <div className="rounded-2xl p-6" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-          <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--color-text)' }}>
-            Performance Metrics
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Total Actions</p>
-              <p className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
-                {metrics.summary.totalActions}
-              </p>
+      {/* ── Email Test Tab ──────────────────────────────────────────────── */}
+      {activeTab === 'email' && <EmailTestPanel />}
+
+      {/* ── ROI Analytics Tab ───────────────────────────────────────────── */}
+      {activeTab === 'roi' && <RoiAnalyticsTab />}
+
+      {/* ── Agents Tab ─────────────────────────────────────────────────── */}
+      {activeTab === 'agents' && (
+        <>
+          {/* Enhanced Health Status Widget */}
+          <HealthStatusWidget health={health} loading={loading} />
+
+          {/* Metrics Summary */}
+          {metrics && (
+            <div className="rounded-2xl p-6" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+              <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--color-text)' }}>
+                Performance Metrics
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Total Actions</p>
+                  <p className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
+                    {metrics.summary.totalActions}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Approval Rate</p>
+                  <p className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
+                    {metrics.summary.approvalRate.toFixed(1)}%
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Avg Execution Time</p>
+                  <p className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
+                    {metrics.summary.avgExecutionTimeMs}ms
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Approved Actions</p>
+                  <p className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
+                    {metrics.summary.approvedActions}
+                  </p>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Approval Rate</p>
-              <p className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
-                {metrics.summary.approvalRate.toFixed(1)}%
-              </p>
-            </div>
-            <div>
-              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Avg Execution Time</p>
-              <p className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
-                {metrics.summary.avgExecutionTimeMs}ms
-              </p>
-            </div>
-            <div>
-              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Approved Actions</p>
-              <p className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
-                {metrics.summary.approvedActions}
-              </p>
-            </div>
-          </div>
-        </div>
+          )}
+
+          {/* Filter Controls */}
+          <FilterControls
+            filters={filters}
+            onFilterChange={updateFilters}
+          />
+
+          {/* Actions List */}
+          <ActionList
+            actions={actions}
+            pagination={pagination || undefined}
+            loading={loading}
+            error={error}
+            onActionClick={setSelectedAction}
+            onRetry={handleRefresh}
+            onPageChange={handlePageChange}
+          />
+        </>
       )}
-
-      {/* Filter Controls */}
-      <FilterControls
-        filters={filters}
-        onFilterChange={updateFilters}
-      />
-
-      {/* Actions List */}
-      <ActionList
-        actions={actions}
-        pagination={pagination || undefined}
-        loading={loading}
-        error={error}
-        onActionClick={setSelectedAction}
-        onRetry={handleRefresh}
-        onPageChange={handlePageChange}
-      />
 
       {/* Action Detail Modal */}
       {selectedAction && (

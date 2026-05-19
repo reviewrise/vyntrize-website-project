@@ -90,7 +90,7 @@ const templates = [
       firstName: 'Contact first name',
       companyName: 'Your company name',
       scheduleLink: 'Link to scheduling page',
-      companyAddress: 'Your company address',
+       companyAddress: 'Your company address',
     },
     isShared: true,
   },

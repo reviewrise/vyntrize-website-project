@@ -4,6 +4,7 @@
 
 import { vyntrizeDb } from '@platform/vyntrize-db';
 import { EmailEventType } from '@platform/vyntrize-db/src/generated/client';
+import { eventBus, CRMEvent } from '@/lib/agents/event-bus';
 
 export interface TrackingMetadata {
   ipAddress?: string;
@@ -72,6 +73,19 @@ export class TrackingService {
         });
       }
 
+      if (emailLog.leadId) {
+        await eventBus.emitCRMEvent(CRMEvent.EMAIL_OPENED, {
+          leadId: emailLog.leadId,
+          metadata: {
+            trackingId,
+            emailId: emailLog.id,
+            timestamp: metadata.timestamp?.toISOString() || now.toISOString(),
+            openCount: emailLog.openCount + 1,
+            firstOpen: isFirstOpen,
+          },
+        });
+      }
+
       console.log(`[TrackingService] Recorded open for ${trackingId}`);
     } catch (error) {
       console.error('[TrackingService] Error recording open:', error);
@@ -132,6 +146,20 @@ export class TrackingService {
           where: { id: emailLog.campaignId },
           data: {
             clickedCount: { increment: 1 },
+          },
+        });
+      }
+
+      if (emailLog.leadId) {
+        await eventBus.emitCRMEvent(CRMEvent.EMAIL_CLICKED, {
+          leadId: emailLog.leadId,
+          metadata: {
+            trackingId,
+            emailId: emailLog.id,
+            targetUrl: url,
+            timestamp: metadata.timestamp?.toISOString() || now.toISOString(),
+            clickCount: emailLog.clickCount + 1,
+            firstClick: isFirstClick,
           },
         });
       }

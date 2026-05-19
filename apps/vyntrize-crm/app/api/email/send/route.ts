@@ -99,6 +99,35 @@ export async function POST(request: NextRequest) {
     });
 
     if (!sendResult.success) {
+      // Create failed email log
+      const failedLog = await vyntrizeDb.emailLog.create({
+        data: {
+          subject: emailSubject,
+          body: emailBody,
+          htmlBody: finalBody,
+          fromEmail: process.env.EMAIL_FROM_ADDRESS || 'noreply@vyntrize.com',
+          fromName: process.env.EMAIL_FROM_NAME || 'Vyntrize CRM',
+          toEmail: data.to,
+          toName: data.toName,
+          replyTo: data.replyTo,
+          trackingId,
+          status: 'FAILED',
+          errorMessage: sendResult.error,
+          sentAt: new Date(),
+          contactId: data.contactId,
+          leadId: data.leadId,
+          templateId: data.templateId,
+          userId: session.userId,
+        },
+      });
+      // Enqueue log for background processing (e.g., enrichment)
+      try {
+        const { emailLogQueue } = await import('@/lib/queues/emailLogQueue');
+        await emailLogQueue.add('process', { logId: failedLog.id });
+      } catch (qErr) {
+        console.error('[Email API] Failed to enqueue failed log:', qErr);
+      }
+
       return NextResponse.json(
         { error: sendResult.error || 'Failed to send email' },
         { status: 500 }

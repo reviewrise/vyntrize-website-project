@@ -55,13 +55,16 @@ export default function TaskModal({ task, leadId, onClose, onSaved }: TaskModalP
     } else if (leadId) {
       setSelectedLeadId(leadId);
     }
+  }, [task, leadId]);
 
-    // Fetch users and leads (simplified - in production, add proper error handling)
-    fetchUsers();
-    if (!leadId) {
+  useEffect(() => {
+    if (users.length === 0) {
+      fetchUsers();
+    }
+    if (!leadId && leads.length === 0) {
       fetchLeads();
     }
-  }, [task, leadId]);
+  }, [leadId]);
 
   const fetchUsers = async () => {
     try {
