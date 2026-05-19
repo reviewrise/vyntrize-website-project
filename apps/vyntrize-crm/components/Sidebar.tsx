@@ -6,7 +6,7 @@ import {
     LayoutDashboard, Kanban, Users, Building2,
     Download, UserCog, LogOut, Globe, Briefcase,
     UserCircle, Settings, ChevronRight, BarChart2,
-    CheckSquare, Mail, Send, Sparkles,
+    CheckSquare, Mail, Send, Sparkles, Cpu,
 } from 'lucide-react';
 import { logout } from '@/lib/actions/auth';
 
@@ -29,6 +29,7 @@ const CRM_NAV = [
 
 const SETTINGS_NAV = [
     { href: '/settings/pipeline', label: 'Pipeline Stages', icon: Settings },
+    { href: '/settings/ai-providers', label: 'AI Providers', icon: Cpu },
 ];
 
 const WEBSITE_NAV = [

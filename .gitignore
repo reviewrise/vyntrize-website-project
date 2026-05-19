@@ -26,3 +26,6 @@ packages/@platform/vyntrize-db/src/generated/
 *.log
 .turbo/
 *.tsbuildinfo
+.env
+.env
+scripts/set-secrets.ps1

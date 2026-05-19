@@ -1,8 +1,13 @@
 // Job Scheduler for executing periodic agent tasks using BullMQ
+//
+// Uses LAZY initialization — the Redis/BullMQ connection is created only
+// when the first method that needs it is called, not at module import time.
+// This prevents ECONNREFUSED errors when Redis isn't available yet (e.g. during
+// Next.js build or when the module is imported before Docker networking is ready).
 
 import { Queue, Worker, Job } from 'bullmq';
-import { Redis } from 'ioredis';
 import { Agent, AgentContext } from './base-agent';
+import { redisConnection } from '@/lib/redis';
 
 export enum JobPriority {
   HIGH = 1,
@@ -17,22 +22,21 @@ export interface AgentJobData {
 }
 
 class AgentJobScheduler {
-  private queue: Queue<AgentJobData>;
-  private worker: Worker<AgentJobData>;
-  private redis: Redis;
+  private queue: Queue<AgentJobData> | null = null;
+  private worker: Worker<AgentJobData> | null = null;
   private agents: Map<string, Agent> = new Map();
+  private _initialized = false;
 
-  constructor() {
-    // Initialize Redis connection
-    this.redis = new Redis({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379'),
-      maxRetriesPerRequest: null,
-    });
+  /**
+   * Lazily initialize the BullMQ Queue and Worker.
+   * Safe to call multiple times — only runs once.
+   */
+  private ensureInitialized() {
+    if (this._initialized) return;
 
     // Initialize BullMQ queue
     this.queue = new Queue<AgentJobData>('agent-jobs', {
-      connection: this.redis,
+      connection: redisConnection,
       defaultJobOptions: {
         attempts: 3,
         backoff: {
@@ -56,12 +60,14 @@ class AgentJobScheduler {
         return this.processJob(job);
       },
       {
-        connection: this.redis,
+        connection: redisConnection,
         concurrency: parseInt(process.env.AGENT_JOB_CONCURRENCY || '5'),
       }
     );
 
     this.setupWorkerListeners();
+    this._initialized = true;
+    console.log('[JobScheduler] BullMQ Queue + Worker initialized (lazy)');
   }
 
   /**
@@ -81,7 +87,8 @@ class AgentJobScheduler {
     priority: JobPriority = JobPriority.MEDIUM,
     delay?: number
   ) {
-    await this.queue.add(
+    this.ensureInitialized();
+    await this.queue!.add(
       `${agentType}-job`,
       {
         agentType,
@@ -103,7 +110,8 @@ class AgentJobScheduler {
     cronExpression: string,
     context: AgentContext = {}
   ) {
-    await this.queue.add(
+    this.ensureInitialized();
+    await this.queue!.add(
       `${agentType}-recurring`,
       {
         agentType,
@@ -151,6 +159,8 @@ class AgentJobScheduler {
    * Setup worker event listeners
    */
   private setupWorkerListeners() {
+    if (!this.worker) return;
+
     this.worker.on('completed', (job) => {
       console.log(`[JobScheduler] Job ${job.id} completed`);
     });
@@ -168,11 +178,12 @@ class AgentJobScheduler {
    * Get queue metrics
    */
   async getMetrics() {
+    this.ensureInitialized();
     const [waiting, active, completed, failed] = await Promise.all([
-      this.queue.getWaitingCount(),
-      this.queue.getActiveCount(),
-      this.queue.getCompletedCount(),
-      this.queue.getFailedCount(),
+      this.queue!.getWaitingCount(),
+      this.queue!.getActiveCount(),
+      this.queue!.getCompletedCount(),
+      this.queue!.getFailedCount(),
     ]);
 
     return {
@@ -187,11 +198,10 @@ class AgentJobScheduler {
    * Cleanup
    */
   async close() {
-    await this.worker.close();
-    await this.queue.close();
-    await this.redis.quit();
+    if (this.worker) await this.worker.close();
+    if (this.queue) await this.queue.close();
   }
 }
 
-// Singleton instance
+// Singleton instance — constructor is now a no-op (no Redis connection)
 export const jobScheduler = new AgentJobScheduler();
