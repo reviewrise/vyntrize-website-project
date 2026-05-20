@@ -4,10 +4,11 @@ import { getAIProviderFactory } from '@/lib/agents/ai-provider-factory';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { taskId: string } }
+  { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
-    const taskId = parseInt(params.taskId, 10);
+    const resolvedParams = await params;
+    const taskId = parseInt(resolvedParams.taskId, 10);
     if (isNaN(taskId)) {
       return NextResponse.json({ error: 'Invalid task ID' }, { status: 400 });
     }

@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { EventBus, CRMEvent } from '@/lib/agents/event-bus';
+import { eventBus, CRMEvent } from '@/lib/agents/event-bus';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { taskId: string } }
+  { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
-    const taskId = parseInt(params.taskId, 10);
+    const resolvedParams = await params;
+    const taskId = parseInt(resolvedParams.taskId, 10);
     if (isNaN(taskId)) {
       return NextResponse.json({ error: 'Invalid task ID' }, { status: 400 });
     }
@@ -35,7 +36,7 @@ export async function POST(
     });
 
     // 2. Emit the TASK_APPROVED event so the TaskExecutionAgent can pick it up
-    EventBus.emit(CRMEvent.TASK_APPROVED, { 
+    eventBus.emit(CRMEvent.TASK_APPROVED, { 
       leadId: task.leadId, 
       taskId: task.id 
     });
