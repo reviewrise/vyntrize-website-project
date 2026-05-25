@@ -41,12 +41,11 @@ function createClient(): PrismaClient {
     const pool = new Pool({ connectionString: url });
     const adapter = new PrismaPg(pool);
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new PrismaClient({
         adapter,
         log: getLogConfig(),
         errorFormat: process.env.NODE_ENV === 'development' ? 'pretty' : 'minimal',
-    } as any); // Using 'any' to bridge any strict type changes in the generated client
+    } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 const baseClient = globalThis.__vyntrizeDb ?? createClient();
