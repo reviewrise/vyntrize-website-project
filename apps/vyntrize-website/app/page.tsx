@@ -406,7 +406,7 @@ export default function Home() {
                     <span className="text-[9px] font-mono text-emerald-400 font-bold">LIVE 24/7</span>
                   </div>
                 </div>
-                <div className="flex flex-col divide-y" style={{ divideColor: 'rgba(255,255,255,0.04)' }}>
+                <div className="flex flex-col divide-y" style={{ ['--tw-divide-color']: 'rgba(255,255,255,0.04)' } as any}>
                   {[
                     { label: 'Instant lead qualification & routing',    color: 'bg-blue-500/20 text-blue-300',    dot: '#60a5fa' },
                     { label: 'Autonomous review responses',              color: 'bg-violet-500/20 text-violet-300', dot: '#a78bfa' },
