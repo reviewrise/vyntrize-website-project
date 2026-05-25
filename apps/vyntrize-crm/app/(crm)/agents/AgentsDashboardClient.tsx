@@ -10,12 +10,14 @@ import { ActionDetailModal } from './components/ActionDetailModal';
 import { ManualTriggerModal } from './components/ManualTriggerModal';
 import { EmailTestPanel } from './components/EmailTestPanel';
 import { RoiAnalyticsTab } from './components/RoiAnalyticsTab';
+import { InboxView } from './components/InboxView';
+import { LiveFeed } from './components/LiveFeed';
 import type { AgentAction, HealthStatus, MetricsResponse, FilterState, PaginationInfo } from '@/types/agent-dashboard';
 
-type ActiveTab = 'agents' | 'email' | 'roi';
+type ActiveTab = 'agents_inbox' | 'agents_history' | 'email' | 'roi';
 
 export function AgentsDashboardClient() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('agents');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('agents_inbox');
 
   // State management
   const [actions, setActions] = useState<AgentAction[]>([]);
@@ -247,7 +249,8 @@ export function AgentsDashboardClient() {
       >
         {(
           [
-            { id: 'agents', label: '🤖 Agents', title: 'Agent actions & health' },
+            { id: 'agents_inbox', label: '📥 Inbox', title: 'Pending AI actions' },
+            { id: 'agents_history', label: '📜 History', title: 'All executed actions' },
             { id: 'email',  label: '✉️ Email',  title: 'Test email delivery' },
             { id: 'roi',    label: '📊 ROI',    title: 'AI vs manual performance' },
           ] as { id: ActiveTab; label: string; title: string }[]
@@ -274,13 +277,32 @@ export function AgentsDashboardClient() {
       {/* ── ROI Analytics Tab ───────────────────────────────────────────── */}
       {activeTab === 'roi' && <RoiAnalyticsTab />}
 
-      {/* ── Agents Tab ─────────────────────────────────────────────────── */}
-      {activeTab === 'agents' && (
+      {/* ── Inbox Tab ─────────────────────────────────────────────────── */}
+      {activeTab === 'agents_inbox' && (
         <>
-          {/* Enhanced Health Status Widget */}
           <HealthStatusWidget health={health} loading={loading} />
+          
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div className="col-span-3">
+              <InboxView 
+                actions={actions}
+                pagination={pagination || undefined}
+                loading={loading}
+                onApprove={handleApprove}
+                onReject={handleReject}
+                onRefresh={handleRefresh}
+              />
+            </div>
+            <div className="col-span-1 h-[700px]">
+              <LiveFeed actions={actions} />
+            </div>
+          </div>
+        </>
+      )}
 
-          {/* Metrics Summary */}
+      {/* ── History Tab ─────────────────────────────────────────────────── */}
+      {activeTab === 'agents_history' && (
+        <>
           {metrics && (
             <div className="rounded-2xl p-6" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
               <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--color-text)' }}>
@@ -315,13 +337,11 @@ export function AgentsDashboardClient() {
             </div>
           )}
 
-          {/* Filter Controls */}
           <FilterControls
             filters={filters}
             onFilterChange={updateFilters}
           />
 
-          {/* Actions List */}
           <ActionList
             actions={actions}
             pagination={pagination || undefined}
@@ -331,17 +351,16 @@ export function AgentsDashboardClient() {
             onRetry={handleRefresh}
             onPageChange={handlePageChange}
           />
-        </>
-      )}
 
-      {/* Action Detail Modal */}
-      {selectedAction && (
-        <ActionDetailModal
-          action={selectedAction}
-          onClose={() => setSelectedAction(null)}
-          onApprove={handleApprove}
-          onReject={handleReject}
-        />
+          {selectedAction && (
+            <ActionDetailModal
+              action={selectedAction}
+              onClose={() => setSelectedAction(null)}
+              onApprove={handleApprove}
+              onReject={handleReject}
+            />
+          )}
+        </>
       )}
 
       {/* Manual Trigger Modal */}

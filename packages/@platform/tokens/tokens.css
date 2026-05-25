@@ -1,0 +1,179 @@
+/*
+ * ╔══════════════════════════════════════════════════════════════╗
+ * ║          VYNTRISE SHARED DESIGN TOKENS  v1.0                ║
+ * ║                                                              ║
+ * ║  Single source of truth for ALL workspace apps.             ║
+ * ║  Consumed by:                                               ║
+ * ║    • apps/vyntrize-website  (Tailwind v4 via @import)       ║
+ * ║    • apps/vyntrize-crm      (Tailwind v3 via @import)       ║
+ * ║                                                              ║
+ * ║  Usage in JSX:  style={{ color: 'var(--color-primary)' }}   ║
+ * ║  Usage in CSS:  color: var(--color-primary);                 ║
+ * ╚══════════════════════════════════════════════════════════════╝
+ */
+
+/* ── Light mode (default) ─────────────────────────────────────── */
+:root,
+[data-theme="light"] {
+  /* Backgrounds */
+  --color-bg:              #ffffff;
+  --color-surface:         #f8fafc;   /* slate-50 */
+  --color-raised:          #f1f5f9;   /* slate-100 */
+
+  /* Borders */
+  --color-border:          #e2e8f0;   /* slate-200 */
+  --color-border-muted:    #f1f5f9;   /* slate-100 */
+  --color-border-hover:    #cbd5e1;   /* slate-300 */
+
+  /* Text */
+  --color-text:            #0f172a;   /* slate-900 */
+  --color-text-muted:      #64748b;   /* slate-500 */
+  --color-text-subtle:     #94a3b8;   /* slate-400 */
+
+  /* Brand — Primary (Indigo) */
+  --color-primary:         #6366F1;   /* indigo-500 */
+  --color-primary-h:       #4F46E5;   /* indigo-600 — hover */
+  --color-primary-fg:      #ffffff;
+  --color-primary-soft:    #eef2ff;   /* indigo-50 — soft bg */
+
+  /* Brand — Gradient (logo, hero visuals) */
+  --color-grad-start:      #41A5FF;   /* bright cyan-blue */
+  --color-grad-end:        #2A52BE;   /* deep indigo-blue */
+
+  /* Semantic colours */
+  --color-success:         #10b981;   /* emerald-500 */
+  --color-success-soft:    #ecfdf5;
+  --color-danger:          #ef4444;   /* red-500 */
+  --color-danger-soft:     #fef2f2;
+  --color-warning:         #f59e0b;   /* amber-500 */
+  --color-warning-soft:    #fffbeb;
+
+  /* Data viz accents */
+  --color-data-green:      #00E5FF;
+  --color-data-purple:     #9D4EDD;
+  --color-data-cyan:       #00B4D8;
+
+  /* Shadows */
+  --shadow-sm:             0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md:             0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg:             0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+
+  /* Border radius */
+  --radius-sm:             0.375rem;  /* 6px  */
+  --radius-md:             0.5rem;    /* 8px  */
+  --radius-lg:             0.75rem;   /* 12px */
+  --radius-xl:             1rem;      /* 16px */
+  --radius-2xl:            1.5rem;    /* 24px */
+}
+
+/* ── Dark mode ────────────────────────────────────────────────── */
+.dark,
+[data-theme="dark"] {
+  /* Backgrounds — VyntRise navy brand spec */
+  --color-bg:              #0B101A;   /* deepest navy — main canvas */
+  --color-surface:         #151B2B;   /* card / panel surface */
+  --color-raised:          #1E2538;   /* elevated surface / hover */
+
+  /* Borders */
+  --color-border:          #1E2538;
+  --color-border-muted:    #151B2B;
+  --color-border-hover:    #2d3755;
+
+  /* Text */
+  --color-text:            #FFFFFF;
+  --color-text-muted:      #8A96A8;   /* cool muted slate */
+  --color-text-subtle:     #5A6478;
+
+  /* Brand — Primary (same indigo, lighter hover on dark) */
+  --color-primary:         #6366F1;
+  --color-primary-h:       #818CF8;   /* lighter on dark for hover */
+  --color-primary-fg:      #ffffff;
+  --color-primary-soft:    #1e1b4b;   /* indigo-950 — soft bg on dark */
+
+  /* Semantic colours */
+  --color-success:         #34d399;   /* emerald-400 */
+  --color-success-soft:    #052e16;
+  --color-danger:          #f87171;   /* red-400 */
+  --color-danger-soft:     #2d1515;
+  --color-warning:         #fbbf24;   /* amber-400 */
+  --color-warning-soft:    #2d1f00;
+
+  /* Shadows (heavier on dark) */
+  --shadow-sm:             0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md:             0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg:             0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+}
+
+/* ── High contrast accessibility override ─────────────────────── */
+@media (prefers-contrast: high) {
+  :root {
+    --color-border:   #000000;
+    --color-text:     #000000;
+    --color-bg:       #ffffff;
+  }
+  .dark, [data-theme="dark"] {
+    --color-border:   #ffffff;
+    --color-text:     #ffffff;
+    --color-bg:       #000000;
+  }
+}
+
+/* ── Shared utility classes (available in both apps) ──────────── */
+
+/* Backgrounds */
+.vr-bg-base    { background-color: var(--color-bg); }
+.vr-bg-surface { background-color: var(--color-surface); }
+.vr-bg-raised  { background-color: var(--color-raised); }
+
+/* Text */
+.vr-text-base   { color: var(--color-text); }
+.vr-text-muted  { color: var(--color-text-muted); }
+.vr-text-subtle { color: var(--color-text-subtle); }
+
+/* Brand gradient — logo, hero visuals */
+.vr-brand-gradient {
+  background: linear-gradient(135deg, var(--color-grad-start) 0%, var(--color-grad-end) 100%);
+}
+.vr-brand-gradient-text {
+  background: linear-gradient(135deg, var(--color-grad-start) 0%, var(--color-grad-end) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Primary button */
+.vr-btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-primary-fg);
+  transition: background-color 0.15s;
+}
+.vr-btn-primary:hover { background-color: var(--color-primary-h); }
+
+/* Shared card style */
+.vr-card {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Shared badge style (GitHub-style) */
+.vr-badge {
+  background-color: var(--color-surface);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-size: 0.75rem;
+  font-family: ui-monospace, monospace;
+  font-weight: 500;
+}
+
+/* Focus ring (consistent across apps) */
+.vr-focus-ring:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}

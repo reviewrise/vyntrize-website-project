@@ -9,6 +9,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
   const tabs = [
     { name: 'Pipeline', href: '/settings/pipeline' },
     { name: 'AI Providers', href: '/settings/ai-providers' },
+    { name: 'Integrations', href: '/settings/integrations' },
   ];
 
   return (

@@ -1,19 +1,29 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, JetBrains_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import './globals.css';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const inter = Inter({
+    subsets: ['latin'],
+    variable: '--font-sans',
+    display: 'swap',
+});
+
+const jetbrainsMono = JetBrains_Mono({
+    subsets: ['latin'],
+    variable: '--font-mono',
+    display: 'swap',
+});
 
 export const metadata: Metadata = {
-    title: 'Vyntrize CRM',
-    description: 'Internal CRM for Vyntrize agency team',
+    title: 'VyntRise — CRM',
+    description: 'The VyntRise internal CRM — manage leads, campaigns, and AI workflows.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
-        <html lang="en" data-theme="light" suppressHydrationWarning>
-            <body className={inter.variable}>
+        <html lang="en" data-theme="light" suppressHydrationWarning className={`${inter.variable} ${jetbrainsMono.variable}`}>
+            <body className="font-sans antialiased" style={{ fontFamily: 'var(--font-sans), ui-sans-serif, system-ui, sans-serif' }}>
                 <ThemeProvider>
                     {children}
                 </ThemeProvider>
@@ -21,3 +31,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </html>
     );
 }
+

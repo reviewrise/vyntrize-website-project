@@ -1,6 +1,6 @@
 import { PrismaClient } from './generated/client';
-import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 declare global {
     var __vyntrizeDb: PrismaClient | undefined;
@@ -28,59 +28,24 @@ function getDatabaseUrl(): string {
     return url;
 }
 
-function getPoolConfig() {
-    const connectionString = getDatabaseUrl();
-    const sslMode = process.env.VYNTRIZE_DATABASE_SSL_MODE;
-    const config: { connectionString: string; ssl?: Record<string, unknown> } = {
-        connectionString,
-    };
-
-    if (!sslMode || sslMode === 'disable') {
-        return config;
-    }
-
-    config.ssl = {};
-
-    const isLocal =
-        connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
-    if (isLocal && sslMode !== 'require' && sslMode !== 'verify-ca' && sslMode !== 'verify-full') {
-        try {
-            const url = new URL(connectionString);
-            url.searchParams.delete('sslmode');
-            return { connectionString: url.toString() };
-        } catch {
-            return { connectionString };
-        }
-    }
-
-    if (sslMode === 'prefer' || sslMode === 'require') {
-        config.ssl.rejectUnauthorized = sslMode === 'require';
-    }
-
-    if (sslMode === 'verify-ca' || sslMode === 'verify-full') {
-        config.ssl.rejectUnauthorized = true;
-        if (process.env.VYNTRIZE_DATABASE_SSL_CA) config.ssl.ca = process.env.VYNTRIZE_DATABASE_SSL_CA;
-        if (process.env.VYNTRIZE_DATABASE_SSL_CERT) config.ssl.cert = process.env.VYNTRIZE_DATABASE_SSL_CERT;
-        if (process.env.VYNTRIZE_DATABASE_SSL_KEY) config.ssl.key = process.env.VYNTRIZE_DATABASE_SSL_KEY;
-    }
-
-    return config;
-}
-
 function getLogConfig(): Array<'query' | 'error' | 'warn'> {
     if (process.env.NODE_ENV === 'development') return ['query', 'error', 'warn'];
     return ['error'];
 }
 
 function createClient(): PrismaClient {
-    const pool = new Pool(getPoolConfig());
+    // Inject into standard env var as well for safety
+    const url = getDatabaseUrl();
+    process.env.DATABASE_URL = url;
+    
+    const pool = new Pool({ connectionString: url });
     const adapter = new PrismaPg(pool);
-
+    
     return new PrismaClient({
         adapter,
         log: getLogConfig(),
         errorFormat: process.env.NODE_ENV === 'development' ? 'pretty' : 'minimal',
-    });
+    } as any); // Using 'any' to bridge any strict type changes in the generated client
 }
 
 const baseClient = globalThis.__vyntrizeDb ?? createClient();

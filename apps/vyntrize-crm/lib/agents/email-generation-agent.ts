@@ -407,6 +407,13 @@ export class EmailGenerationAgent extends Agent {
       parts.push(`\nLead Score: ${lead.score}/100 (${lead.qualificationStatus})`);
     }
 
+    // Assignee / Booking Link
+    if (lead.assignee) {
+      parts.push(`\nSales Rep (Assignee): ${lead.assignee.displayName}`);
+      const slug = lead.assignee.bookingSlug || lead.assignee.id;
+      parts.push(`Booking Link: https://vyntrise.com/book/${slug}`);
+    }
+
     return parts.join('\n');
   }
 
@@ -470,7 +477,7 @@ export class EmailGenerationAgent extends Agent {
     const fewShotExamples = await this.fetchFewShotExamples(5);
 
     // ── Build system prompt ────────────────────────────────────────────────
-    let systemPrompt = `You are a professional sales email writer. Generate personalized, engaging emails that drive action. Keep emails concise (150-200 words), use a ${tone} tone, and include a clear call-to-action.`;
+    let systemPrompt = `You are a professional sales email writer. Generate personalized, engaging emails that drive action. Keep emails concise (150-200 words), use a ${tone} tone, and include a clear call-to-action. If you propose a meeting, always include the Sales Rep's Booking Link provided in the context.`;
 
     if (fewShotExamples.length > 0) {
       systemPrompt += `\n\nIMPORTANT — the user has previously corrected your drafts. Study these examples and EXACTLY mimic their tone, sentence structure, vocabulary, and style:\n`;

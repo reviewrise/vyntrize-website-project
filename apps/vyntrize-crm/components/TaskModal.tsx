@@ -341,6 +341,7 @@ export default function TaskModal({ task, leadId, onClose, onSaved }: TaskModalP
                               <option value="IN_PROGRESS">In Progress</option>
                               <option value="COMPLETED">Completed</option>
                               <option value="CANCELLED">Cancelled</option>
+                              <option value="FAILED">Failed</option>
                             </select>
                           </div>
                         )}

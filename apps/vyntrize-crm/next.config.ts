@@ -2,10 +2,9 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
     output: process.env.NEXT_OUTPUT as 'standalone' | undefined,
-    transpilePackages: ['@platform/vyntrize-db'],
+    transpilePackages: ['@platform/vyntrize-db', '@platform/tokens'],
     serverExternalPackages: [
         '@prisma/client',
-        '@prisma/adapter-pg',
         '@prisma/client-runtime-utils',
         'bullmq',
         'ioredis',

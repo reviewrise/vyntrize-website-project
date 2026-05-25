@@ -21,6 +21,11 @@ export enum CRMEvent {
   CONTACT_CREATED = 'contact_created',
   TASK_CREATED = 'task_created',
   TASK_APPROVED = 'task_approved',
+  CALENDAR_EVENT_CREATED = 'calendar_event_created',
+  CALENDAR_EVENT_UPDATED = 'calendar_event_updated',
+  CALENDAR_EVENT_DELETED = 'calendar_event_deleted',
+  MEETING_ATTENDED = 'meeting_attended',
+  MEETING_MISSED = 'meeting_missed',
 }
 
 export interface EventPayload {

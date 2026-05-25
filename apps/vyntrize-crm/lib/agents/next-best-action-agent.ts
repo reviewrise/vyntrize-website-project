@@ -73,6 +73,10 @@ export class NextBestActionAgent extends Agent {
             orderBy: { createdAt: 'desc' },
             take: 10,
           },
+          calendarEvents: {
+            orderBy: { startTime: 'desc' },
+            take: 5,
+          },
         },
       });
 
@@ -174,6 +178,15 @@ export class NextBestActionAgent extends Agent {
       lead.leadTasks.slice(0, 3).forEach((task: any) => {
         const dueDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date';
         parts.push(`- ${task.title} (${task.priority}, due: ${dueDate})`);
+      });
+    }
+
+    // Calendar Events
+    if (lead.calendarEvents && lead.calendarEvents.length > 0) {
+      parts.push(`\nRecent/Upcoming Meetings:`);
+      lead.calendarEvents.forEach((evt: any) => {
+        const evtDate = new Date(evt.startTime).toLocaleDateString();
+        parts.push(`- [${evtDate}] ${evt.title} (Status: ${evt.status})`);
       });
     }
 
@@ -304,6 +317,23 @@ Focus on:
       recommendations.push({
         action: 'Schedule discovery call',
         reasoning: `Lead has high engagement score (${lead.score}/100). Time to move to next stage.`,
+        priority: 'HIGH',
+      });
+    }
+
+    // Calendar specific rules
+    const upcomingMeeting = lead.calendarEvents?.find((e: any) => new Date(e.startTime) > new Date() && e.status === 'SCHEDULED');
+    if (upcomingMeeting) {
+      recommendations.unshift({
+        action: 'Prepare for meeting',
+        reasoning: `You have an upcoming meeting: "${upcomingMeeting.title}". Review lead history and notes.`,
+        priority: 'HIGH',
+      });
+    } else if (lead.score && lead.score >= 60 && (lead.stage === 'QUALIFIED' || lead.stage === 'CONTACTED')) {
+      // High intent but no upcoming meeting
+      recommendations.push({
+        action: 'Propose meeting with booking link',
+        reasoning: `Lead is warm but has no scheduled meeting. Send your booking link to lock in a consultation.`,
         priority: 'HIGH',
       });
     }

@@ -109,3 +109,73 @@ export async function emitContactCreated(contactId: string, userId?: string, met
 export async function emitCRMEvent(event: CRMEvent, payload: EventPayload) {
   await eventBus.emitCRMEvent(event, payload);
 }
+
+/**
+ * Emit a calendar event created event
+ */
+export async function emitCalendarEventCreated(eventId: string, leadId?: string, contactId?: string, userId?: string) {
+  await eventBus.emitCRMEvent(CRMEvent.CALENDAR_EVENT_CREATED, {
+    leadId,
+    contactId,
+    userId,
+    metadata: {
+      eventId,
+    },
+  });
+}
+
+/**
+ * Emit a calendar event updated event
+ */
+export async function emitCalendarEventUpdated(eventId: string, leadId?: string, contactId?: string, userId?: string) {
+  await eventBus.emitCRMEvent(CRMEvent.CALENDAR_EVENT_UPDATED, {
+    leadId,
+    contactId,
+    userId,
+    metadata: {
+      eventId,
+    },
+  });
+}
+
+/**
+ * Emit a calendar event deleted event
+ */
+export async function emitCalendarEventDeleted(eventId: string, leadId?: string, contactId?: string, userId?: string) {
+  await eventBus.emitCRMEvent(CRMEvent.CALENDAR_EVENT_DELETED, {
+    leadId,
+    contactId,
+    userId,
+    metadata: {
+      eventId,
+    },
+  });
+}
+
+/**
+ * Emit a meeting attended event
+ */
+export async function emitMeetingAttended(eventId: string, leadId?: string, contactId?: string, userId?: string) {
+  await eventBus.emitCRMEvent(CRMEvent.MEETING_ATTENDED, {
+    leadId,
+    contactId,
+    userId,
+    metadata: {
+      eventId,
+    },
+  });
+}
+
+/**
+ * Emit a meeting missed event
+ */
+export async function emitMeetingMissed(eventId: string, leadId?: string, contactId?: string, userId?: string) {
+  await eventBus.emitCRMEvent(CRMEvent.MEETING_MISSED, {
+    leadId,
+    contactId,
+    userId,
+    metadata: {
+      eventId,
+    },
+  });
+}

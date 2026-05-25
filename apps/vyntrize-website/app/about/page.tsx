@@ -11,34 +11,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 
-/* ─── Animated counter ─── */
-function Counter({ to, suffix = '', prefix = '' }: { to: number; suffix?: string; prefix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true });
-  const [val, setVal] = useState(0);
-  useEffect(() => {
-    if (!inView) return;
-    const duration = 1400;
-    const step = 16;
-    const increment = to / (duration / step);
-    let current = 0;
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= to) { setVal(to); clearInterval(timer); }
-      else setVal(Math.floor(current));
-    }, step);
-    return () => clearInterval(timer);
-  }, [inView, to]);
-  return <span ref={ref}>{prefix}{val.toLocaleString()}{suffix}</span>;
-}
 
-/* ─── Data ─── */
-const stats = [
-  { label: 'Businesses empowered', to: 500, suffix: '+', color: 'text-blue-600', context: 'across 12+ industries' },
-  { label: 'Tasks automated', to: 1000000, suffix: '+', color: 'text-violet-600', context: 'every month, 24/7' },
-  { label: 'Client satisfaction', to: 99, suffix: '%', color: 'text-emerald-600', context: 'avg. across all plans' },
-  { label: 'Avg. ROI increase', to: 35, suffix: 'x', prefix: '3.', color: 'text-amber-600', context: 'within first 90 days' },
-];
 
 const principles = [
   {
@@ -83,9 +56,9 @@ const industries = [
 const milestones = [
   { year: '2022', label: 'Founded', body: 'VyntRise launched with a single mission: give small businesses the tools that enterprise companies take for granted.' },
   { year: '2023', label: '100 clients', body: 'Crossed 100 active clients across healthcare, e-commerce, and professional services. First AI agent deployed.' },
-  { year: '2024', label: '1M+ tasks', body: 'Autonomous agents crossed 1 million completed tasks. Expanded to data architecture and custom software services.' },
+  { year: '2024', label: 'Scaling up', body: 'Successfully deployed autonomous agents for our early clients. Expanded services to custom data pipelines and specialized integrations.' },
   { year: '2025', label: 'Enterprise tier', body: 'Launched Enterprise plan with on-premise deployment, custom SLAs, and dedicated account management.' },
-  { year: '2026', label: 'Today', body: '500+ businesses. 5 service lines. Still the same mission — help every business rise.' },
+  { year: '2026', label: 'Today', body: 'Growing client base across multiple sectors. High-touch bespoke partnerships, still focused on our core mission — helping local businesses rise.' },
 ];
 
 const comparison = [
@@ -128,7 +101,7 @@ const team = [
   {
     name: 'Biniyam Lombe',
     title: 'AI Systems Architect & LLM Engineer',
-    bio: 'Designs and builds the autonomous agent systems and LLM pipelines powering 1M+ tasks per month.',
+    bio: 'Designs and builds the autonomous agent systems and LLM pipelines powering highly efficient custom client workflows.',
     initials: 'BL',
     color: 'bg-emerald-500',
     tag: 'AI Engineering',
@@ -275,30 +248,98 @@ const portfolioBar: Record<string, string> = {
               </div>
             </motion.div>
 
-            {/* Right: stat panel */}
-            <motion.div
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.65, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-              className="grid grid-cols-2 gap-3"
-            >
-              {stats.map((s, i) => (
-                <motion.div
-                  key={s.label}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.45, delay: 0.2 + i * 0.08 }}
-                  className="rounded-2xl p-5 shadow-sm"
-                  style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
-                >
-                  <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-subtle)' }}>{s.label}</p>
-                  <p className={`text-3xl font-extrabold ${s.color}`}>
-                    <Counter to={s.to} suffix={s.suffix} prefix={s.prefix} />
+            {/* Right: Founder Mission & Performance Stat */}
+            <div className="flex flex-col gap-4">
+
+              {/* Founder Quote Card */}
+              <motion.div
+                initial={{ opacity: 0, x: 24 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.65, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                className="relative rounded-2xl p-7 overflow-hidden"
+                style={{
+                  border: '1px solid rgba(99,102,241,0.18)',
+                  backgroundColor: 'var(--color-surface)',
+                  boxShadow: '0 12px 40px rgba(99,102,241,0.06)',
+                }}
+              >
+                <div className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full blur-2xl" style={{ backgroundColor: 'rgba(99,102,241,0.12)' }} />
+                <div className="pointer-events-none absolute -left-12 -bottom-12 h-36 w-36 rounded-full blur-2xl" style={{ backgroundColor: 'rgba(65,165,255,0.10)' }} />
+                <div className="relative">
+                  <div className="text-6xl font-serif leading-none select-none mb-1" style={{ color: 'rgba(99,102,241,0.2)', lineHeight: 1 }}>&ldquo;</div>
+                  <p className="text-sm md:text-base leading-relaxed font-medium mb-5" style={{ color: 'var(--color-text)' }}>
+                    At VyntRise, we believe small businesses deserve the same calibre of technology and growth infrastructure as the world&apos;s largest enterprises. Our mission is to build autonomous, transparent systems that level the playing field &mdash; allowing local business owners to operate with absolute clarity and scale without limits.
                   </p>
-                  <p className="text-[11px] mt-1" style={{ color: 'var(--color-text-subtle)' }}>{s.context}</p>
-                </motion.div>
-              ))}
-            </motion.div>
+                  <div className="flex items-center gap-3 pt-4" style={{ borderTop: '1px dashed var(--color-border)' }}>
+                    <div className="h-9 w-9 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 shadow" style={{ background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' }}>
+                      AB
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold leading-none mb-0.5" style={{ color: 'var(--color-text)' }}>Abdisa Bati</p>
+                      <p className="text-[11px]" style={{ color: 'var(--color-text-subtle)' }}>Founder &amp; CEO, VyntRise</p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* ROI Performance Card — bold gradient */}
+              <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, delay: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                className="relative rounded-2xl overflow-hidden"
+                style={{ boxShadow: '0 16px 48px rgba(245,158,11,0.22)' }}
+              >
+                {/* Amber gradient base */}
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #b45309 0%, #d97706 40%, #f59e0b 100%)' }} />
+                {/* Radial highlight */}
+                <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse at 75% 15%, rgba(255,255,255,0.2) 0%, transparent 55%)' }} />
+                {/* Dot texture */}
+                <div className="pointer-events-none absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.7) 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
+
+                <div className="relative p-6 flex items-center gap-5">
+                  {/* Left: label + mini progress bars */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.6)' }}>Partner Performance</p>
+                    <p className="text-base font-extrabold text-white mb-4">Avg. Return on Investment</p>
+                    <div className="flex flex-col gap-2.5">
+                      {[
+                        { label: 'Revenue from new leads', pct: 85 },
+                        { label: 'Hours reclaimed per week', pct: 72 },
+                        { label: 'Reputation growth',       pct: 90 },
+                      ].map((row) => (
+                        <div key={row.label}>
+                          <div className="flex justify-between text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.65)' }}>
+                            <span>{row.label}</span>
+                            <span className="font-bold text-white">{row.pct}%</span>
+                          </div>
+                          <div className="h-1 rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${row.pct}%` }}
+                              transition={{ duration: 1.1, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                              className="h-full rounded-full"
+                              style={{ backgroundColor: 'rgba(255,255,255,0.75)' }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[10px] mt-3" style={{ color: 'rgba(255,255,255,0.45)' }}>Within first 90 days &middot; All client partners</p>
+                  </div>
+
+                  {/* Right: Big number */}
+                  <div
+                    className="flex flex-col items-center justify-center shrink-0 pl-5"
+                    style={{ borderLeft: '1px solid rgba(255,255,255,0.2)' }}
+                  >
+                    <span className="text-5xl font-black font-mono text-white leading-none tracking-tight">3.0x</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider mt-1.5" style={{ color: 'rgba(255,255,255,0.55)' }}>ROI lift</span>
+                  </div>
+                </div>
+              </motion.div>
+
+            </div>
           </div>
         </div>
       </section>

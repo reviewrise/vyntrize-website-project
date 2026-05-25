@@ -57,6 +57,15 @@ export class StagnationDetectionAgent extends Agent {
             },
           },
         },
+        calendarEvents: {
+          where: {
+            startTime: { gte: new Date() },
+          },
+          orderBy: {
+            startTime: 'asc',
+          },
+          take: 1,
+        },
       },
     });
 
@@ -73,6 +82,14 @@ export class StagnationDetectionAgent extends Agent {
       return {
         success: true,
         reasoning: 'Lead is closed, skipping stagnation check',
+      };
+    }
+
+    // Skip leads with upcoming meetings
+    if (lead.calendarEvents && lead.calendarEvents.length > 0) {
+      return {
+        success: true,
+        reasoning: `Lead has an upcoming meeting scheduled for ${lead.calendarEvents[0].startTime.toLocaleDateString()}, skipping stagnation check`,
       };
     }
 

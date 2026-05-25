@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
@@ -8,7 +9,7 @@ import {
     Download, UserCog, LogOut, Briefcase,
     UserCircle, Settings, ChevronRight, BarChart2,
     CheckSquare, Mail, Send, Sparkles, Inbox,
-    FileText, GitBranch, ChevronDown,
+    FileText, GitBranch, ChevronDown, CalendarDays,
 } from 'lucide-react';
 import { logout } from '@/lib/actions/auth';
 
@@ -24,6 +25,7 @@ const CRM_NAV = [
     { href: '/contacts', label: 'Contacts', icon: Users },
     { href: '/companies', label: 'Companies', icon: Building2 },
     { href: '/tasks', label: 'Tasks', icon: CheckSquare },
+    { href: '/calendar', label: 'Calendar', icon: CalendarDays },
     { href: '/analytics', label: 'Analytics', icon: BarChart2 },
 ];
 
@@ -129,6 +131,7 @@ function EmailSection() {
 
 export function Sidebar({ role, displayName, email }: SidebarProps) {
     const initials = displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+    const [logoError, setLogoError] = useState(false);
 
     return (
         <aside
@@ -143,20 +146,34 @@ export function Sidebar({ role, displayName, email }: SidebarProps) {
                 className="flex items-center gap-2.5 px-4 h-14 flex-shrink-0"
                 style={{ borderBottom: '1px solid var(--color-border)' }}
             >
-                <div
-                    className="h-7 w-7 rounded-lg flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
-                    style={{ background: 'linear-gradient(135deg, var(--color-primary), #8b5cf6)' }}
-                >
-                    V
-                </div>
-                <div>
-                    <p className="text-[0.8125rem] font-bold leading-tight" style={{ color: 'var(--color-text)' }}>
-                        Vyntrize
-                    </p>
-                    <p className="text-[10px] leading-tight" style={{ color: 'var(--color-text-subtle)' }}>
-                        CRM
-                    </p>
-                </div>
+                <Link href="/dashboard" className="flex items-center gap-2">
+                    {logoError ? (
+                        <div
+                            className="h-7 w-7 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                            style={{ background: 'linear-gradient(135deg, #4f6ef7, #7c5bf7)' }}
+                        >
+                            V
+                        </div>
+                    ) : (
+                        <Image
+                            src="/images/logo.png"
+                            alt="VyntRise"
+                            width={28}
+                            height={28}
+                            className="object-contain shrink-0"
+                            priority
+                            onError={() => setLogoError(true)}
+                        />
+                    )}
+                    <div>
+                        <p className="text-[0.8125rem] font-bold leading-tight" style={{ color: 'var(--color-text)', letterSpacing: '-0.01em' }}>
+                            VyntRise
+                        </p>
+                        <p className="text-[10px] leading-tight font-medium" style={{ color: 'var(--color-primary)' }}>
+                            CRM
+                        </p>
+                    </div>
+                </Link>
             </div>
 
             {/* Nav */}
@@ -201,7 +218,7 @@ export function Sidebar({ role, displayName, email }: SidebarProps) {
                     style={{ backgroundColor: 'var(--color-raised)' }}>
                     <div
                         className="h-7 w-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
-                        style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+                        style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-h))' }}
                     >
                         {initials}
                     </div>
