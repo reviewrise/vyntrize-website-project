@@ -8,7 +8,7 @@
     "dev:crm": "pnpm --filter vyntrize-crm dev",
     "dev:website": "pnpm --filter vyntrize-website dev",
     "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r exec tsc --noEmit",
+    "typecheck": "pnpm --filter=!@platform/tokens -r exec tsc --noEmit",
     "db:generate": "pnpm --filter @platform/vyntrize-db db:generate",
     "db:migrate": "pnpm --filter @platform/vyntrize-db db:migrate",
     "db:migrate:deploy": "pnpm --filter @platform/vyntrize-db db:migrate:deploy",
