@@ -41,6 +41,7 @@ function createClient(): PrismaClient {
     const pool = new Pool({ connectionString: url });
     const adapter = new PrismaPg(pool);
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new PrismaClient({
         adapter,
         log: getLogConfig(),
