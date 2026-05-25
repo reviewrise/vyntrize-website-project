@@ -282,63 +282,6 @@ const portfolioBar: Record<string, string> = {
                 </div>
               </motion.div>
 
-              {/* ROI Performance Card — bold gradient */}
-              <motion.div
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.55, delay: 0.32, ease: [0.16, 1, 0.3, 1] }}
-                className="relative rounded-2xl overflow-hidden"
-                style={{ boxShadow: '0 16px 48px rgba(245,158,11,0.22)' }}
-              >
-                {/* Amber gradient base */}
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #b45309 0%, #d97706 40%, #f59e0b 100%)' }} />
-                {/* Radial highlight */}
-                <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse at 75% 15%, rgba(255,255,255,0.2) 0%, transparent 55%)' }} />
-                {/* Dot texture */}
-                <div className="pointer-events-none absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.7) 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
-
-                <div className="relative p-6 flex items-center gap-5">
-                  {/* Left: label + mini progress bars */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.6)' }}>Partner Performance</p>
-                    <p className="text-base font-extrabold text-white mb-4">Avg. Return on Investment</p>
-                    <div className="flex flex-col gap-2.5">
-                      {[
-                        { label: 'Revenue from new leads', pct: 85 },
-                        { label: 'Hours reclaimed per week', pct: 72 },
-                        { label: 'Reputation growth',       pct: 90 },
-                      ].map((row) => (
-                        <div key={row.label}>
-                          <div className="flex justify-between text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.65)' }}>
-                            <span>{row.label}</span>
-                            <span className="font-bold text-white">{row.pct}%</span>
-                          </div>
-                          <div className="h-1 rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${row.pct}%` }}
-                              transition={{ duration: 1.1, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                              className="h-full rounded-full"
-                              style={{ backgroundColor: 'rgba(255,255,255,0.75)' }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-[10px] mt-3" style={{ color: 'rgba(255,255,255,0.45)' }}>Within first 90 days &middot; All client partners</p>
-                  </div>
-
-                  {/* Right: Big number */}
-                  <div
-                    className="flex flex-col items-center justify-center shrink-0 pl-5"
-                    style={{ borderLeft: '1px solid rgba(255,255,255,0.2)' }}
-                  >
-                    <span className="text-5xl font-black font-mono text-white leading-none tracking-tight">3.0x</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider mt-1.5" style={{ color: 'rgba(255,255,255,0.55)' }}>ROI lift</span>
-                  </div>
-                </div>
-              </motion.div>
-
             </div>
           </div>
         </div>
