@@ -85,6 +85,19 @@ export class DripCampaignAgent extends Agent {
           }
         }
 
+        // If calendar event created, stop all active drip sequences unconditionally
+        if (context.eventData?.event === 'calendar_event_created') {
+          for (const enrollment of activeEnrollments) {
+            if (enrollment.status === 'ACTIVE') {
+              await this.stopEnrollment(enrollment.id, 'meeting_scheduled');
+            }
+          }
+          return {
+            success: true,
+            reasoning: `Stopped ${activeEnrollments.length} active drips because a meeting was scheduled.`,
+          };
+        }
+
         // 2. Check if any active DripSequence trigger conditions match this lead
         const sequences = await prisma.dripSequence.findMany({
           where: { isActive: true },
@@ -577,6 +590,19 @@ export class DripCampaignAgent extends Agent {
       if (trackingReplied || activityReplied) {
         return 'email_replied';
       }
+    }
+
+    // Stop if they have an active scheduled meeting
+    const upcomingMeeting = await prisma.calendarEvent.findFirst({
+      where: {
+        leadId: lead.id,
+        status: 'SCHEDULED',
+        startTime: { gte: new Date() },
+      }
+    });
+
+    if (upcomingMeeting) {
+      return 'meeting_scheduled';
     }
 
     return null;

@@ -1,0 +1,11 @@
+{
+  "name": "@platform/tokens",
+  "version": "0.1.0",
+  "description": "Shared VyntRise design tokens — single source of truth for colors, fonts, radius, and shadows across all workspace apps.",
+  "exports": {
+    "./tokens.css": "./tokens.css"
+  },
+  "files": [
+    "tokens.css"
+  ]
+}

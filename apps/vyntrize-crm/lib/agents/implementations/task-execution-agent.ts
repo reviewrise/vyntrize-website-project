@@ -87,7 +87,7 @@ export class TaskExecutionAgent extends Agent {
       await prisma.leadTask.update({
         where: { id: task.id },
         data: { 
-          status: 'PENDING', // Revert to pending so it can be retried or fixed
+          status: 'FAILED', // Mark as FAILED so it needs explicit attention
           executionLog: { success: false, error: error.message, timestamp: new Date() } 
         }
       });
@@ -101,6 +101,10 @@ export class TaskExecutionAgent extends Agent {
   }
 
   private async executeEmail(leadId: string, payload: { to: string; subject: string; body: string }) {
+    if (!payload || !payload.to || !payload.subject) {
+      throw new Error(`Invalid email payload. Missing "to" or "subject".`);
+    }
+
     console.log(`[TaskExecutionAgent] 📧 Sending Email to ${payload.to}`);
     
     // 1. Fetch Lead & Contact for template vars
@@ -174,6 +178,10 @@ export class TaskExecutionAgent extends Agent {
   }
 
   private async executeStatusUpdate(leadId: string, payload: { newStatus: string }) {
+    if (!payload || !payload.newStatus) {
+      throw new Error(`Invalid status update payload. Missing "newStatus".`);
+    }
+
     console.log(`[TaskExecutionAgent] 🔄 Updating Lead ${leadId} stage to ${payload.newStatus}`);
     await prisma.lead.update({
       where: { id: leadId },

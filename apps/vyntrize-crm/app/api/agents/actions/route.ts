@@ -36,20 +36,22 @@ export async function GET(request: NextRequest) {
     if (search) {
       where.lead = {
         OR: [
-          { contactName: { contains: search, mode: 'insensitive' } },
-          { company: { contains: search, mode: 'insensitive' } },
+          { contact: { firstName: { contains: search, mode: 'insensitive' } } },
+          { contact: { lastName: { contains: search, mode: 'insensitive' } } },
+          { company: { name: { contains: search, mode: 'insensitive' } } },
         ],
       };
     }
 
     // Fetch actions with pagination
-    const [actions, total] = await Promise.all([
+    const [rawActions, total] = await Promise.all([
       prisma.agentAction.findMany({
         where,
         include: {
           lead: {
             include: {
               contact: true,
+              company: true,
             },
           },
           approvedByUser: {
@@ -68,6 +70,15 @@ export async function GET(request: NextRequest) {
       }),
       prisma.agentAction.count({ where }),
     ]);
+
+    const actions = rawActions.map((action) => ({
+      ...action,
+      lead: action.lead ? {
+        ...action.lead,
+        contactName: action.lead.contact ? `${action.lead.contact.firstName} ${action.lead.contact.lastName}`.trim() : 'Unknown Contact',
+        company: action.lead.company?.name || null,
+      } : null,
+    }));
 
     return NextResponse.json({
       actions,

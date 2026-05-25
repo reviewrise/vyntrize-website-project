@@ -79,7 +79,6 @@ export default function Hero() {
   }, []);
 
   const repScore  = useCountUp(94, 72, 1600, 900);
-  const taskCount = useCountUp(1351, 1284, 1400, 1000);
 
   return (
     <section className="relative min-h-screen overflow-hidden flex items-center" style={{ backgroundColor: 'var(--color-bg)' }}>
@@ -109,24 +108,6 @@ export default function Hero() {
         ══════════════════════════════════════════ */}
         <div className="flex flex-col items-start">
 
-          {/* Status pill — brand gradient dot */}
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-8 inline-flex items-center gap-2.5 rounded-full px-4 py-1.5"
-            style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
-          >
-            <span className="relative flex h-2 w-2 shrink-0">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60"
-                style={{ backgroundColor: '#6366F1' }} />
-              <span className="relative inline-flex h-2 w-2 rounded-full" style={{ backgroundColor: '#6366F1' }} />
-            </span>
-            <span className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>AI agents active</span>
-            <span className="h-3.5 w-px" style={{ backgroundColor: 'var(--color-border)' }} />
-            <span className="text-xs font-mono" style={{ color: 'var(--color-text-muted)' }}>{taskCount.toLocaleString()} tasks today</span>
-          </motion.div>
-
           {/* Headline — bigger, bolder */}
           <motion.h1
             initial={{ opacity: 0, y: 22 }}
@@ -135,22 +116,26 @@ export default function Hero() {
             className="font-extrabold tracking-tight leading-[1.02] mb-6"
             style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)', color: 'var(--color-text)' }}
           >
-            Your business,{' '}
+            Your business deserves the same tools{' '}
             <span style={{ background: 'linear-gradient(135deg, #41A5FF 0%, #6366F1 50%, #2A52BE 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              running itself.
+              as the big guys.
             </span>
           </motion.h1>
 
           {/* Subtext — shorter, punchier */}
-          <motion.p
+          <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="text-lg leading-relaxed max-w-[420px] mb-10"
-            style={{ color: 'var(--color-text-muted)' }}
+            className="max-w-[480px] mb-10"
           >
-            Autonomous AI agents that handle your reputation, leads, and workflows — 24/7, without lifting a finger.
-          </motion.p>
+            <p className="text-lg leading-relaxed mb-4" style={{ color: 'var(--color-text-muted)' }}>
+              AI-powered reputation management, lead capture, and scheduling — built for small businesses that are ready to grow.
+            </p>
+            <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+              We started by helping Ethiopian and immigrant-owned businesses in the US. Now we help any small business compete.
+            </p>
+          </motion.div>
 
           {/* CTAs */}
           <motion.div
@@ -279,7 +264,7 @@ export default function Hero() {
               {/* Tasks + Agents */}
               <div className="flex-1 grid grid-cols-2 divide-x divide-white/8">
                 {[
-                  { label: 'Tasks today', value: taskCount.toLocaleString(), color: '#41A5FF', Icon: Activity },
+                  { label: 'Success rate', value: '99.9%', color: '#41A5FF', Icon: Activity },
                   { label: 'Agents active', value: '3', color: '#a78bfa', Icon: Bot },
                 ].map(({ label, value, color, Icon }) => (
                   <div key={label} className="px-5 py-5">

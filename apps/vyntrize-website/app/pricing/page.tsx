@@ -129,13 +129,6 @@ const faqs = [
   { q: 'What payment methods do you accept?', a: 'We accept all major credit and debit cards (Visa, Mastercard, Amex), ACH bank transfers, and wire transfers for Enterprise. All payments are processed securely via Stripe.' },
 ];
 
-/* ─── Testimonials ─── */
-const testimonials = [
-  { quote: 'The ROI was clear within 30 days. Best investment we made this year.', name: 'Sarah M.', role: 'Martinez Dental Group', initials: 'SM', color: 'bg-blue-500' },
-  { quote: 'Switched from a $2k/mo agency to VyntRise Professional. Better results, half the cost.', name: 'Michael C.', role: 'TechStart Solutions', initials: 'MC', color: 'bg-violet-500' },
-  { quote: 'Enterprise plan paid for itself in the first quarter. The team is exceptional.', name: 'James O.', role: 'Meridian Logistics', initials: 'JO', color: 'bg-emerald-500' },
-];
-
 /* ─── Cell renderer ─── */
 function CellValue({ val, isProCol }: { val: string | boolean; isProCol?: boolean }) {
   if (val === true) return (
@@ -295,30 +288,6 @@ export default function PricingPage() {
                 <Check className="h-3.5 w-3.5 text-emerald-500" />
                 {t}
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Social proof ── */}
-      <section className="px-4 md:px-6 py-12" style={{ borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
-        <div className="container mx-auto max-w-6xl">
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-8 text-center" style={{ color: 'var(--color-text-subtle)' }}>What customers say about the value</p>
-          <div className="grid md:grid-cols-3 gap-4">
-            {testimonials.map((t, i) => (
-              <motion.div key={t.name} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }}
-                className="rounded-xl p-5 shadow-sm" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
-              >
-                <div className="flex gap-0.5 mb-3">{[...Array(5)].map((_, j) => <Star key={j} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />)}</div>
-                <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--color-text)' }}>&ldquo;{t.quote}&rdquo;</p>
-                <div className="flex items-center gap-2.5">
-                  <div className={`h-8 w-8 rounded-full ${t.color} flex items-center justify-center text-white text-[10px] font-bold shrink-0`}>{t.initials}</div>
-                  <div>
-                    <p className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>{t.name}</p>
-                    <p className="text-[11px]" style={{ color: 'var(--color-text-subtle)' }}>{t.role}</p>
-                  </div>
-                </div>
-              </motion.div>
             ))}
           </div>
         </div>

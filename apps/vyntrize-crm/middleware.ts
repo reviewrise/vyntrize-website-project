@@ -3,7 +3,14 @@ import { getIronSession } from 'iron-session';
 import { SessionData, getSessionOptions } from './lib/session';
 
 const ADMIN_ONLY_PATHS = ['/admin', '/import'];
-const PUBLIC_PATHS = ['/login', '/api/health', '/api/email/track'];
+const PUBLIC_PATHS = [
+    '/login',
+    '/api/health',
+    '/api/email/track',
+    '/book',
+    '/api/book',
+    '/api/availability'
+];
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
@@ -43,5 +50,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/((?!_next/static|_next/image|favicon.ico|api/health).*)'],
+    // Exclude Next.js internals, public static assets, and the health endpoint
+    matcher: ['/((?!_next/static|_next/image|favicon.ico|images/|icons/|fonts/|api/health).*)'],
 };

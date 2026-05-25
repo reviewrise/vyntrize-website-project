@@ -10,6 +10,8 @@ interface StageTaskConfig {
   taskDescription: string;
   dueInDays: number;
   priority: TaskPriority;
+  taskType?: import('@platform/vyntrize-db').TaskActionType;
+  payload?: any;
 }
 
 export class TaskAutomationAgent extends Agent {
@@ -57,13 +59,7 @@ export class TaskAutomationAgent extends Agent {
         include: {
           contact: true,
           assignee: true,
-          leadTasks: {
-            where: {
-              status: {
-                in: ['PENDING', 'IN_PROGRESS'],
-              },
-            },
-          },
+          leadTasks: true,
         },
       });
 
@@ -73,6 +69,15 @@ export class TaskAutomationAgent extends Agent {
           error: 'Lead not found',
           reasoning: 'Lead does not exist',
         };
+      }
+
+      // Handle specific calendar events directly
+      if (context.eventData?.event === 'calendar_event_created') {
+        return await this.createCalendarTask(lead, context, 'Prepare meeting agenda and review lead history', 1, 'HIGH', 'calendar_prep');
+      } else if (context.eventData?.event === 'meeting_attended') {
+        return await this.createCalendarTask(lead, context, 'Log meeting notes and send follow-up proposal', 1, 'HIGH', 'meeting_follow_up');
+      } else if (context.eventData?.event === 'meeting_missed') {
+        return await this.createCalendarTask(lead, context, 'Reach out to reschedule missed meeting', 0, 'HIGH', 'meeting_reschedule');
       }
 
       // Get stage from event data or current lead stage
@@ -106,6 +111,7 @@ export class TaskAutomationAgent extends Agent {
 
       // Determine assignee (use lead assignee, or current user, or leave unassigned)
       const assignedToId = lead.assigneeId || context.userId || null;
+      const createdById = context.userId || lead.assigneeId || null;
 
       // Create task
       const task = await prisma.leadTask.create({
@@ -116,8 +122,10 @@ export class TaskAutomationAgent extends Agent {
           priority: config.priority,
           dueDate,
           assignedToId,
-          createdById: context.userId || lead.assigneeId || 'system',
+          createdById,
           status: 'PENDING',
+          taskType: config.taskType || 'MANUAL',
+          payload: config.payload ? config.payload : undefined,
         },
       });
 
@@ -161,6 +169,45 @@ export class TaskAutomationAgent extends Agent {
         reasoning: 'Error during task creation',
       };
     }
+  }
+
+  /**
+   * Helper to create calendar-specific tasks
+   */
+  private async createCalendarTask(lead: any, context: AgentContext, taskTitle: string, dueInDays: number, priority: TaskPriority, typeLabel: string): Promise<AgentActionResult> {
+    const existingTask = lead.leadTasks.find((task: any) => task.title === taskTitle);
+    if (existingTask) {
+      return { success: true, reasoning: `Task "${taskTitle}" already exists for this lead` };
+    }
+
+    const dueDate = this.calculateDueDate(dueInDays);
+    const assignedToId = lead.assigneeId || context.userId || null;
+    const createdById = context.userId || lead.assigneeId || null;
+
+    const task = await prisma.leadTask.create({
+      data: {
+        leadId: lead.id,
+        title: taskTitle,
+        description: 'Automatically generated task based on calendar event.',
+        priority,
+        dueDate,
+        assignedToId,
+        createdById,
+        status: 'PENDING',
+        taskType: 'MANUAL',
+      },
+    });
+
+    const reasoning = `Automatically created task "${taskTitle}" for ${lead.contact.firstName} ${lead.contact.lastName} based on calendar action.`;
+    const actionId = await this.recordAction(ActionType.TASK_CREATE, context.leadId!, reasoning, AutonomyLevel.FULLY_AUTONOMOUS, {
+      taskId: task.id,
+      taskTitle,
+      typeLabel,
+    });
+
+    this.log('info', 'Calendar task created automatically', { leadId: context.leadId, taskId: task.id });
+
+    return { success: true, actionId, reasoning, metadata: { taskId: task.id, taskTitle } };
   }
 
   /**

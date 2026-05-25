@@ -19,12 +19,7 @@ const stats = [
   { label: 'Review response rate', value: '98%', delta: 'vs 34% industry avg', icon: CheckCircle2, color: 'text-emerald-600' },
 ];
 
-const testimonial = {
-  quote: '250% traffic increase in 3 months. Our review rating went from 3.8 to 4.7 stars. VyntRise completely transformed our online presence.',
-  name: 'Sarah Martinez',
-  role: 'Owner, Martinez Dental Group',
-  initials: 'SM',
-};
+const outcomeStatement = 'Our clients typically see meaningful improvements in local search visibility and review response rates within the first 60 days.';
 
 const modules = [
   {
@@ -122,19 +117,16 @@ export default function AISearchService() {
         </div>
       </section>
 
-      {/* Testimonial */}
+      {/* Outcome Statement */}
       <section className="px-4 md:px-6 py-8" style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
         <div className="container mx-auto max-w-6xl">
           <div className="flex items-start gap-4 max-w-2xl">
-            <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5">
-              {testimonial.initials}
+            <div className="h-10 w-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0 mt-0.5">
+              <TrendingUp className="h-5 w-5" />
             </div>
             <div>
-              <div className="flex gap-0.5 mb-2">
-                {[...Array(5)].map((_, i) => <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />)}
-              </div>
-              <p className="text-sm leading-relaxed mb-2" style={{ color: 'var(--color-text)' }}>&ldquo;{testimonial.quote}&rdquo;</p>
-              <p className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>{testimonial.name} <span className="font-normal" style={{ color: 'var(--color-text-subtle)' }}>— {testimonial.role}</span></p>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--color-text-subtle)' }}>Typical Client Outcomes</p>
+              <p className="text-sm md:text-base leading-relaxed font-medium" style={{ color: 'var(--color-text)' }}>{outcomeStatement}</p>
             </div>
           </div>
         </div>

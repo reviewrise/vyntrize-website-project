@@ -67,7 +67,7 @@ const services = [
     description: 'Bespoke web applications and AI integrations engineered around your unique business logic — not the other way around.',
     capabilities: ['Bespoke AI Implementation', 'Niche E-commerce Platforms', 'Mini-ERP & Ops Tools', 'Legacy-to-Cloud Migration'],
     outcomes: [
-      { label: 'Projects delivered', value: '100+', icon: Code },
+      { label: 'Project success rate', value: '100%', icon: Code },
       { label: 'On-time delivery', value: '95%', icon: CheckCircle2 },
       { label: 'Client satisfaction', value: '4.9/5', icon: Activity },
     ],

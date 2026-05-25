@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     template: '%s | VyntRise',
   },
   description:
-    'VyntRise deploys autonomous AI agents that handle your reputation, leads, workflows, and data — 24/7, without a single manual step. Trusted by 500+ businesses.',
+    'VyntRise deploys autonomous AI agents that handle your reputation, leads, workflows, and data — 24/7, without a single manual step. Built for small businesses ready to grow.',
   keywords: [
     'AI automation', 'business automation', 'reputation management',
     'AI agents', 'intelligent automation', 'custom software', 'data analytics',
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     siteName: 'VyntRise',
     title: 'VyntRise — AI-Powered Business Growth',
     description:
-      'Autonomous AI agents that handle your reputation, leads, workflows, and data — 24/7. Trusted by 500+ businesses.',
+      'Autonomous AI agents that handle your reputation, leads, workflows, and data — 24/7. Built for small businesses ready to grow.',
     images: [
       {
         url: '/og-image.png',

@@ -3,21 +3,21 @@
  * Uses ioredis-compatible connection options required by BullMQ.
  */
 
-const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
+const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6380';
 
 export const redisConnection = {
   host: (() => {
     try {
       return new URL(REDIS_URL).hostname;
     } catch {
-      return 'localhost';
+      return '127.0.0.1';
     }
   })(),
   port: (() => {
     try {
-      return parseInt(new URL(REDIS_URL).port) || 6379;
+      return parseInt(new URL(REDIS_URL).port) || 6380;
     } catch {
-      return 6379;
+      return 6380;
     }
   })(),
   password: (() => {

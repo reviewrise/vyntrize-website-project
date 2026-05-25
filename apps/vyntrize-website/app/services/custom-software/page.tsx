@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRight, Code, Zap, ShoppingCart, Settings, CheckCircle2,
 const meta = { badge: 'DEV · Service 03', headline: 'Custom Software Development', tagline: 'Built for your exact workflow — not the other way around.', cta: 'Discuss your project', ctaColor: 'bg-emerald-600 hover:bg-emerald-700' };
 
 const stats = [
-  { label: 'Projects delivered', value: '100+', delta: 'since 2022', icon: Code, color: 'text-emerald-600' },
+  { label: 'Project success rate', value: '100%', delta: 'on-time & scope', icon: Code, color: 'text-emerald-600' },
   { label: 'On-time delivery', value: '95%', delta: 'across all projects', icon: CheckCircle2, color: 'text-blue-600' },
   { label: 'Client satisfaction', value: '4.9/5', delta: 'avg rating', icon: Activity, color: 'text-violet-600' },
 ];

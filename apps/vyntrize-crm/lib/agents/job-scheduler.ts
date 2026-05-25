@@ -33,8 +33,8 @@ class AgentJobScheduler {
   private async checkRedisAvailable(): Promise<boolean> {
     if (this._redisAvailable !== null) return this._redisAvailable;
 
-    const host = process.env.REDIS_HOST || 'localhost';
-    const port = parseInt(process.env.REDIS_PORT || '6379');
+    const host = process.env.REDIS_HOST || '127.0.0.1';
+    const port = parseInt(process.env.REDIS_PORT || '6380');
 
     try {
       const { default: Redis } = await import('ioredis');

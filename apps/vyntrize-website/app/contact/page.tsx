@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import {
@@ -26,7 +26,7 @@ const nextSteps = [
 
 const trust = [
   { value: '< 4h', label: 'Avg. first response' },
-  { value: '500+', label: 'Businesses helped' },
+  { value: 'Growing', label: 'Bespoke partnerships' },
   { value: '14-day', label: 'Free trial on all plans' },
 ];
 
@@ -42,7 +42,24 @@ export default function Contact() {
   const [selected, setSelected] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [experts, setExperts] = useState<any[]>([]);
   const formRef = useRef<HTMLFormElement>(null);
+
+  // Fetch experts on mount
+  useEffect(() => {
+    async function fetchExperts() {
+      try {
+        const res = await fetch('/api/experts');
+        if (res.ok) {
+          const data = await res.json();
+          setExperts(data.experts || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch experts:', err);
+      }
+    }
+    fetchExperts();
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -366,6 +383,52 @@ export default function Contact() {
                     </a>
                   ))}
                 </div>
+              </motion.div>
+
+              {/* Address */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.25 }}
+                className="rounded-2xl p-6 shadow-sm"
+                style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
+              >
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--color-text-subtle)' }}>Book an Expert Directly</p>
+                
+                {experts.length > 0 ? (
+                  <div className="space-y-3">
+                    {experts.map((expert) => (
+                      <a
+                        key={expert.id}
+                        href={`http://localhost:3014/book/${expert.bookingSlug}`}
+                        className="flex items-center justify-between gap-3 group rounded-lg p-2.5 transition-all border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-sm shrink-0">
+                            {expert.displayName.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{expert.displayName}</p>
+                            <p className="text-xs text-slate-500 capitalize">{expert.role?.toLowerCase() || 'Expert'}</p>
+                          </div>
+                        </div>
+                        <div className="h-7 w-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors shrink-0">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                        </div>
+                      </a>
+                    ))}
+                    <a
+                      href="http://localhost:3014/book"
+                      className="block w-full text-center mt-2 py-2 px-3 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                    >
+                      Let Us Match You
+                    </a>
+                  </div>
+                ) : (
+                  <div className="text-center py-4 bg-slate-50 rounded-lg border border-dashed border-slate-200">
+                    <p className="text-xs text-slate-500">Loading experts...</p>
+                  </div>
+                )}
               </motion.div>
 
               {/* Address */}

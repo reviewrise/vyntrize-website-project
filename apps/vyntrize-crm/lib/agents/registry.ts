@@ -41,6 +41,11 @@ class AgentRegistry {
       eventBus.registerAgent(CRMEvent.EMAIL_OPENED, leadScoringAgent);
       eventBus.registerAgent(CRMEvent.EMAIL_CLICKED, leadScoringAgent);
       eventBus.registerAgent(CRMEvent.EMAIL_REPLIED, leadScoringAgent);
+      eventBus.registerAgent(CRMEvent.CALENDAR_EVENT_CREATED, leadScoringAgent);
+      eventBus.registerAgent(CRMEvent.CALENDAR_EVENT_UPDATED, leadScoringAgent);
+      eventBus.registerAgent(CRMEvent.CALENDAR_EVENT_DELETED, leadScoringAgent);
+      eventBus.registerAgent(CRMEvent.MEETING_ATTENDED, leadScoringAgent);
+      eventBus.registerAgent(CRMEvent.MEETING_MISSED, leadScoringAgent);
       
       // Scheduled: daily batch scoring for all leads
       await jobScheduler.scheduleRecurringJob(
@@ -53,6 +58,9 @@ class AgentRegistry {
       // Register Task Automation Agent
       // Event-driven: create tasks when stage changes
       eventBus.registerAgent(CRMEvent.STAGE_CHANGED, taskAutomationAgent);
+      eventBus.registerAgent(CRMEvent.CALENDAR_EVENT_CREATED, taskAutomationAgent);
+      eventBus.registerAgent(CRMEvent.MEETING_ATTENDED, taskAutomationAgent);
+      eventBus.registerAgent(CRMEvent.MEETING_MISSED, taskAutomationAgent);
       jobScheduler.registerAgent('TaskAutomationAgent', taskAutomationAgent);
 
       // Register Stagnation Detection Agent
@@ -90,6 +98,8 @@ class AgentRegistry {
         eventBus.registerAgent(CRMEvent.EMAIL_CLICKED, stageProgressionAgent);
         eventBus.registerAgent(CRMEvent.EMAIL_REPLIED, stageProgressionAgent);
         eventBus.registerAgent(CRMEvent.TASK_COMPLETED, stageProgressionAgent);
+        eventBus.registerAgent(CRMEvent.CALENDAR_EVENT_CREATED, stageProgressionAgent);
+        eventBus.registerAgent(CRMEvent.MEETING_ATTENDED, stageProgressionAgent);
 
         // Scheduled: nightly batch evaluation at 2 AM
         await jobScheduler.scheduleRecurringJob(
@@ -113,6 +123,8 @@ class AgentRegistry {
         eventBus.registerAgent(CRMEvent.EMAIL_CLICKED, dripCampaignAgent);
         eventBus.registerAgent(CRMEvent.EMAIL_REPLIED, dripCampaignAgent);
         eventBus.registerAgent(CRMEvent.TASK_COMPLETED, dripCampaignAgent);
+        eventBus.registerAgent(CRMEvent.CALENDAR_EVENT_CREATED, dripCampaignAgent);
+        eventBus.registerAgent(CRMEvent.MEETING_MISSED, dripCampaignAgent);
 
         // Scheduled: process due drip steps every 5 minutes
         await jobScheduler.scheduleRecurringJob(
@@ -137,6 +149,11 @@ class AgentRegistry {
         eventBus.registerAgent(CRMEvent.EMAIL_CLICKED, workflowRuleEngine);
         eventBus.registerAgent(CRMEvent.EMAIL_REPLIED, workflowRuleEngine);
         eventBus.registerAgent(CRMEvent.TASK_COMPLETED, workflowRuleEngine);
+        eventBus.registerAgent(CRMEvent.CALENDAR_EVENT_CREATED, workflowRuleEngine);
+        eventBus.registerAgent(CRMEvent.CALENDAR_EVENT_UPDATED, workflowRuleEngine);
+        eventBus.registerAgent(CRMEvent.CALENDAR_EVENT_DELETED, workflowRuleEngine);
+        eventBus.registerAgent(CRMEvent.MEETING_ATTENDED, workflowRuleEngine);
+        eventBus.registerAgent(CRMEvent.MEETING_MISSED, workflowRuleEngine);
 
         // On-demand: also available for manual triggering
         jobScheduler.registerAgent('WorkflowRuleEngine', workflowRuleEngine);

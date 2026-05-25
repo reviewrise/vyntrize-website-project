@@ -6,6 +6,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { vyntrizeDb } from '@platform/vyntrize-db';
 
+/**
+ * Wraps a Prisma operation with one automatic retry on stale-connection errors.
+ * Cloud databases (Neon, Supabase, etc.) aggressively close idle connections,
+ * causing "Server has closed the connection" on the first request after idle.
+ */
+async function withDbRetry<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (err: any) {
+    const msg: string = err?.message ?? '';
+    const isConnectionError =
+      msg.includes('Server has closed the connection') ||
+      msg.includes('Connection refused') ||
+      msg.includes('connection pool timeout') ||
+      err?.code === 'P1001' || // "Can't reach database server"
+      err?.code === 'P1017';   // "Server has closed the connection"
+
+    if (isConnectionError) {
+      console.warn('[Track API] Stale DB connection detected — reconnecting and retrying...');
+      try { await vyntrizeDb.$disconnect(); } catch {}
+      await vyntrizeDb.$connect();
+      return await fn(); // single retry
+    }
+    throw err;
+  }
+}
+
 interface TrackingEvent {
   type: 'pageview' | 'event' | 'session_start' | 'session_end';
   timestamp: number;
@@ -83,9 +110,9 @@ async function processEvent(event: TrackingEvent, request: NextRequest) {
   }
 
   // Get or create session
-  let session = await vyntrizeDb.analyticsSession.findUnique({
-    where: { sessionId },
-  });
+  let session = await withDbRetry(() =>
+    vyntrizeDb.analyticsSession.findUnique({ where: { sessionId } })
+  );
 
   console.log(`[Track API] Session lookup result:`, session ? 'found' : 'not found');
 

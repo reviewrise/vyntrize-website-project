@@ -10,6 +10,10 @@ interface ScoringFactors {
   completedTasks: number;
   daysSinceActivity: number;
   emailReplies: number;
+  scheduledMeetings: number;
+  attendedMeetings: number;
+  missedMeetings: number;
+  cancelledMeetings: number;
 }
 
 export class LeadScoringAgent extends Agent {
@@ -63,6 +67,13 @@ export class LeadScoringAgent extends Agent {
             },
           },
           emailLogs: {
+            where: {
+              createdAt: {
+                gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+              },
+            },
+          },
+          calendarEvents: {
             where: {
               createdAt: {
                 gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -172,6 +183,12 @@ export class LeadScoringAgent extends Agent {
       (Date.now() - new Date(lastActivityAt).getTime()) / (24 * 60 * 60 * 1000)
     );
 
+    // Meetings
+    const scheduledMeetings = lead.calendarEvents?.length || 0;
+    const attendedMeetings = lead.calendarEvents?.filter((e: any) => e.status === 'ATTENDED').length || 0;
+    const missedMeetings = lead.calendarEvents?.filter((e: any) => e.status === 'MISSED').length || 0;
+    const cancelledMeetings = lead.calendarEvents?.filter((e: any) => e.status === 'CANCELLED').length || 0;
+
     return {
       emailOpens: emailOpens + emailLogOpens,
       emailClicks: emailClicks + emailLogClicks,
@@ -179,6 +196,10 @@ export class LeadScoringAgent extends Agent {
       completedTasks,
       daysSinceActivity,
       emailReplies,
+      scheduledMeetings,
+      attendedMeetings,
+      missedMeetings,
+      cancelledMeetings,
     };
   }
 
@@ -194,10 +215,14 @@ export class LeadScoringAgent extends Agent {
     score += factors.emailReplies * 15;     // +15 per email reply
     score += factors.websiteVisits * 8;     // +8 per website visit
     score += factors.completedTasks * 12;   // +12 per completed task
+    score += factors.scheduledMeetings * 25; // +25 per scheduled meeting
+    score += factors.attendedMeetings * 15; // +15 per attended meeting
 
     // Negative factors (inactivity penalty, max -40)
     const inactivityPenalty = Math.min(factors.daysSinceActivity * 2, 40);
     score -= inactivityPenalty;
+    score -= factors.missedMeetings * 10;   // -10 per missed meeting
+    score -= factors.cancelledMeetings * 5; // -5 per cancelled meeting
 
     // Clamp to 0-100 range
     return Math.max(0, Math.min(100, Math.round(score)));
@@ -237,6 +262,9 @@ export class LeadScoringAgent extends Agent {
     if (factors.emailReplies > 0) engagementDetails.push(`${factors.emailReplies} email replies`);
     if (factors.websiteVisits > 0) engagementDetails.push(`${factors.websiteVisits} website visits`);
     if (factors.completedTasks > 0) engagementDetails.push(`${factors.completedTasks} completed tasks`);
+    if (factors.scheduledMeetings > 0) engagementDetails.push(`${factors.scheduledMeetings} scheduled meetings`);
+    if (factors.attendedMeetings > 0) engagementDetails.push(`${factors.attendedMeetings} attended meetings`);
+    if (factors.missedMeetings > 0) engagementDetails.push(`${factors.missedMeetings} missed meetings`);
 
     if (engagementDetails.length > 0) {
       parts.push(`Engagement: ${engagementDetails.join(', ')}.`);

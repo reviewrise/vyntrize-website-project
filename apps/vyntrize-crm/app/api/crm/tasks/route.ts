@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
         lt: new Date(),
       };
       where.status = {
-        notIn: ['COMPLETED', 'CANCELLED'],
+        notIn: ['COMPLETED', 'CANCELLED', 'FAILED'],
       };
     }
 

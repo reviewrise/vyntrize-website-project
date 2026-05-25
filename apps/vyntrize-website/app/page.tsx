@@ -119,14 +119,7 @@ const services = [
   },
 ];
 
-const testimonials = [
-  { quote: '250% traffic increase in 3 months. Review rating: 3.8 → 4.7 stars.', name: 'Sarah Martinez', role: 'Owner, Martinez Dental', initials: 'SM', color: 'bg-blue-500' },
-  { quote: 'Saved 20+ hours a week. We focus on strategy — VyntRise handles the rest.', name: 'Michael Chen', role: 'CTO, TechStart Solutions', initials: 'MC', color: 'bg-violet-500' },
-  { quote: 'Delivered exactly what we needed, on time and within budget. Exceptional.', name: 'Emily Rodriguez', role: 'CEO, GrowthHub Agency', initials: 'ER', color: 'bg-emerald-500' },
-  { quote: 'Unified our data from 6 tools in under 3 weeks. Absolute game changer.', name: 'James Okafor', role: 'COO, Meridian Logistics', initials: 'JO', color: 'bg-amber-500' },
-  { quote: 'AI agents handle lead follow-up 24/7. Conversion rate up 40%.', name: 'Priya Nair', role: 'VP Sales, Crestline SaaS', initials: 'PN', color: 'bg-rose-500' },
-  { quote: 'Spreadsheets to a real database in 2 weeks. The team was exceptional.', name: 'David Park', role: 'Founder, Stackflow', initials: 'DP', color: 'bg-cyan-500' },
-];
+
 
 const comparisons = [
   { label: 'Results in < 30 days', us: true },
@@ -244,7 +237,79 @@ export default function Home() {
       {/* ── 1. Hero ── */}
       <Hero />
 
-      {/* ── 2. Logo strip — removed ── */}
+      {/* ── 2. Client Showcase ── */}
+      <section className="py-16 border-b" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
+        <div className="container mx-auto max-w-6xl px-4 md:px-6">
+          <div className="text-center mb-10">
+            <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--color-text-subtle)' }}>Real clients. Real results.</p>
+            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Local businesses growing with VyntRise AI agents.</p>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-4">
+            {[
+              {
+                name: 'Habesha Food', initials: 'HF', color: '#10b981',
+                bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)',
+                industry: 'Food & Hospitality',
+                metric: '+1.4★', metricLabel: 'review rating lift',
+                result: 'AI reputation management and local SEO driving consistent new customers.',
+              },
+              {
+                name: 'Liya Cookies', initials: 'LC', color: '#f43f5e',
+                bg: 'rgba(244,63,94,0.08)', border: 'rgba(244,63,94,0.2)',
+                industry: 'E-commerce & Bakery',
+                metric: '100%', metricLabel: 'review response rate',
+                result: 'Autonomous review agents maintaining customer trust around the clock.',
+              },
+              {
+                name: 'Nazaret Market', initials: 'NM', color: '#f59e0b',
+                bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)',
+                industry: 'Local Retail',
+                metric: '24/7', metricLabel: 'AI agent coverage',
+                result: 'Fully automated lead qualification and customer routing with zero manual effort.',
+              },
+            ].map((client, i) => (
+              <motion.div
+                key={client.name}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.45, delay: i * 0.1 }}
+                className="rounded-2xl p-6 flex flex-col gap-4 shadow-sm hover:shadow-md transition-all"
+                style={{ border: `1px solid ${client.border}`, backgroundColor: 'var(--color-bg)' }}
+              >
+                {/* Client identity */}
+                <div className="flex items-center gap-3">
+                  <div
+                    className="h-10 w-10 rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm"
+                    style={{ backgroundColor: client.color }}
+                  >
+                    {client.initials}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>{client.name}</p>
+                    <p className="text-[11px] font-medium" style={{ color: 'var(--color-text-subtle)' }}>{client.industry}</p>
+                  </div>
+                </div>
+                {/* Metric highlight */}
+                <div className="rounded-xl px-4 py-3.5" style={{ backgroundColor: client.bg, border: `1px solid ${client.border}` }}>
+                  <p className="text-2xl font-extrabold font-mono leading-none" style={{ color: client.color }}>{client.metric}</p>
+                  <p className="text-[11px] font-semibold mt-1" style={{ color: client.color, opacity: 0.7 }}>{client.metricLabel}</p>
+                </div>
+                {/* Result description */}
+                <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--color-text-muted)' }}>{client.result}</p>
+                {/* Live badge */}
+                <div className="flex items-center gap-1.5">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" style={{ backgroundColor: client.color }} />
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full" style={{ backgroundColor: client.color }} />
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: client.color, opacity: 0.7 }}>Active</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ── 3. How it works ── */}
       <section className="px-4 md:px-6 py-24" style={{ borderBottom: '1px solid var(--color-border)' }}>
@@ -329,24 +394,32 @@ export default function Home() {
                 <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--color-text)' }}>Autonomous AI Agents</h3>
                 <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>Deploy agents that engage leads, answer questions, and complete workflows — without human intervention.</p>
               </div>
-              {/* Animated bar chart — whileInView */}
-              <div className="mt-4 rounded-xl p-4" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text-subtle)' }}>Tasks automated this week</span>
-                  <span className="text-xs font-bold text-emerald-600">↑ 12%</span>
+              {/* Live capability feed */}
+              <div className="mt-4 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(99,102,241,0.15)', backgroundColor: '#0f172a' }}>
+                <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', backgroundColor: 'rgba(255,255,255,0.03)' }}>
+                  <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-slate-500">Agent capabilities</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    </span>
+                    <span className="text-[9px] font-mono text-emerald-400 font-bold">LIVE 24/7</span>
+                  </div>
                 </div>
-                <p className="text-2xl font-extrabold mb-3" style={{ color: 'var(--color-text)' }}>1,284,091</p>
-                <div className="flex items-end gap-1 h-10">
-                  {[40, 55, 45, 70, 60, 85, 75].map((h, i) => (
-                    <div key={i} className="flex-1 rounded-sm bg-blue-50 overflow-hidden" style={{ height: '100%' }}>
-                      <motion.div
-                        initial={{ height: 0 }}
-                        whileInView={{ height: `${h}%` }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: i * 0.07, ease: [0.16, 1, 0.3, 1] }}
-                        className="w-full rounded-sm bg-blue-500 mt-auto"
-                        style={{ marginTop: 'auto' }}
-                      />
+                <div className="flex flex-col divide-y" style={{ divideColor: 'rgba(255,255,255,0.04)' }}>
+                  {[
+                    { label: 'Instant lead qualification & routing',    color: 'bg-blue-500/20 text-blue-300',    dot: '#60a5fa' },
+                    { label: 'Autonomous review responses',              color: 'bg-violet-500/20 text-violet-300', dot: '#a78bfa' },
+                    { label: 'Automated search citation updates',        color: 'bg-emerald-500/20 text-emerald-300', dot: '#34d399' },
+                    { label: 'CRM & data pipeline synchronization',     color: 'bg-amber-500/20 text-amber-300',  dot: '#fbbf24' },
+                  ].map((cap, idx) => (
+                    <div key={idx} className="flex items-center gap-3 px-4 py-2.5" style={{ borderTop: idx > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                      <span className="relative flex h-1.5 w-1.5 shrink-0">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-50" style={{ backgroundColor: cap.dot, animationDelay: `${idx * 0.4}s` }} />
+                        <span className="relative inline-flex h-1.5 w-1.5 rounded-full" style={{ backgroundColor: cap.dot }} />
+                      </span>
+                      <span className="text-[11px] text-slate-300 flex-1">{cap.label}</span>
+                      <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" />
                     </div>
                   ))}
                 </div>
@@ -503,34 +576,16 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-5">
+          <div className="max-w-4xl">
             {[
               {
-                slug: 'habesha-food',
-                client: 'Habesha Food',
-                service: 'Web Design & Development',
-                tagline: 'A full digital presence for an authentic Ethiopian restaurant.',
-                image: '/images/work/Habesha%20Food/photo_2026-04-09_16-23-33.jpg',
-                color: 'bg-emerald-500',
-                initials: 'HF',
-              },
-              {
-                slug: 'liya-cookies',
-                client: 'Liya Cookies',
-                service: 'Web Design & Development',
-                tagline: 'A delightful online presence for a boutique cookie brand.',
-                image: '/images/work/Liya%20Cookies/photo_2026-04-09_16-23-32.jpg',
-                color: 'bg-rose-500',
-                initials: 'LC',
-              },
-              {
-                slug: 'nazaret-market',
-                client: 'Nazaret Market',
-                service: 'Brand Identity & Web Design',
-                tagline: 'A modern digital storefront for a community grocery market.',
-                image: '/images/work/NAZARET%20MARKET/1.png',
-                color: 'bg-amber-500',
-                initials: 'NM',
+                slug: 'vyntrise-agent',
+                client: 'VyntRise Agent Platform',
+                service: 'Full-Stack SaaS Product',
+                tagline: 'AI-Powered Business Automation Platform with review response agents, calendar-aware scheduling, and lead qualification.',
+                image: '/images/work/vyntrise-agent/dashboard.png',
+                color: 'bg-violet-600',
+                initials: 'VR',
               },
             ].map((item, i) => (
               <motion.div
@@ -542,32 +597,34 @@ export default function Home() {
               >
                 <Link
                   href={`/work/${item.slug}`}
-                  className="group flex flex-col rounded-2xl overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                  className="group flex flex-col md:flex-row rounded-2xl overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-lg"
                   style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
                 >
                   {/* Image */}
-                  <div className="relative h-44 overflow-hidden" style={{ backgroundColor: 'var(--color-raised)' }}>
+                  <div className="relative md:w-3/5 h-64 md:h-auto min-h-[300px] overflow-hidden" style={{ backgroundColor: 'var(--color-raised)' }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={item.image}
                       alt={item.client}
-                      className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                      className="absolute inset-0 w-full h-full object-cover object-left-top transition-transform duration-500 group-hover:scale-105"
                     />
-                    <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/40 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/40 to-transparent md:hidden" />
                   </div>
                   {/* Body */}
-                  <div className="p-4 flex-1">
-                    <p className="text-[11px] font-semibold mb-1" style={{ color: 'var(--color-text-muted)' }}>{item.service}</p>
-                    <p className="text-sm font-bold mb-1" style={{ color: 'var(--color-text)' }}>{item.client}</p>
-                    <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{item.tagline}</p>
-                  </div>
-                  <div className="px-4 pb-4 flex items-center justify-between">
-                    <div className={`h-6 w-6 rounded-full ${item.color} flex items-center justify-center text-white text-[9px] font-bold`}>
-                      {item.initials}
+                  <div className="p-6 md:p-8 flex flex-col flex-1 justify-center border-t md:border-t-0 md:border-l" style={{ borderColor: 'var(--color-border)' }}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className={`h-8 w-8 rounded-lg ${item.color} flex items-center justify-center text-white text-[10px] font-bold shadow-sm`}>
+                        {item.initials}
+                      </div>
+                      <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-primary)' }}>{item.service}</p>
                     </div>
-                    <span className="text-xs font-semibold flex items-center gap-1 group-hover:gap-1.5 transition-all" style={{ color: 'var(--color-primary)' }}>
-                      View project <ArrowRight className="h-3 w-3" />
-                    </span>
+                    <h3 className="text-2xl font-bold mb-3" style={{ color: 'var(--color-text)' }}>{item.client}</h3>
+                    <p className="text-sm leading-relaxed mb-8" style={{ color: 'var(--color-text-muted)' }}>{item.tagline}</p>
+                    <div className="flex items-center gap-2 mt-auto">
+                      <span className="text-sm font-semibold flex items-center gap-1.5 group-hover:gap-2 transition-all" style={{ color: 'var(--color-text)' }}>
+                        Read case study <ArrowRight className="h-4 w-4" style={{ color: 'var(--color-primary)' }} />
+                      </span>
+                    </div>
                   </div>
                 </Link>
               </motion.div>
@@ -661,7 +718,7 @@ export default function Home() {
             Ready to put AI to work?
           </h2>
           <p className="text-slate-400 text-lg max-w-xl mx-auto mb-10 leading-relaxed">
-            Join 500+ businesses already growing with VyntRise. Start free and see results in your first 30 days.
+            Built for small businesses that are ready to grow. Start free and see results in your first 30 days.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

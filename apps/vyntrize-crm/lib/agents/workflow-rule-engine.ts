@@ -351,7 +351,7 @@ export class WorkflowRuleEngine extends Agent {
             title,
             dueDate,
             assignedToId: assigneeId ?? null,
-            createdById: 'system',
+            createdById: null,
             status: 'PENDING',
             priority: 'MEDIUM',
           },

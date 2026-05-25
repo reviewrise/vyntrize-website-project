@@ -1,0 +1,28 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { google } from 'googleapis';
+
+const SCOPES = [
+  'https://www.googleapis.com/auth/calendar',
+  'https://www.googleapis.com/auth/calendar.events',
+  'https://www.googleapis.com/auth/userinfo.email',
+];
+
+export async function GET(request: NextRequest) {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+
+  if (!clientId || !clientSecret || !redirectUri) {
+    return NextResponse.json({ error: 'Google OAuth not configured' }, { status: 500 });
+  }
+
+  const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+
+  const url = oauth2Client.generateAuthUrl({
+    access_type: 'offline', // Get refresh token
+    scope: SCOPES,
+    prompt: 'consent', // Force consent screen to always get refresh token
+  });
+
+  return NextResponse.redirect(url);
+}

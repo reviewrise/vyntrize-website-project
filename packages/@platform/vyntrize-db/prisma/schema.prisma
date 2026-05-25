@@ -3,8 +3,9 @@
 //          apps/vyntrize-crm (crm_* tables)
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/client"
+  provider   = "prisma-client-js"
+  output     = "../src/generated/client"
+  engineType = "library"
 }
 
 datasource db {
@@ -65,6 +66,8 @@ model CrmUser {
   passwordHash String
   role         CrmRole   @default(MEMBER)
   isActive     Boolean   @default(true)
+  bookingSlug  String?   @unique
+  timezone     String?   @default("America/New_York")
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -80,6 +83,9 @@ model CrmUser {
   emailCampaigns      EmailCampaign[]   @relation("EmailCampaignAuthor")
   emailLogs           EmailLog[]        @relation("EmailLogUser")
   approvedAgentActions AgentAction[]    @relation("AgentActionApprover")
+
+  connectedAccounts   ConnectedAccount[]
+  calendarEvents      CalendarEvent[]
 
   @@map("crm_users")
 }
@@ -133,9 +139,10 @@ model Contact {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  leads       Lead[]
-  activities  Activity[]
-  emailLogs   EmailLog[]
+  leads          Lead[]
+  activities     Activity[]
+  emailLogs      EmailLog[]
+  calendarEvents CalendarEvent[]
 
   @@index([email])
   @@index([deletedAt])
@@ -188,6 +195,7 @@ model Lead {
   emailLogs       EmailLog[]     @relation("EmailLogLead")
   agentActions    AgentAction[]
   dripEnrollments DripEnrollment[]
+  calendarEvents  CalendarEvent[]
 
   @@index([stage])
   @@index([score])
@@ -541,8 +549,8 @@ model LeadTask {
   assignedToId String?
   assignedTo   CrmUser? @relation(fields: [assignedToId], references: [id], name: "AssignedTasks")
 
-  createdById String
-  createdBy   CrmUser @relation(fields: [createdById], references: [id], name: "CreatedTasks")
+  createdById String?
+  createdBy   CrmUser? @relation(fields: [createdById], references: [id], name: "CreatedTasks")
 
   title       String
   description String?  @db.Text
@@ -570,6 +578,7 @@ enum TaskStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+  FAILED
 }
 
 enum TaskPriority {
@@ -1121,4 +1130,64 @@ enum DripEnrollmentStatus {
   ACTIVE
   COMPLETED
   STOPPED
+}
+
+// ─── Calendar Integration ─────────────────────────────────────────────────────
+
+model ConnectedAccount {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  userId       String
+  user         CrmUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  provider     String   // 'google', 'microsoft'
+  providerId   String   // The account ID from the provider
+  email        String
+  accessToken  String   @db.Text
+  refreshToken String?  @db.Text
+  expiresAt    DateTime?
+  scope        String?  @db.Text
+
+  @@unique([provider, providerId])
+  @@index([userId])
+  @@map("connected_accounts")
+}
+
+model CalendarEvent {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  title        String
+  description  String?  @db.Text
+  location     String?
+
+  startTime    DateTime
+  endTime      DateTime
+  isAllDay     Boolean  @default(false)
+  
+  // Status of the event: SCHEDULED, ATTENDED, MISSED, CANCELLED
+  status       String   @default("SCHEDULED")
+
+  // Ownership
+  userId       String
+  user         CrmUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Relations to CRM entities
+  leadId       String?
+  lead         Lead?    @relation(fields: [leadId], references: [id])
+  contactId    String?
+  contact      Contact? @relation(fields: [contactId], references: [id])
+
+  // Sync state
+  externalId   String?  // ID from Google/Outlook Calendar
+  syncedAt     DateTime?
+
+  @@index([userId])
+  @@index([startTime])
+  @@index([leadId])
+  @@index([contactId])
+  @@map("calendar_events")
 }
