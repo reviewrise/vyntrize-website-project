@@ -12,7 +12,7 @@
   "dependencies": {
     "@google/genai": "^1.17.0",
     "@hookform/resolvers": "^5.2.1",
-    "@next/third-parties": "^16.2.6",
+    "@next/third-parties": "^15.4.9",
     "@platform/tokens": "workspace:*",
     "@platform/vyntrize-db": "workspace:*",
     "autoprefixer": "^10.4.21",
