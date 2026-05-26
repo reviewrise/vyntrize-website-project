@@ -35,11 +35,12 @@ export const metadata: Metadata = {
     template: '%s | VyntRise',
   },
   description:
-    'VyntRise deploys autonomous AI agents that handle your reputation, leads, workflows, and data — 24/7, without a single manual step. Built for small businesses ready to grow.',
+    'VyntRise deploys autonomous AI agents that handle your reputation, reviews, workflows, and data — 24/7, without a single manual step. Review our work to see how we help businesses grow.',
   keywords: [
+    'vyntrise', 'reputation', 'review', 'agents', 'work',
     'AI automation', 'business automation', 'reputation management',
     'AI agents', 'intelligent automation', 'custom software', 'data analytics',
-    'digital marketing', 'small business AI', 'VyntRise',
+    'digital marketing', 'small business AI',
   ],
   authors: [{ name: 'VyntRise', url: BASE_URL }],
   creator: 'VyntRise',
@@ -48,6 +49,9 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
     googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
+  },
+  alternates: {
+    canonical: BASE_URL,
   },
   openGraph: {
     type: 'website',
@@ -76,8 +80,8 @@ export const metadata: Metadata = {
     images: ['/og-image.png'],
   },
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon-16x16.png',
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
     apple: '/apple-touch-icon.png',
   },
   manifest: '/site.webmanifest',
@@ -94,6 +98,19 @@ export default function RootLayout({
         <meta name="google-site-verification" content="64_A0DW5_f5MZK0wbNSa2zGgR4_XjMg8Gb9KyF9suxA" />
       </head>
       <body className="font-sans antialiased flex flex-col min-h-screen transition-colors duration-200" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "VyntRise",
+              "url": BASE_URL,
+              "logo": `${BASE_URL}/icon.svg`,
+              "description": "VyntRise deploys autonomous AI agents that handle your reputation, reviews, workflows, and data.",
+            }),
+          }}
+        />
         <ThemeProvider>
           <CookieConsentProvider>
             <AnalyticsProvider />

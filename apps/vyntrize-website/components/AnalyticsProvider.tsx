@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { initAnalytics, getAnalytics } from '@/lib/analytics';
 import { useCookieConsent } from '@/hooks/useCookieConsent';
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 /**
  * Analytics Provider Component
@@ -62,5 +63,11 @@ export function AnalyticsProvider() {
     }
   }, [pathname, consent?.analytics]);
 
-  return null;
+  return (
+    <>
+      {consent?.analytics && (
+        <GoogleAnalytics gaId="G-XXXXXXXXXX" />
+      )}
+    </>
+  );
 }
