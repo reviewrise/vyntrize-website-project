@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -566,9 +567,9 @@ export default function Home() {
         <div className="container mx-auto max-w-6xl">
           <div className="flex items-end justify-between gap-4 mb-10">
             <div>
-              <div className="github-badge mb-3">OUR WORK</div>
+              <div className="github-badge mb-3">OUR WORK & RESULTS</div>
               <h2 className="text-3xl md:text-4xl font-extrabold" style={{ color: 'var(--color-text)' }}>
-                Work we&apos;re proud of
+                Work we&apos;re proud of: AI Agents for Reviews & Reputation
               </h2>
             </div>
             <Link href="/work" className="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold shrink-0 transition-colors" style={{ color: 'var(--color-primary)' }}>
@@ -602,11 +603,12 @@ export default function Home() {
                 >
                   {/* Image */}
                   <div className="relative md:w-3/5 h-64 md:h-auto min-h-[300px] overflow-hidden" style={{ backgroundColor: 'var(--color-raised)' }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src={item.image}
-                      alt={item.client}
-                      className="absolute inset-0 w-full h-full object-cover object-left-top transition-transform duration-500 group-hover:scale-105"
+                      alt={`${item.client} - VyntRise AI Reputation Agent`}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 60vw"
+                      className="object-cover object-left-top transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/40 to-transparent md:hidden" />
                   </div>
@@ -715,7 +717,7 @@ export default function Home() {
           </div>
 
           <h2 className="text-4xl md:text-6xl font-extrabold text-white leading-tight mb-6 tracking-tight">
-            Ready to put AI to work?
+            Ready to put VyntRise AI agents to work?
           </h2>
           <p className="text-slate-400 text-lg max-w-xl mx-auto mb-10 leading-relaxed">
             Built for small businesses that are ready to grow. Start free and see results in your first 30 days.
