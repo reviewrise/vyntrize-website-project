@@ -3,7 +3,7 @@ import { buildMeta } from '@/app/page-metadata';
 
 export const metadata: Metadata = buildMeta({
   title: 'Industry Solutions',
-  description: 'AI solutions built for healthcare, e-commerce, financial services, and real estate. Same platform, configured for your industry\'s specific challenges and compliance needs.',
+  description: 'AI solutions built for healthcare, e-commerce, finance, and real estate. Same platform, configured for your industry\'s specific challenges and compliance.',
   path: '/solutions',
   keywords: ['AI for healthcare', 'AI for e-commerce', 'AI for financial services', 'AI for real estate', 'industry AI solutions'],
 });
