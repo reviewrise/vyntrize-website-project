@@ -34,31 +34,13 @@ const nextConfig: NextConfig = {
   ],
   webpack: (config, { dev }) => {
     // HMR is disabled in AI Studio via DISABLE_HMR env var.
-    // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
+    // Do not modifyâ€”file watching is disabled to prevent flickering during agent edits.
     if (dev && process.env.DISABLE_HMR === 'true') {
       config.watchOptions = {
         ignored: /.*/,
       };
     }
     return config;
-  },
-  async redirects() {
-    return [
-      // Non-www → www (canonicalization)
-      {
-        source: '/:path*',
-        has: [{ type: 'host' as const, value: 'vyntrise.com' }],
-        destination: 'https://www.vyntrise.com/:path*',
-        permanent: true,
-      },
-      // HTTP → HTTPS (safety net — must also be enabled at infrastructure level)
-      {
-        source: '/:path*',
-        has: [{ type: 'header' as const, key: 'x-forwarded-proto', value: 'http' }],
-        destination: 'https://www.vyntrise.com/:path*',
-        permanent: true,
-      },
-    ];
   },
   async headers() {
     return [
