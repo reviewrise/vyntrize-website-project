@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     template: '%s | VyntRise',
   },
   description:
-    'VyntRise deploys autonomous AI agents that handle your reputation, reviews, workflows, and data — 24/7, without a single manual step. Review our work to see how we help businesses grow.',
+    'VyntRise deploys autonomous AI agents to manage your reputation, reviews, workflows, and data — 24/7, no manual steps. See how we help businesses grow.',
   keywords: [
     'vyntrise', 'reputation', 'review', 'agents', 'work',
     'AI automation', 'business automation', 'reputation management',

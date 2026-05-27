@@ -32,7 +32,7 @@ export default function VyntriseLogo({
       {/* Icon mark */}
       <Image
         src="/images/logo.png"
-        alt=""
+        alt="VyntRise logo"
         width={iconSize}
         height={iconSize}
         className="object-contain shrink-0"
