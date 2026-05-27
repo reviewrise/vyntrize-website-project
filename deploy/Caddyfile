@@ -1,3 +1,8 @@
+# Redirect bare domain to www (canonical)
+vyntrise.com {
+    redir https://www.vyntrise.com{uri} 301
+}
+
 www.vyntrise.com {
     reverse_proxy vyntrize-website:3013
 }
