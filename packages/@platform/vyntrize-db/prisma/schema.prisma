@@ -75,6 +75,7 @@ model CrmUser {
   activities          Activity[]
   auditLogs           AuditLog[]
   leadNotes           LeadNote[]        @relation("LeadNoteAuthor")
+
   assignedTasks       LeadTask[]        @relation("AssignedTasks")
   createdTasks        LeadTask[]        @relation("CreatedTasks")
   emailTemplates      EmailTemplate[]   @relation("EmailTemplateAuthor")
@@ -517,8 +518,8 @@ model LeadNote {
   leadId String
   lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
-  userId String
-  user   CrmUser @relation(fields: [userId], references: [id], name: "LeadNoteAuthor")
+  userId String?
+  user   CrmUser? @relation(fields: [userId], references: [id], name: "LeadNoteAuthor")
 
   note     String  @db.Text
   isPinned Boolean @default(false)
