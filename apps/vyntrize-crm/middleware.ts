@@ -9,7 +9,8 @@ const PUBLIC_PATHS = [
     '/api/email/track',
     '/book',
     '/api/book',
-    '/api/availability'
+    '/api/availability',
+    '/api/webhooks'
 ];
 
 export async function middleware(request: NextRequest) {
