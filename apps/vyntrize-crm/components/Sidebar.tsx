@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
@@ -158,13 +157,13 @@ export function Sidebar({ role, displayName, email }: SidebarProps) {
                             V
                         </div>
                     ) : (
-                        <Image
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
                             src="/images/logo.png"
                             alt="VyntRise"
                             width={28}
                             height={28}
                             className="object-contain shrink-0"
-                            priority
                             onError={() => setLogoError(true)}
                         />
                     )}

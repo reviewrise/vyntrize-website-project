@@ -149,10 +149,12 @@ export default function LeadNotes({ leadId, currentUserId, currentUserRole }: Le
   };
 
   const canEditNote = (note: Note) => {
+    if (!note.user) return currentUserRole === 'ADMIN';
     return note.user.id === currentUserId || currentUserRole === 'ADMIN';
   };
 
   const canDeleteNote = (note: Note) => {
+    if (!note.user) return currentUserRole === 'ADMIN';
     return note.user.id === currentUserId || currentUserRole === 'ADMIN';
   };
 
@@ -257,7 +259,7 @@ export default function LeadNotes({ leadId, currentUserId, currentUserRole }: Le
                     </div>
                   </div>
                   <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
-                    <span className="font-medium">{note.user.displayName}</span>
+                    <span className="font-medium">{note.user?.displayName ?? 'System'}</span>
                     <span>•</span>
                     <span>{formatDate(note.createdAt)}</span>
                     {note.updatedAt !== note.createdAt && (
