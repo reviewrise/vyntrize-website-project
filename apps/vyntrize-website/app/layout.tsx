@@ -50,9 +50,6 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
   },
-  alternates: {
-    canonical: BASE_URL,
-  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
