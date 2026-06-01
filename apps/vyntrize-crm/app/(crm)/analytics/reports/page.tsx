@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tab } from '@headlessui/react';
 import DateRangeSelector, { DateRange } from '@/components/DateRangeSelector';
 import FunnelChart from '@/components/FunnelChart';
 import SourcesTable from '@/components/SourcesTable';
@@ -15,16 +14,6 @@ import {
   ArrowTrendingUpIcon, 
   DocumentChartBarIcon 
 } from '@heroicons/react/24/outline';
-
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(' ');
-}
-
-const tabIcons = [
-  <FunnelIcon key="funnel" className="h-5 w-5" />,
-  <ArrowTrendingUpIcon key="sources" className="h-5 w-5" />,
-  <DocumentChartBarIcon key="pages" className="h-5 w-5" />,
-];
 
 export default function AnalyticsReportsPage() {
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -39,7 +28,6 @@ export default function AnalyticsReportsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState(0);
 
   useEffect(() => {
     fetchAllData();
@@ -49,7 +37,6 @@ export default function AnalyticsReportsPage() {
     setLoading(true);
     setError(null);
     try {
-      // Adjust end date to include the full day (23:59:59)
       const endDate = new Date(dateRange.endDate);
       endDate.setHours(23, 59, 59, 999);
       const endDateStr = endDate.toISOString();
@@ -87,7 +74,6 @@ export default function AnalyticsReportsPage() {
 
   const handleExportSources = () => {
     if (!sourcesData?.sources) return;
-
     CSVExporter.exportAndDownload(
       sourcesData.sources,
       `traffic-sources-${dateRange.startDate}-to-${dateRange.endDate}.csv`,
@@ -104,7 +90,6 @@ export default function AnalyticsReportsPage() {
 
   const handleExportPages = () => {
     if (!pagesData?.pages) return;
-
     CSVExporter.exportAndDownload(
       pagesData.pages,
       `top-pages-${dateRange.startDate}-to-${dateRange.endDate}.csv`,
@@ -117,40 +102,23 @@ export default function AnalyticsReportsPage() {
     );
   };
 
-  if (loading) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="space-y-6"
-      >
-        {/* Header Skeleton */}
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="h-8 w-64 bg-gray-200 rounded animate-pulse mb-2"></div>
-            <div className="h-4 w-96 bg-gray-200 rounded animate-pulse"></div>
-          </div>
-        </div>
+  // Stagger variants for the bento grid items
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 },
+    },
+  };
 
-        {/* Date Range Skeleton */}
-        <div className="bg-white rounded-xl shadow-lg p-6 animate-pulse">
-          <div className="h-10 w-full bg-gray-200 rounded"></div>
-        </div>
-
-        {/* Tabs Skeleton */}
-        <div className="bg-white rounded-xl shadow-lg p-6 animate-pulse">
-          <div className="h-64 bg-gray-200 rounded"></div>
-        </div>
-      </motion.div>
-    );
-  }
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
+  };
 
   if (error) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <ErrorMessage message={error} onRetry={fetchAllData} />
       </motion.div>
     );
@@ -161,126 +129,161 @@ export default function AnalyticsReportsPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="space-y-8"
+      className="space-y-8 pb-12"
     >
-      {/* Header */}
+      {/* Header Area */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="flex items-center justify-between"
+        className="flex flex-col lg:flex-row lg:items-end justify-between gap-6"
       >
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-primary-600 via-indigo-600 to-primary-500 bg-clip-text text-transparent tracking-tight">
             Analytics Reports
           </h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Detailed reports on conversion funnel, traffic sources, and page performance
+          <p className="mt-2 text-sm text-gray-500 font-medium">
+            Deep dive into your funnel, traffic sources, and top performing pages.
           </p>
+        </div>
+
+        <div className="bg-white/60 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-2">
+          <DateRangeSelector value={dateRange} onChange={setDateRange} />
         </div>
       </motion.div>
 
-      {/* Date Range Selector */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="bg-white rounded-xl shadow-lg p-6"
-      >
-        <DateRangeSelector value={dateRange} onChange={setDateRange} />
-      </motion.div>
+      {/* Loading State or Bento Grid */}
+      <AnimatePresence mode="wait">
+        {loading ? (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="grid grid-cols-1 lg:grid-cols-12 gap-8"
+          >
+            <div className="lg:col-span-7 bg-white rounded-3xl p-8 shadow-sm border border-gray-100 min-h-[400px] animate-pulse">
+              <div className="h-8 w-48 bg-gray-200 rounded mb-6"></div>
+              <div className="h-64 bg-gray-100 rounded-xl"></div>
+            </div>
+            <div className="lg:col-span-5 bg-white rounded-3xl p-8 shadow-sm border border-gray-100 min-h-[400px] animate-pulse">
+              <div className="h-8 w-32 bg-gray-200 rounded mb-6"></div>
+              <div className="space-y-4">
+                <div className="h-12 bg-gray-100 rounded-xl"></div>
+                <div className="h-12 bg-gray-100 rounded-xl"></div>
+                <div className="h-12 bg-gray-100 rounded-xl"></div>
+              </div>
+            </div>
+            <div className="lg:col-span-12 bg-white rounded-3xl p-8 shadow-sm border border-gray-100 min-h-[400px] animate-pulse">
+              <div className="h-8 w-48 bg-gray-200 rounded mb-6"></div>
+              <div className="h-64 bg-gray-100 rounded-xl"></div>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="content"
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="grid grid-cols-1 lg:grid-cols-12 gap-8"
+          >
+            {/* Conversion Funnel Bento */}
+            <motion.div
+              variants={itemVariants}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="lg:col-span-7 bg-white rounded-3xl shadow-xl shadow-primary-500/5 p-8 border border-gray-100 relative overflow-hidden group"
+            >
+              {/* Subtle background glow */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary-100/40 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              
+              <div className="flex items-center gap-3 mb-8 relative z-10">
+                <div className="p-3 bg-gradient-to-br from-primary-50 to-indigo-50 rounded-xl text-primary-600 shadow-sm border border-white">
+                  <FunnelIcon className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Conversion Funnel</h2>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mt-0.5">Visitor drop-off analysis</p>
+                </div>
+              </div>
 
-      {/* Tabs */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <Tab.Group selectedIndex={selectedTab} onChange={setSelectedTab}>
-          <Tab.List className="flex space-x-2 rounded-xl bg-gradient-to-r from-primary-50 to-secondary-50 p-2">
-            {['Conversion Funnel', 'Traffic Sources', 'Top Pages'].map((label, index) => (
-              <Tab
-                key={label}
-                className={({ selected }) =>
-                  classNames(
-                    'w-full rounded-lg py-3 px-4 text-sm font-semibold leading-5 transition-all duration-200',
-                    'ring-white ring-opacity-60 ring-offset-2 ring-offset-primary-400 focus:outline-none focus:ring-2',
-                    'flex items-center justify-center gap-2',
-                    selected
-                      ? 'bg-white text-primary-700 shadow-lg scale-105'
-                      : 'text-primary-600 hover:bg-white/50 hover:text-primary-800'
-                  )
-                }
-              >
-                {tabIcons[index]}
-                {label}
-              </Tab>
-            ))}
-          </Tab.List>
-          <Tab.Panels className="mt-6">
-            <AnimatePresence mode="wait">
-              {/* Funnel Panel */}
-              <Tab.Panel
-                as={motion.div}
-                key="funnel"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white rounded-xl shadow-lg p-8"
-              >
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Conversion Funnel</h2>
-                {funnelData && (
+              <div className="relative z-10">
+                {funnelData ? (
                   <FunnelChart
                     steps={funnelData.steps}
                     overallConversionRate={funnelData.overallConversionRate}
                   />
+                ) : (
+                  <div className="flex items-center justify-center h-64 text-gray-400 font-medium">No funnel data</div>
                 )}
-              </Tab.Panel>
+              </div>
+            </motion.div>
 
-              {/* Sources Panel */}
-              <Tab.Panel
-                as={motion.div}
-                key="sources"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white rounded-xl shadow-lg p-8"
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Traffic Sources</h2>
-                  <ExportButton onExport={handleExportSources} />
-                </div>
-                {sourcesData && <SourcesTable sources={sourcesData.sources} />}
-              </Tab.Panel>
+            {/* Top Pages Bento */}
+            <motion.div
+              variants={itemVariants}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="lg:col-span-5 bg-white rounded-3xl shadow-xl shadow-primary-500/5 p-8 border border-gray-100 flex flex-col relative overflow-hidden group"
+            >
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-indigo-100/40 to-transparent rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-              {/* Pages Panel */}
-              <Tab.Panel
-                as={motion.div}
-                key="pages"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white rounded-xl shadow-lg p-8"
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Top Pages</h2>
-                  <ExportButton onExport={handleExportPages} />
+              <div className="flex items-start justify-between mb-6 relative z-10">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl text-indigo-600 shadow-sm border border-white">
+                    <DocumentChartBarIcon className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Top Pages</h2>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mt-0.5">Most viewed content</p>
+                  </div>
                 </div>
-                {pagesData && (
+                <ExportButton onExport={handleExportPages} />
+              </div>
+
+              <div className="flex-1 relative z-10">
+                {pagesData ? (
                   <TopPagesTable
                     pages={pagesData.pages}
                     pagination={pagesData.pagination}
                     onPageChange={setCurrentPage}
                   />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-400 font-medium">No page data</div>
                 )}
-              </Tab.Panel>
-            </AnimatePresence>
-          </Tab.Panels>
-        </Tab.Group>
-      </motion.div>
+              </div>
+            </motion.div>
+
+            {/* Traffic Sources Bento */}
+            <motion.div
+              variants={itemVariants}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="lg:col-span-12 bg-white rounded-3xl shadow-xl shadow-primary-500/5 p-8 border border-gray-100 relative overflow-hidden group"
+            >
+               <div className="absolute top-1/2 left-1/2 w-full h-64 bg-gradient-to-r from-primary-50/50 via-transparent to-indigo-50/50 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+
+              <div className="flex items-center justify-between mb-8 relative z-10">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-gradient-to-br from-blue-50 to-primary-50 rounded-xl text-blue-600 shadow-sm border border-white">
+                    <ArrowTrendingUpIcon className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Traffic Sources</h2>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mt-0.5">Where your users come from</p>
+                  </div>
+                </div>
+                <ExportButton onExport={handleExportSources} />
+              </div>
+
+              <div className="relative z-10">
+                {sourcesData ? (
+                  <SourcesTable sources={sourcesData.sources} />
+                ) : (
+                  <div className="flex items-center justify-center h-64 text-gray-400 font-medium">No sources data</div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

@@ -18,25 +18,25 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const serviceStatus = emailService.getStatus();
-    const isConnected = serviceStatus.initialized
-      ? await emailService.verifyConnection()
-      : false;
+    const serviceStatus = await emailService.getStatus();
+    const isConnected = await emailService.verifyConnection();
+
+    // Fetch dynamic config instead of .env
+    const config = await emailService.getConfig();
 
     return NextResponse.json({
       configured: serviceStatus.configured,
-      initialized: serviceStatus.initialized,
+      initialized: true,
       connected: isConnected,
       config: {
-        host: process.env.SMTP_HOST || null,
-        port: process.env.SMTP_PORT || '587',
-        secure: process.env.SMTP_SECURE === 'true',
-        user: process.env.SMTP_USER
-          ? `${process.env.SMTP_USER.slice(0, 3)}***@${process.env.SMTP_USER.split('@')[1] ?? '***'}`
+        host: config.host || null,
+        port: config.port || '587',
+        secure: config.secure === true,
+        user: config.user
+          ? `${config.user.slice(0, 3)}***@${config.user.split('@')[1] ?? '***'}`
           : null,
-        fromAddress: process.env.EMAIL_FROM_ADDRESS || null,
-        fromName: process.env.EMAIL_FROM_NAME || null,
-        trackingEnabled: process.env.EMAIL_TRACKING_ENABLED !== 'false',
+        fromAddress: config.fromAddress || null,
+        fromName: config.fromName || null,
       },
     });
   } catch (error) {
@@ -44,6 +44,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
 
 // ─── POST: Send a test email ──────────────────────────────────────────────────
 
@@ -80,6 +81,8 @@ export async function POST(request: NextRequest) {
     const subject = data.subject || 'Vyntrize CRM — Email Configuration Test';
     const sentAt = new Date().toUTCString();
 
+    const config = await emailService.getConfig();
+
     const htmlBody = TemplateRenderer.wrapInEmailTemplate(
       `
       <h2 style="margin-top:0;color:#111827;">✅ Email Delivery Test</h2>
@@ -96,13 +99,14 @@ export async function POST(request: NextRequest) {
         </tr>
         <tr style="background:#f9fafb;">
           <td style="padding:10px 14px;border:1px solid #e5e7eb;font-weight:600;color:#374151;">SMTP Host</td>
-          <td style="padding:10px 14px;border:1px solid #e5e7eb;color:#111827;">${process.env.SMTP_HOST || 'Not configured'}</td>
+          <td style="padding:10px 14px;border:1px solid #e5e7eb;color:#111827;">${config.host || 'Not configured'}</td>
         </tr>
         <tr>
           <td style="padding:10px 14px;border:1px solid #e5e7eb;font-weight:600;color:#374151;">From</td>
-          <td style="padding:10px 14px;border:1px solid #e5e7eb;color:#111827;">${process.env.EMAIL_FROM_NAME || 'Vyntrize CRM'} &lt;${process.env.EMAIL_FROM_ADDRESS || 'noreply@vyntrize.com'}&gt;</td>
+          <td style="padding:10px 14px;border:1px solid #e5e7eb;color:#111827;">${config.fromName || 'Vyntrize CRM'} &lt;${config.fromAddress || 'noreply@vyntrize.com'}&gt;</td>
         </tr>
       </table>
+
 
       <p style="color:#6b7280;font-size:14px;">
         If you received this email, your SMTP configuration is working correctly and Vyntrize CRM can send emails to your leads and contacts.

@@ -2,6 +2,7 @@ import { getSession } from '@/lib/session';
 import { vyntrizeDb } from '@platform/vyntrize-db';
 import { Calendar, CheckCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
+import { VyntriseWebhookCard } from './VyntriseWebhookCard';
 
 export default async function IntegrationsSettingsPage({
   searchParams,
@@ -87,6 +88,9 @@ export default async function IntegrationsSettingsPage({
             )}
           </div>
         </div>
+
+        {/* Vyntrise Webhook Card */}
+        <VyntriseWebhookCard initialHasSecret={!!process.env.VYNTRISE_WEBHOOK_SECRET} />
       </div>
     </div>
   );

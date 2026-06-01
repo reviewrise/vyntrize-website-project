@@ -10,6 +10,7 @@ import {
   ArrowPathRoundedSquareIcon,
   CursorArrowRaysIcon,
 } from '@heroicons/react/24/outline';
+import DateRangeSelector, { DateRange } from '@/components/DateRangeSelector';
 
 interface DashboardData {
   metrics: {
@@ -71,7 +72,8 @@ function MetricCard({ title, value, change, icon, format = 'number' }: any) {
 }
 
 export default function WebsiteAnalyticsPage() {
-  const [dateRange, setDateRange] = useState({
+  const [dateRange, setDateRange] = useState<DateRange>({
+    label: 'Last 30 days',
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
   });
@@ -153,6 +155,11 @@ export default function WebsiteAnalyticsPage() {
         >
           View Detailed Reports
         </a>
+      </div>
+
+      {/* Date Range Selector */}
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <DateRangeSelector value={dateRange} onChange={setDateRange} />
       </div>
 
       {/* Primary Metrics */}
