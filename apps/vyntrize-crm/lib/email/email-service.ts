@@ -1,10 +1,7 @@
-/**
- * Email Service - Core email sending functionality using Nodemailer
- */
-
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import { convert } from 'html-to-text';
+import { prisma } from '@/lib/prisma';
 
 export interface EmailOptions {
   to: string;
@@ -31,61 +28,81 @@ export interface BulkEmailResult {
   errors: Array<{ email: string; error: string }>;
 }
 
+export interface EmailConfig {
+  host: string;
+  port: number;
+  secure: boolean;
+  user: string;
+  pass: string;
+  fromAddress?: string;
+  fromName?: string;
+  replyTo?: string;
+}
+
 class EmailService {
   private transporter: Transporter | null = null;
-  private initialized: boolean = false;
+  private currentConfigString: string = '';
 
-  constructor() {
-    this.initialize();
-  }
+  constructor() {}
 
-  /**
-   * Initialize the email transporter with SMTP configuration
-   */
-  private initialize() {
+  async getConfig(): Promise<EmailConfig> {
     try {
-      const host = process.env.SMTP_HOST;
-      const port = parseInt(process.env.SMTP_PORT || '587');
-      const secure = process.env.SMTP_SECURE === 'true';
-      const user = process.env.SMTP_USER;
-      const pass = process.env.SMTP_PASSWORD;
-
-      if (!host || !user || !pass) {
-        console.warn('[EmailService] SMTP configuration incomplete. Email sending disabled.');
-        return;
-      }
-
-      this.transporter = nodemailer.createTransport({
-        host,
-        port,
-        secure,
-        auth: {
-          user,
-          pass,
-        },
-        pool: true, // Use connection pooling
-        maxConnections: 5,
-        maxMessages: 100,
+      const setting = await prisma.systemSetting.findUnique({
+        where: { key: 'EMAIL_CONFIG' }
       });
-
-      this.initialized = true;
-      console.log('[EmailService] Initialized successfully');
+      if (setting && setting.value) {
+        return setting.value as unknown as EmailConfig;
+      }
     } catch (error) {
-      console.error('[EmailService] Initialization error:', error);
-      this.initialized = false;
+      console.error('[EmailService] Failed to load config from DB:', error);
     }
+    // Fallback to .env
+    return {
+      host: process.env.SMTP_HOST || '',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_SECURE === 'true',
+      user: process.env.SMTP_USER || '',
+      pass: process.env.SMTP_PASSWORD || '',
+      fromAddress: process.env.EMAIL_FROM_ADDRESS || 'noreply@vyntrize.com',
+      fromName: process.env.EMAIL_FROM_NAME || 'Vyntrize CRM',
+      replyTo: process.env.EMAIL_REPLY_TO
+    };
   }
 
-  /**
-   * Verify SMTP connection
-   */
-  async verifyConnection(): Promise<boolean> {
-    if (!this.transporter) {
-      return false;
+  private async getTransporter(): Promise<Transporter | null> {
+    const config = await this.getConfig();
+    if (!config.host || !config.user || !config.pass) {
+      return null;
     }
 
+    const configString = JSON.stringify({ host: config.host, port: config.port, secure: config.secure, user: config.user, pass: config.pass });
+    
+    // Recreate transporter if config changed
+    if (this.transporter && this.currentConfigString === configString) {
+      return this.transporter;
+    }
+
+    this.currentConfigString = configString;
+    this.transporter = nodemailer.createTransport({
+      host: config.host,
+      port: config.port,
+      secure: config.secure,
+      auth: {
+        user: config.user,
+        pass: config.pass,
+      },
+      pool: true,
+      maxConnections: 5,
+      maxMessages: 100,
+    });
+    return this.transporter;
+  }
+
+  async verifyConnection(): Promise<boolean> {
+    const transporter = await this.getTransporter();
+    if (!transporter) return false;
     try {
-      await this.transporter.verify();
+      await transporter.verify();
       console.log('[EmailService] SMTP connection verified');
       return true;
     } catch (error) {
@@ -94,19 +111,16 @@ class EmailService {
     }
   }
 
-  /**
-   * Send a single email
-   */
   async sendEmail(options: EmailOptions): Promise<EmailResult> {
-    if (!this.initialized || !this.transporter) {
+    const transporter = await this.getTransporter();
+    if (!transporter) {
       return {
         success: false,
-        error: 'Email service not initialized. Check SMTP configuration.',
+        error: 'Email service not configured. Check SMTP configuration.',
       };
     }
 
     try {
-      // Validate email address
       if (!this.isValidEmail(options.to)) {
         return {
           success: false,
@@ -114,7 +128,6 @@ class EmailService {
         };
       }
 
-      // Generate plain text version if not provided
       const text = options.text || convert(options.html, {
         wordwrap: 130,
         selectors: [
@@ -123,10 +136,10 @@ class EmailService {
         ],
       });
 
-      // Prepare email
-      const fromAddress = options.from || process.env.EMAIL_FROM_ADDRESS || 'noreply@vyntrize.com';
-      const fromName = options.fromName || process.env.EMAIL_FROM_NAME || 'Vyntrize CRM';
-      const replyTo = options.replyTo || process.env.EMAIL_REPLY_TO;
+      const config = await this.getConfig();
+      const fromAddress = options.from || config.fromAddress || 'noreply@vyntrize.com';
+      const fromName = options.fromName || config.fromName || 'Vyntrize CRM';
+      const replyTo = options.replyTo || config.replyTo;
 
       const mailOptions = {
         from: `"${fromName}" <${fromAddress}>`,
@@ -140,8 +153,7 @@ class EmailService {
         } : undefined,
       };
 
-      // Send email
-      const info = await this.transporter.sendMail(mailOptions);
+      const info = await transporter.sendMail(mailOptions);
 
       console.log('[EmailService] Email sent:', {
         to: options.to,
@@ -162,9 +174,6 @@ class EmailService {
     }
   }
 
-  /**
-   * Send bulk emails (with rate limiting)
-   */
   async sendBulkEmails(emails: EmailOptions[]): Promise<BulkEmailResult> {
     const result: BulkEmailResult = {
       total: emails.length,
@@ -176,11 +185,9 @@ class EmailService {
     const rateLimit = parseInt(process.env.EMAIL_QUEUE_RATE_LIMIT || '100');
     const batchSize = parseInt(process.env.EMAIL_QUEUE_BATCH_SIZE || '50');
 
-    // Process in batches
     for (let i = 0; i < emails.length; i += batchSize) {
       const batch = emails.slice(i, i + batchSize);
       
-      // Send batch with rate limiting
       const batchPromises = batch.map(async (email) => {
         const sendResult = await this.sendEmail(email);
         
@@ -197,7 +204,6 @@ class EmailService {
 
       await Promise.all(batchPromises);
 
-      // Rate limiting delay between batches
       if (i + batchSize < emails.length) {
         const delayMs = (60 * 1000) / rateLimit * batchSize;
         await this.delay(delayMs);
@@ -208,31 +214,21 @@ class EmailService {
     return result;
   }
 
-  /**
-   * Validate email address format
-   */
   private isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   }
 
-  /**
-   * Delay helper for rate limiting
-   */
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  /**
-   * Get service status
-   */
-  getStatus() {
+  async getStatus() {
+    const config = await this.getConfig();
     return {
-      initialized: this.initialized,
-      configured: !!process.env.SMTP_HOST && !!process.env.SMTP_USER,
+      configured: !!config.host && !!config.user,
     };
   }
 }
 
-// Export singleton instance
 export const emailService = new EmailService();

@@ -1192,3 +1192,14 @@ model CalendarEvent {
   @@index([contactId])
   @@map("calendar_events")
 }
+
+// ─── System Settings ──────────────────────────────────────────────────────────
+
+model SystemSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+}
+

@@ -38,6 +38,9 @@ const EMAIL_NAV = [
 
 const SETTINGS_NAV = [
     { href: '/settings', label: 'Settings', icon: Settings },
+    { href: '/settings/email', label: 'Email Configuration', icon: Settings },
+    { href: '/settings/ai-providers', label: 'AI Providers', icon: CheckSquare },
+    { href: '/settings/integrations', label: 'Integrations', icon: CheckSquare },
 ];
 
 const WEBSITE_NAV = [
