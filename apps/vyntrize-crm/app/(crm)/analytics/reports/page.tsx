@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import DateRangeSelector, { DateRange } from '@/components/DateRangeSelector';
 import FunnelChart from '@/components/FunnelChart';
 import SourcesTable from '@/components/SourcesTable';
@@ -109,12 +109,12 @@ export default function AnalyticsReportsPage() {
       opacity: 1,
       transition: { staggerChildren: 0.1 },
     },
-  };
+  } satisfies Variants;
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
-  };
+    show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 300, damping: 24 } },
+  } satisfies Variants;
 
   if (error) {
     return (
