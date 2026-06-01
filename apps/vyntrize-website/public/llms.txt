@@ -1,0 +1,26 @@
+# VyntRise LLC
+
+> Production-grade AI and automation that drives measurable outcomes from day one.
+
+VyntRise is a technology firm that builds intelligent systems, custom software, and robust data architectures to help businesses scale and thrive in the modern era.
+
+## Key Services
+- AI Search & Reputation: Optimize your brand's presence in AI search engines and LLM-generated answers. (/services/ai-search)
+- Intelligent Automation: Streamline operations with custom AI agents and workflow automation. (/services/intelligent-automation)
+- Custom Software: Tailored applications built for your specific business needs. (/services/custom-software)
+- Data & Analytics: Robust data architectures to drive informed decision-making. (/services/data-architecture)
+- Digital Marketing: Comprehensive strategies to grow your digital footprint. (/services/digital-marketing)
+
+## Company Links
+- About Us: /about
+- Contact: /contact
+- FAQ: /faq
+- Support: /support
+
+## Social Media
+- LinkedIn: https://www.linkedin.com/company/vyntrise-technologies/about/?viewAsMember=true
+- Instagram: https://www.instagram.com/vyntrisellc?igsh=MWc5aHIxdzhkaGFpdg%3D%3D&utm_source=qr
+- Facebook: https://www.facebook.com/share/1cBw5oDbhj/?mibextid=wwXIfr
+
+## Contact Information
+- Address: 205 Van Buren St, Suite 120, #063, Herndon, VA 20170, United States

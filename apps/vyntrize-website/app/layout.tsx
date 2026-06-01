@@ -112,6 +112,11 @@ export default function RootLayout({
               "url": BASE_URL,
               "logo": `${BASE_URL}/icon.svg`,
               "description": "VyntRise deploys autonomous AI agents that handle your reputation, reviews, workflows, and data.",
+              "sameAs": [
+                "https://www.linkedin.com/company/vyntrise-technologies",
+                "https://www.instagram.com/vyntrisellc",
+                "https://www.facebook.com/share/1cBw5oDbhj/?mibextid=wwXIfr"
+              ]
             }),
           }}
         />
