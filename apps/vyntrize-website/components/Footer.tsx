@@ -25,10 +25,9 @@ const resourceLinks = [
 ];
 
 const socials = [
-  { href: '#', label: 'Twitter',   icon: 'X'  },
-  { href: '#', label: 'LinkedIn',  icon: 'in' },
-  { href: '#', label: 'GitHub',    icon: 'gh' },
-  { href: '#', label: 'Instagram', icon: 'ig' },
+  { href: 'https://www.linkedin.com/company/vyntrise-technologies/about/?viewAsMember=true', label: 'LinkedIn',  icon: 'in' },
+  { href: 'https://www.instagram.com/vyntrisellc?igsh=MWc5aHIxdzhkaGFpdg%3D%3D&utm_source=qr', label: 'Instagram', icon: 'ig' },
+  { href: 'https://www.facebook.com/share/1cBw5oDbhj/?mibextid=wwXIfr', label: 'Facebook', icon: 'fb' },
 ];
 
 export default function Footer() {
