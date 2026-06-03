@@ -199,7 +199,7 @@ async function main() {
     await prisma.dripStep.deleteMany();
     await prisma.dripSequence.deleteMany();
 
-    const inboundSequence = await prisma.dripSequence.create({
+    await prisma.dripSequence.create({
         data: {
             name: 'Inbound Lead Nurture',
             description: 'Nurture sequence for new inbound leads who have not booked a call.',
@@ -236,7 +236,7 @@ async function main() {
         }
     });
 
-    const proposalSequence = await prisma.dripSequence.create({
+    await prisma.dripSequence.create({
         data: {
             name: 'Proposal Follow-Up',
             description: 'Follow-up sequence for leads who have received a proposal.',
