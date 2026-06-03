@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { vyntrizeDb } from '@platform/vyntrize-db';
 import crypto from 'crypto';
+import { eventBus, CRMEvent } from '@/lib/agents/event-bus';
 
 const WEBHOOK_SECRET = process.env.VYNTRISE_WEBHOOK_SECRET;
 
@@ -73,7 +74,7 @@ export async function POST(req: NextRequest) {
         const lastName = nameParts.slice(1).join(' ');
 
         // 3. Database Operations
-        await vyntrizeDb.$transaction(async (tx) => {
+        const createdLead = await vyntrizeDb.$transaction(async (tx) => {
             // A. Upsert Company (if organization name exists)
             let companyId: string | undefined;
             if (organizationName && organizationName.toLowerCase() !== 'n/a') {
@@ -136,9 +137,20 @@ export async function POST(req: NextRequest) {
                     note: noteBody,
                 }
             });
+            
+            return lead;
+        });
 
-            // Optionally, create a CalendarEvent or LeadTask if needed
-            // For now, Lead + LeadNote perfectly captures the booking context in the CRM.
+        // 4. Emit event for workflow automation
+        await eventBus.emitCRMEvent(CRMEvent.LEAD_CREATED, {
+            leadId: createdLead.id,
+            userId: 'SYSTEM',
+            metadata: { 
+                source: appointment.source || 'chatbot_embed',
+                appointmentStartTime: appointment.startTime,
+                appointmentEndTime: appointment.endTime,
+                appointmentDescription: serviceSelection,
+            }
         });
 
         return NextResponse.json({ success: true }, { status: 200 });

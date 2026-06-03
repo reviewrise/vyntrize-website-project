@@ -20,10 +20,12 @@ export interface DashboardData {
     totalContacts: number;
     totalCompanies: number;
     totalOpenDealValue: number;
+    revenueThisMonth: number;
+    outstandingInvoices: number;
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
-    const [leads, recentActivities, totalContacts, totalCompanies] =
+    const [leads, recentActivities, totalContacts, totalCompanies, monthlyRevenueAgg, invoicesAgg] =
         await prisma.$transaction([
             prisma.lead.findMany({
                 select: {
@@ -42,6 +44,16 @@ export async function getDashboardData(): Promise<DashboardData> {
             }),
             prisma.contact.count({ where: { deletedAt: null } }),
             prisma.company.count(),
+            prisma.invoicePayment.aggregate({
+                where: {
+                    paidAt: { gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) }
+                },
+                _sum: { amount: true }
+            }),
+            prisma.invoice.aggregate({
+                where: { status: { in: ['SENT', 'PARTIALLY_PAID', 'OVERDUE'] } },
+                _sum: { total: true, amountPaid: true }
+            })
         ]);
 
     const leadCountByStage: Record<string, number> = {};
@@ -65,6 +77,8 @@ export async function getDashboardData(): Promise<DashboardData> {
         }
     }
 
+    const totalOutstanding = Number(invoicesAgg._sum.total ?? 0) - Number(invoicesAgg._sum.amountPaid ?? 0);
+
     return {
         leadCountByStage,
         dealValueByStage,
@@ -72,5 +86,7 @@ export async function getDashboardData(): Promise<DashboardData> {
         totalContacts,
         totalCompanies,
         totalOpenDealValue,
+        revenueThisMonth: Number(monthlyRevenueAgg._sum.amount ?? 0),
+        outstandingInvoices: totalOutstanding,
     };
 }

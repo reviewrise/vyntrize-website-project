@@ -18,7 +18,8 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "seed:users": "tsx scripts/seed-users.ts",
-    "seed:templates": "tsx scripts/seed-email-templates.ts"
+    "seed:templates": "tsx scripts/seed-email-templates.ts",
+    "seed:ops": "tsx scripts/seed-operational-workflows.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.1.0",

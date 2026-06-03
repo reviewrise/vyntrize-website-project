@@ -2,13 +2,14 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
-import { updateLeadDeal, updateLeadStage } from '@/lib/actions/leads';
+import { updateLeadStage } from '@/lib/actions/leads';
 import { ArrowLeft, DollarSign } from 'lucide-react';
 import { ActivityFeed } from '@/components/ActivityFeed';
 import LeadScoreWidget from '@/components/LeadScoreWidget';
 import LeadActivityTimeline from '@/components/LeadActivityTimeline';
 import LeadNotes from '@/components/LeadNotes';
 import LeadDetailClient, { LeadEmailHistory, LeadDripSequences } from './LeadDetailClient';
+import { DealsClient } from '@/app/(crm)/deals/DealsClient';
 
 const STAGE_LABELS: Record<string, string> = {
     NEW: 'New',
@@ -38,6 +39,9 @@ export default async function LeadDetailPage({
             activities: {
                 orderBy: { createdAt: 'desc' },
                 include: { user: true },
+            },
+            deals: {
+                orderBy: { createdAt: 'desc' },
             },
         },
     });
@@ -103,60 +107,83 @@ export default async function LeadDetailPage({
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Main Content - Left Column (2/3) */}
                 <div className="lg:col-span-2 space-y-6">
-                    {/* Stage Update */}
+                    {/* Status & Assignment Update */}
                     <div className="rounded-2xl p-6" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-                        <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text)' }}>Update Stage</h2>
-                        <form action={async (formData: FormData) => { "use server"; await updateLeadStage(formData); }} className="flex items-end gap-4">
+                        <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text)' }}>Lead Details & Status</h2>
+                        <form action={async (formData: FormData) => { "use server"; await updateLeadStage(formData); }} className="flex flex-col gap-4">
                             <input type="hidden" name="id" value={lead.id} />
-                            <div className="flex-1">
-                                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Stage</label>
-                                <select name="stage" defaultValue={lead.stage} className="w-full rounded-lg px-3 py-2 text-sm" style={{ backgroundColor: 'var(--color-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
-                                    {Object.entries(STAGE_LABELS).map(([value, label]) => (
-                                        <option key={value} value={value}>{label}</option>
-                                    ))}
-                                </select>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Stage</label>
+                                    <select name="stage" defaultValue={lead.stage} className="w-full rounded-lg px-3 py-2 text-sm" style={{ backgroundColor: 'var(--color-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+                                        {Object.entries(STAGE_LABELS).map(([value, label]) => (
+                                            <option key={value} value={value}>{label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Assigned To</label>
+                                    <select name="assigneeId" defaultValue={lead.assigneeId ?? ''} className="w-full rounded-lg px-3 py-2 text-sm" style={{ backgroundColor: 'var(--color-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+                                        <option value="">Unassigned</option>
+                                        {users.map((u) => (
+                                            <option key={u.id} value={u.id}>{u.displayName}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Closing Note (for Won/Lost)</label>
+                                    <input name="closingNote" type="text" defaultValue={lead.closingNote ?? ''} className="w-full rounded-lg px-3 py-2 text-sm" style={{ backgroundColor: 'var(--color-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
+                                </div>
+                                <div className="md:col-span-3 flex justify-end">
+                                    <button type="submit" className="w-full md:w-auto rounded-lg px-6 py-2 text-sm font-semibold text-white whitespace-nowrap" style={{ backgroundColor: 'var(--color-primary)' }}>
+                                        Save Changes
+                                    </button>
+                                </div>
                             </div>
-                            <div className="flex-1">
-                                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Closing Note (required for Won/Lost)</label>
-                                <input name="closingNote" type="text" defaultValue={lead.closingNote ?? ''} className="w-full rounded-lg px-3 py-2 text-sm" style={{ backgroundColor: 'var(--color-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
-                            </div>
-                            <button type="submit" className="rounded-lg px-4 py-2 text-sm font-semibold text-white" style={{ backgroundColor: 'var(--color-primary)' }}>
-                                Update
-                            </button>
                         </form>
                     </div>
 
-                    {/* Deal Info */}
+
+
+                    {/* Deals Pipeline Info */}
                     <div className="rounded-2xl p-6" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-                        <div className="flex items-center gap-2 mb-4">
-                            <DollarSign className="h-4 w-4" style={{ color: 'var(--color-text-muted)' }} />
-                            <h2 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Deal Details</h2>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <DollarSign className="h-4 w-4" style={{ color: 'var(--color-text-muted)' }} />
+                                <h2 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Sales Deals</h2>
+                            </div>
+                            <DealsClient mode="new-button" leadId={lead.id} contactId={lead.contactId} companyId={lead.companyId ?? undefined} />
                         </div>
-                        <form action={async (formData: FormData) => { "use server"; await updateLeadDeal(formData); }} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <input type="hidden" name="id" value={lead.id} />
-                            <div>
-                                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Deal Value (USD)</label>
-                                <input name="dealValue" type="number" min="0" step="0.01" defaultValue={lead.dealValue?.toString() ?? ''} className="w-full rounded-lg px-3 py-2 text-sm" style={{ backgroundColor: 'var(--color-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} placeholder="0.00" />
+                        
+                        {lead.deals.length === 0 ? (
+                            <div className="text-center py-6 px-4 rounded-xl border border-dashed border-[var(--color-border)]">
+                                <p className="text-sm text-[var(--color-text-muted)] mb-3">No deals created for this lead yet.</p>
+                                {lead.stage === 'WON' && (
+                                    <div className="inline-block px-3 py-2 bg-[var(--color-primary-soft)] text-[var(--color-primary)] rounded-lg text-xs font-semibold">
+                                        💡 Since this lead is Won, you should create a Deal to start invoicing!
+                                    </div>
+                                )}
                             </div>
-                            <div>
-                                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Expected Close Date</label>
-                                <input name="closeDate" type="date" min={today} defaultValue={lead.closeDate ? lead.closeDate.toISOString().split('T')[0] : ''} className="w-full rounded-lg px-3 py-2 text-sm" style={{ backgroundColor: 'var(--color-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
+                        ) : (
+                            <div className="space-y-3">
+                                {lead.deals.map(deal => (
+                                    <Link key={deal.id} href={`/deals/${deal.id}`} className="block">
+                                        <div className="flex items-center justify-between p-3 rounded-xl border border-[var(--color-border)] hover:bg-[var(--color-raised)] transition-colors">
+                                            <div>
+                                                <p className="text-sm font-semibold text-[var(--color-text)] mb-0.5">{deal.title}</p>
+                                                <p className="text-xs text-[var(--color-text-muted)]">{deal.currency} {Number(deal.value).toLocaleString()}</p>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md bg-[var(--color-raised)] text-[var(--color-text-muted)]">
+                                                    {deal.status}
+                                                </span>
+                                                <span className="text-xs text-[var(--color-primary)] font-medium">View →</span>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
                             </div>
-                            <div>
-                                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Assigned To</label>
-                                <select name="assigneeId" defaultValue={lead.assigneeId ?? ''} className="w-full rounded-lg px-3 py-2 text-sm" style={{ backgroundColor: 'var(--color-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
-                                    <option value="">Unassigned</option>
-                                    {users.map((u) => (
-                                        <option key={u.id} value={u.id}>{u.displayName}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="md:col-span-3">
-                                <button type="submit" className="rounded-lg px-4 py-2 text-sm font-semibold text-white" style={{ backgroundColor: 'var(--color-primary)' }}>
-                                    Save Deal Info
-                                </button>
-                            </div>
-                        </form>
+                        )}
                     </div>
 
                     {/* Lead Activity Timeline */}

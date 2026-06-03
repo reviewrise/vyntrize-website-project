@@ -7,6 +7,8 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
   const pathname = usePathname();
 
   const tabs = [
+    { name: 'Profile', href: '/settings/profile' },
+    { name: 'Availability', href: '/settings/availability' },
     { name: 'Pipeline', href: '/settings/pipeline' },
     { name: 'Email', href: '/settings/email' },
     { name: 'AI Providers', href: '/settings/ai-providers' },

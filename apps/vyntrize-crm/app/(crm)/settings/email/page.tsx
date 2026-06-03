@@ -3,16 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { EmailTestPanel } from '../../agents/components/EmailTestPanel';
 
+type EmailRole = 'admin' | 'sales' | 'billing' | 'support';
+
 export default function EmailSettingsPage() {
-  const [config, setConfig] = useState({
-    host: '',
-    port: 587,
-    secure: false,
-    user: '',
-    pass: '',
-    fromAddress: '',
-    fromName: '',
-    replyTo: '',
+  const [activeRole, setActiveRole] = useState<EmailRole>('admin');
+  const [configs, setConfigs] = useState<Record<EmailRole, any>>({
+    admin: { host: '', port: 587, secure: false, user: '', pass: '', fromAddress: '', fromName: '', replyTo: '' },
+    sales: { host: '', port: 587, secure: false, user: '', pass: '', fromAddress: '', fromName: '', replyTo: '' },
+    billing: { host: '', port: 587, secure: false, user: '', pass: '', fromAddress: '', fromName: '', replyTo: '' },
+    support: { host: '', port: 587, secure: false, user: '', pass: '', fromAddress: '', fromName: '', replyTo: '' },
   });
 
   const [loading, setLoading] = useState(true);
@@ -23,17 +22,22 @@ export default function EmailSettingsPage() {
     fetch('/api/settings/email')
       .then(res => res.json())
       .then(data => {
-        if (data.config) {
-          setConfig({
-            host: data.config.host || '',
-            port: data.config.port || 587,
-            secure: data.config.secure || false,
-            user: data.config.user || '',
-            pass: data.config.pass || '',
-            fromAddress: data.config.fromAddress || '',
-            fromName: data.config.fromName || '',
-            replyTo: data.config.replyTo || '',
-          });
+        if (data.configs) {
+          const loadedConfigs: any = { ...configs };
+          for (const role of ['admin', 'sales', 'billing', 'support'] as EmailRole[]) {
+            const roleConfig = data.configs[role] || {};
+            loadedConfigs[role] = {
+              host: roleConfig.host || '',
+              port: roleConfig.port || 587,
+              secure: roleConfig.secure || false,
+              user: roleConfig.user || '',
+              pass: roleConfig.pass || '',
+              fromAddress: roleConfig.fromAddress || '',
+              fromName: roleConfig.fromName || '',
+              replyTo: roleConfig.replyTo || '',
+            };
+          }
+          setConfigs(loadedConfigs);
         }
         setLoading(false);
       })
@@ -45,9 +49,12 @@ export default function EmailSettingsPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setConfig(prev => ({
+    setConfigs(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [activeRole]: {
+        ...prev[activeRole],
+        [name]: type === 'checkbox' ? checked : value
+      }
     }));
   };
 
@@ -62,7 +69,7 @@ export default function EmailSettingsPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(config),
+        body: JSON.stringify({ role: activeRole, ...configs[activeRole] }),
       });
 
       if (res.ok) {
@@ -91,17 +98,38 @@ export default function EmailSettingsPage() {
         </p>
       </div>
 
+      <div className="flex space-x-2 border-b border-slate-200 mb-6 pb-px overflow-x-auto">
+        {(['admin', 'sales', 'billing', 'support'] as EmailRole[]).map((role) => (
+          <button
+            key={role}
+            onClick={() => {
+              setActiveRole(role);
+              setMessage({ type: '', text: '' });
+            }}
+            className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 whitespace-nowrap ${
+              activeRole === role 
+                ? 'border-blue-600 text-blue-600' 
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+            }`}
+            style={activeRole === role ? { borderColor: 'var(--color-accent)', color: 'var(--color-accent)' } : {}}
+          >
+            {role.charAt(0).toUpperCase() + role.slice(1)} Settings
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Settings Form */}
         <div className="bg-white p-6 rounded-xl border" style={{ borderColor: 'var(--color-border)' }}>
           <form onSubmit={handleSave} className="space-y-4">
+            <h3 className="text-lg font-semibold capitalize mb-4">{activeRole} Configuration</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-muted)' }}>SMTP Host</label>
                 <input
                   type="text"
                   name="host"
-                  value={config.host}
+                  value={configs[activeRole].host}
                   onChange={handleChange}
                   placeholder="e.g. smtp.gmail.com"
                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:outline-none"
@@ -113,7 +141,7 @@ export default function EmailSettingsPage() {
                 <input
                   type="number"
                   name="port"
-                  value={config.port}
+                  value={configs[activeRole].port}
                   onChange={handleChange}
                   placeholder="587"
                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:outline-none"
@@ -127,7 +155,7 @@ export default function EmailSettingsPage() {
                 type="checkbox"
                 name="secure"
                 id="secure"
-                checked={config.secure}
+                checked={configs[activeRole].secure}
                 onChange={handleChange}
                 className="rounded text-blue-600 focus:ring-blue-500"
               />
@@ -142,7 +170,7 @@ export default function EmailSettingsPage() {
                 <input
                   type="text"
                   name="user"
-                  value={config.user}
+                  value={configs[activeRole].user}
                   onChange={handleChange}
                   placeholder="user@example.com"
                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:outline-none"
@@ -154,7 +182,7 @@ export default function EmailSettingsPage() {
                 <input
                   type="password"
                   name="pass"
-                  value={config.pass}
+                  value={configs[activeRole].pass}
                   onChange={handleChange}
                   placeholder="••••••••••••"
                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:outline-none"
@@ -171,7 +199,7 @@ export default function EmailSettingsPage() {
                   <input
                     type="text"
                     name="fromName"
-                    value={config.fromName}
+                    value={configs[activeRole].fromName}
                     onChange={handleChange}
                     placeholder="e.g. Vyntrize CRM"
                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:outline-none"
@@ -183,7 +211,7 @@ export default function EmailSettingsPage() {
                   <input
                     type="email"
                     name="fromAddress"
-                    value={config.fromAddress}
+                    value={configs[activeRole].fromAddress}
                     onChange={handleChange}
                     placeholder="noreply@vyntrize.com"
                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:outline-none"
@@ -216,7 +244,7 @@ export default function EmailSettingsPage() {
 
         {/* Test Panel */}
         <div>
-          <EmailTestPanel />
+          <EmailTestPanel role={activeRole} />
         </div>
       </div>
     </div>

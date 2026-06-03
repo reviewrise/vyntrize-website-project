@@ -75,14 +75,21 @@ export async function POST(request: NextRequest) {
     });
 
     // Try to sync with Google Calendar
-    const externalId = await syncEventToGoogle(session.userId, event);
+    const googleSyncResult = await syncEventToGoogle(session.userId, event);
     
-    if (externalId) {
+    if (googleSyncResult?.id) {
+      const updateData: any = { externalId: googleSyncResult.id, syncedAt: new Date() };
+      
+      if (googleSyncResult.hangoutLink && !event.location) {
+        updateData.location = googleSyncResult.hangoutLink;
+        event.location = googleSyncResult.hangoutLink;
+      }
+
       await vyntrizeDb.calendarEvent.update({
         where: { id: event.id },
-        data: { externalId, syncedAt: new Date() },
+        data: updateData,
       });
-      event.externalId = externalId;
+      event.externalId = googleSyncResult.id;
       event.syncedAt = new Date();
     }
 

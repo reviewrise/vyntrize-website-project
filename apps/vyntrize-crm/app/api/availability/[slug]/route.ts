@@ -23,7 +23,12 @@ export async function GET(
           { id: slug }
         ]
       },
-      select: { id: true, displayName: true, timezone: true }
+      select: { 
+        id: true, 
+        displayName: true, 
+        timezone: true,
+        bookingSettings: true 
+      }
     });
 
     if (!user) {
@@ -37,6 +42,9 @@ export async function GET(
         id: user.id,
         displayName: user.displayName,
         timezone: user.timezone,
+        durationMinutes: user.bookingSettings?.durationMinutes || 30,
+        title: user.bookingSettings?.title || 'Book a Consultation',
+        description: user.bookingSettings?.description || 'Pick a date and time that works best for you.',
       },
       date: dateString,
       slots

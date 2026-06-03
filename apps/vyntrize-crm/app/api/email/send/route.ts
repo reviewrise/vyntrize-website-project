@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
 
     // Send email
     const sendResult = await emailService.sendEmail({
+      role: 'sales',
       to: data.to,
       toName: data.toName,
       subject: emailSubject,

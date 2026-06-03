@@ -27,10 +27,12 @@
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@react-pdf/renderer": "^4.5.1",
     "@types/react-big-calendar": "^1.16.3",
     "bcryptjs": "^2.4.3",
     "bullmq": "^5.76.5",
     "date-fns": "^4.3.0",
+    "date-fns-tz": "^3.2.0",
     "dotenv": "^16.4.5",
     "framer-motion": "^12.38.0",
     "googleapis": "^172.0.0",
@@ -48,6 +50,7 @@
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.53.0",
     "recharts": "^3.8.1",
+    "stripe": "^22.2.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

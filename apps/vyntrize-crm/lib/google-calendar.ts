@@ -63,19 +63,38 @@ export async function syncEventToGoogle(userId: string, eventData: any, existing
         : { dateTime: eventData.endTime.toISOString() },
     };
 
+    if (eventData.attendees && Array.isArray(eventData.attendees)) {
+      (resource as any).attendees = eventData.attendees;
+    }
+
+    if (eventData.generateMeetLink) {
+      (resource as any).conferenceData = {
+        createRequest: {
+          requestId: `meet_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+          conferenceSolutionKey: {
+            type: 'hangoutsMeet',
+          },
+        },
+      };
+    }
+
     if (existingExternalId) {
       const res = await calendar.events.update({
         calendarId: 'primary',
         eventId: existingExternalId,
         requestBody: resource,
+        conferenceDataVersion: eventData.generateMeetLink ? 1 : 0,
+        sendUpdates: 'none', // We send our own branded email
       });
-      return res.data.id;
+      return { id: res.data.id, hangoutLink: res.data.hangoutLink };
     } else {
       const res = await calendar.events.insert({
         calendarId: 'primary',
         requestBody: resource,
+        conferenceDataVersion: eventData.generateMeetLink ? 1 : 0,
+        sendUpdates: 'none', // We send our own branded email
       });
-      return res.data.id;
+      return { id: res.data.id, hangoutLink: res.data.hangoutLink };
     }
   } catch (error) {
     console.error('Failed to sync event to Google Calendar:', error);

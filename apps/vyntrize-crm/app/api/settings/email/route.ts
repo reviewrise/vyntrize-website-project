@@ -10,9 +10,39 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const config = await emailService.getConfig();
+    const roles = ['admin', 'sales', 'billing', 'support'] as const;
+    const configs: Record<string, any> = {};
+    
+    // Fetch all keys at once to prevent connection pool exhaustion and warnings
+    const settings = await prisma.systemSetting.findMany({
+      where: { key: { startsWith: 'EMAIL_CONFIG' } }
+    });
 
-    return NextResponse.json({ config });
+    for (const role of roles) {
+      const settingKey = `EMAIL_CONFIG_${role.toUpperCase()}`;
+      let setting = settings.find(s => s.key === settingKey);
+      
+      if (!setting && role !== 'admin') {
+        setting = settings.find(s => s.key === 'EMAIL_CONFIG_ADMIN');
+      }
+      if (!setting) {
+        setting = settings.find(s => s.key === 'EMAIL_CONFIG');
+      }
+      
+      // Fallback structure
+      configs[role] = setting?.value || {
+        host: process.env.SMTP_HOST || '',
+        port: parseInt(process.env.SMTP_PORT || '587'),
+        secure: process.env.SMTP_SECURE === 'true',
+        user: process.env.SMTP_USER || '',
+        pass: process.env.SMTP_PASSWORD || '',
+        fromAddress: process.env.EMAIL_FROM_ADDRESS || 'noreply@vyntrize.com',
+        fromName: process.env.EMAIL_FROM_NAME || 'Vyntrize CRM',
+        replyTo: process.env.EMAIL_REPLY_TO
+      };
+    }
+
+    return NextResponse.json({ configs, config: configs.admin }); // config is returned for backwards compatibility
   } catch (error) {
     console.error('[Email Settings API] GET error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -29,7 +59,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validate body
-    const { host, port, secure, user, pass, fromAddress, fromName, replyTo } = body;
+    const { role, host, port, secure, user, pass, fromAddress, fromName, replyTo } = body;
+
+    const targetRole = role || 'admin';
+    const validRoles = ['admin', 'sales', 'billing', 'support'];
+    if (!validRoles.includes(targetRole)) {
+      return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
+    }
 
     const config = {
       host: host || '',
@@ -42,13 +78,15 @@ export async function POST(request: NextRequest) {
       replyTo: replyTo || '',
     };
 
+    const settingKey = `EMAIL_CONFIG_${targetRole.toUpperCase()}`;
+
     await prisma.systemSetting.upsert({
-      where: { key: 'EMAIL_CONFIG' },
+      where: { key: settingKey },
       update: { value: config },
-      create: { key: 'EMAIL_CONFIG', value: config },
+      create: { key: settingKey, value: config },
     });
 
-    return NextResponse.json({ success: true, config });
+    return NextResponse.json({ success: true, config, role: targetRole });
   } catch (error) {
     console.error('[Email Settings API] POST error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

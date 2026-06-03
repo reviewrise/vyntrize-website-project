@@ -12,6 +12,9 @@ type UserInfo = {
   id: string;
   displayName: string;
   timezone: string;
+  durationMinutes: number;
+  title: string;
+  description: string;
 };
 
 export default function BookingPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -28,6 +31,12 @@ export default function BookingPage({ params }: { params: Promise<{ slug: string
   const [formState, setFormState] = useState({ firstName: "", lastName: "", email: "", notes: "" });
   const [bookingStatus, setBookingStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [bookingResult, setBookingResult] = useState<{ meetLink?: string | null; cancelToken?: string | null; rescheduleToken?: string | null } | null>(null);
+  const [visitorTimezone, setVisitorTimezone] = useState("UTC");
+
+  useEffect(() => {
+    setVisitorTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  }, []);
 
   // Generate next 14 days for date picker
   const availableDates = Array.from({ length: 14 }).map((_, i) => addDays(today, i));
@@ -74,6 +83,8 @@ export default function BookingPage({ params }: { params: Promise<{ slug: string
         throw new Error(data.error || "Booking failed");
       }
       
+      const data = await res.json();
+      setBookingResult(data);
       setBookingStatus("success");
     } catch (err: any) {
       setBookingStatus("error");
@@ -90,13 +101,53 @@ export default function BookingPage({ params }: { params: Promise<{ slug: string
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Meeting Confirmed</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Meeting Confirmed!</h2>
           <p className="text-slate-600 mb-6">
-            You're all set! We've sent a calendar invitation to {formState.email}.
+            You're all set. We've sent a calendar invitation to <span className="font-medium text-slate-900">{formState.email}</span>.
           </p>
-          <div className="bg-slate-50 rounded-xl p-4 text-left border border-slate-100 mb-6">
-            <p className="text-sm font-medium text-slate-900">{format(parseISO(selectedSlot!.start), "EEEE, MMMM d, yyyy")}</p>
-            <p className="text-sm text-slate-500">{format(parseISO(selectedSlot!.start), "h:mm a")} - {format(parseISO(selectedSlot!.end), "h:mm a")}</p>
+
+          <div className="bg-slate-50 rounded-xl p-5 text-left border border-slate-100 mb-6">
+            <div className="flex items-center text-slate-900 font-medium mb-1">
+              <svg className="w-5 h-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              {format(parseISO(selectedSlot!.start), "EEEE, MMMM d, yyyy")}
+            </div>
+            <div className="flex items-center text-slate-600 text-sm ml-7 mb-4">
+              {format(parseISO(selectedSlot!.start), "h:mm a")} - {format(parseISO(selectedSlot!.end), "h:mm a")}
+            </div>
+
+            {bookingResult?.meetLink && (
+              <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mt-4">
+                <div className="flex items-center text-blue-800 font-medium mb-2">
+                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                  Google Meet
+                </div>
+                <a 
+                  href={bookingResult.meetLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block w-full text-center py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors text-sm"
+                >
+                  Join Meeting
+                </a>
+                <p className="text-xs text-blue-600/70 text-center mt-2 break-all">
+                  {bookingResult.meetLink}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-center space-x-4 text-sm font-medium">
+            {bookingResult?.cancelToken && (
+              <a href={`/book/cancel?token=${bookingResult.cancelToken}`} className="text-slate-500 hover:text-slate-800 transition-colors">
+                Cancel Meeting
+              </a>
+            )}
+            <span className="text-slate-300">|</span>
+            {bookingResult?.rescheduleToken && (
+              <a href={`/book/reschedule?token=${bookingResult.rescheduleToken}`} className="text-slate-500 hover:text-slate-800 transition-colors">
+                Reschedule
+              </a>
+            )}
           </div>
         </div>
       </div>
@@ -116,7 +167,7 @@ export default function BookingPage({ params }: { params: Promise<{ slug: string
             <h1 className="text-3xl font-bold mb-2">
               {userInfo ? userInfo.displayName : "Loading..."}
             </h1>
-            <p className="text-slate-400 mb-8 text-sm">30 Minute Consultation</p>
+            <p className="text-slate-400 mb-8 text-sm">{userInfo?.title || "Consultation"}</p>
             
             {selectedSlot ? (
               <div className="space-y-4 text-sm animate-in fade-in slide-in-from-left-4 duration-300">
@@ -126,16 +177,16 @@ export default function BookingPage({ params }: { params: Promise<{ slug: string
                 </div>
                 <div className="flex items-center text-slate-300">
                   <svg className="w-5 h-5 mr-3 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  {format(parseISO(selectedSlot.start), "h:mm a")} - {format(parseISO(selectedSlot.end), "h:mm a")}
+                  {format(parseISO(selectedSlot.start), "h:mm a")} - {format(parseISO(selectedSlot.end), "h:mm a")} ({userInfo?.durationMinutes || 30} min)
                 </div>
                 <div className="flex items-center text-slate-300">
                   <svg className="w-5 h-5 mr-3 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  {userInfo?.timezone || "America/New_York"}
+                  {visitorTimezone} <span className="text-slate-500 ml-2">({userInfo?.timezone})</span>
                 </div>
               </div>
             ) : (
-              <p className="text-slate-400 text-sm leading-relaxed">
-                Pick a date and time that works best for you. I look forward to connecting.
+              <p className="text-slate-400 text-sm leading-relaxed whitespace-pre-line">
+                {userInfo?.description || "Pick a date and time that works best for you. I look forward to connecting."}
               </p>
             )}
           </div>

@@ -62,7 +62,7 @@ function ConfigRow({ label, value }: { label: string; value: string | null | boo
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function EmailTestPanel() {
+export function EmailTestPanel({ role = 'admin' }: { role?: 'admin' | 'sales' | 'billing' | 'support' }) {
   const [smtpStatus, setSmtpStatus] = useState<SmtpStatus | null>(null);
   const [checkState, setCheckState] = useState<CheckState>('idle');
   const [checkError, setCheckError] = useState<string | null>(null);
@@ -81,7 +81,7 @@ export function EmailTestPanel() {
     setSmtpStatus(null);
 
     try {
-      const res = await fetch('/api/email/test');
+      const res = await fetch(`/api/email/test?role=${role}`);
       const data = await res.json();
 
       if (!res.ok) {
@@ -96,10 +96,10 @@ export function EmailTestPanel() {
     }
   }, []);
 
-  // Auto-check on mount
+  // Auto-check on mount and when role changes
   useEffect(() => {
     checkSmtp();
-  }, [checkSmtp]);
+  }, [checkSmtp, role]);
 
   // ── Send test email ────────────────────────────────────────────────────────
 
@@ -115,7 +115,7 @@ export function EmailTestPanel() {
       const res = await fetch('/api/email/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: testEmail.trim(), subject: testSubject.trim() || undefined }),
+        body: JSON.stringify({ to: testEmail.trim(), subject: testSubject.trim() || undefined, role }),
       });
 
       const data = await res.json();
@@ -164,8 +164,8 @@ export function EmailTestPanel() {
               📡
             </div>
             <div>
-              <h3 className="font-semibold text-base" style={{ color: 'var(--color-text)' }}>
-                SMTP Connection
+              <h3 className="font-semibold text-base capitalize" style={{ color: 'var(--color-text)' }}>
+                {role} SMTP Connection
               </h3>
               <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                 Verify your email server is reachable

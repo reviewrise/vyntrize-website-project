@@ -74,6 +74,16 @@ export async function POST(req: NextRequest) {
             },
         });
 
+        // Mark the submission as imported so it doesn't get duplicated if a user clicks the Import button in the CRM
+        await prisma.importRecord.create({
+            data: {
+                contactSubmissionId: submission.id,
+                contactId: contact.id,
+                leadId: lead.id,
+                skipped: false,
+            }
+        });
+
         // Associate visitor activities with lead (if visitor ID provided)
         if (visitorId && sessionId) {
             try {

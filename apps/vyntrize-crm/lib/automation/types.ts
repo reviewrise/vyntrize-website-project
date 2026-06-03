@@ -38,7 +38,7 @@ export interface DripStepInput {
 
 // ─── Workflow Rules ───────────────────────────────────────────────────────────
 
-export type RuleConditionField = 'score' | 'stage' | 'daysInStage' | 'scoreChangedBy' | 'assigneeId';
+export type RuleConditionField = 'score' | 'stage' | 'daysInStage' | 'scoreChangedBy' | 'assigneeId' | 'source';
 export type RuleConditionOperator = 'gt' | 'lt' | 'eq' | 'gte' | 'lte';
 
 export interface RuleCondition {
@@ -47,7 +47,7 @@ export interface RuleCondition {
   value: number | string;
 }
 
-export type RuleActionType = 'send_email' | 'change_stage' | 'create_task' | 'assign_lead' | 'enroll_drip';
+export type RuleActionType = 'send_email' | 'change_stage' | 'create_task' | 'assign_lead' | 'enroll_drip' | 'notify_staff' | 'schedule_meeting';
 
 export interface SendEmailActionConfig {
   templateHint?: string;
@@ -64,11 +64,20 @@ export interface CreateTaskActionConfig {
 }
 
 export interface AssignLeadActionConfig {
-  assigneeId: string;
+  assigneeId?: string;
+  strategy?: 'specific' | 'round-robin';
 }
 
 export interface EnrollDripActionConfig {
   sequenceId: string;
+}
+
+export interface NotifyStaffActionConfig {
+  messageTemplate?: string;
+}
+
+export interface ScheduleMeetingActionConfig {
+  generateMeetLink?: boolean;
 }
 
 export type RuleActionConfig =
@@ -76,7 +85,9 @@ export type RuleActionConfig =
   | ChangeStageActionConfig
   | CreateTaskActionConfig
   | AssignLeadActionConfig
-  | EnrollDripActionConfig;
+  | EnrollDripActionConfig
+  | NotifyStaffActionConfig
+  | ScheduleMeetingActionConfig;
 
 export interface RuleAction {
   type: RuleActionType;

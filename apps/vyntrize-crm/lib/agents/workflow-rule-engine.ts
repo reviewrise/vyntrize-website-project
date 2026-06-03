@@ -22,6 +22,9 @@ import {
 import { StageProgressionAgent } from './stage-progression-agent';
 import { DripCampaignAgent } from './drip-campaign-agent';
 import { EmailGenerationAgent } from './email-generation-agent';
+import { emailService } from '@/lib/email/email-service';
+import { syncEventToGoogle } from '@/lib/google-calendar';
+import crypto from 'crypto';
 import { z } from 'zod';
 import type { Lead } from '@platform/vyntrize-db';
 
@@ -231,13 +234,17 @@ export class WorkflowRuleEngine extends Agent {
           actual = lead.assigneeId ?? '';
           break;
 
+        case 'source':
+          actual = lead.source ?? '';
+          break;
+
         default:
           // Unknown field — skip condition (treat as not met)
           return false;
       }
 
-      // For stage field, only 'eq' is meaningful
-      if (field === 'stage' || field === 'assigneeId') {
+      // For stage, assigneeId, and source fields, only 'eq' is meaningful
+      if (field === 'stage' || field === 'assigneeId' || field === 'source') {
         if (operator !== 'eq') {
           // Non-eq operators on string fields are not supported
           return false;
@@ -360,11 +367,44 @@ export class WorkflowRuleEngine extends Agent {
       }
 
       case 'assign_lead': {
-        const { assigneeId } = action.config as { assigneeId: string };
-        await prisma.lead.update({
-          where: { id: lead.id },
-          data: { assigneeId },
-        });
+        const { assigneeId, strategy } = action.config as { assigneeId?: string, strategy?: 'specific' | 'round-robin' };
+        
+        let targetAssigneeId: string | null = assigneeId || null;
+
+        if (strategy === 'round-robin') {
+          // Find all active users and their current number of active leads
+          const users = await prisma.crmUser.findMany({
+            where: { isActive: true },
+            select: {
+              id: true,
+              _count: {
+                select: { assignedLeads: { where: { stage: { in: ['NEW', 'CONTACTED', 'QUALIFIED', 'PROPOSAL_SENT'] } } } }
+              }
+            }
+          });
+
+          if (users.length > 0) {
+            // Sort users by the lowest count of active leads first
+            users.sort((a, b) => a._count.assignedLeads - b._count.assignedLeads);
+            targetAssigneeId = users[0].id;
+            this.log('info', `Round-robin assignment selected user ${targetAssigneeId} with ${users[0]._count.assignedLeads} active leads.`);
+          }
+        }
+
+        if (targetAssigneeId) {
+          await prisma.lead.update({
+            where: { id: lead.id },
+            data: { assigneeId: targetAssigneeId },
+          });
+          
+          await eventBus.emitCRMEvent(CRMEvent.LEAD_UPDATED, {
+            leadId: lead.id,
+            userId: 'SYSTEM',
+            metadata: { assignedTo: targetAssigneeId, triggeredByRule: rule.id, ruleName: rule.name }
+          });
+        } else {
+          this.log('warn', 'Assign lead action failed: No active users available for assignment.');
+        }
         break;
       }
 
@@ -372,6 +412,138 @@ export class WorkflowRuleEngine extends Agent {
         const { sequenceId } = action.config as { sequenceId: string };
         const dripAgent = new DripCampaignAgent();
         await dripAgent.enroll(lead.id, sequenceId, 'workflow_rule');
+        break;
+      }
+
+      case 'notify_staff': {
+        // Re-fetch the lead to get the latest assigneeId (it may have just been set by assign_lead)
+        const freshLead = await prisma.lead.findUnique({ where: { id: lead.id } });
+        const staffId = freshLead?.assigneeId;
+        if (!staffId) {
+          this.log('warn', 'Cannot notify staff: lead has no assignee', { leadId: lead.id });
+          break;
+        }
+        
+        const staff = await prisma.crmUser.findUnique({ where: { id: staffId } });
+        if (staff) {
+          this.log('info', `[NOTIFY STAFF] Dispatching email to ${staff.email} — new lead assigned: "${lead.title}"`);
+          
+          await prisma.activity.create({
+            data: {
+              type: 'NOTE',
+              body: `System automatically notified assigned staff member ${staff.displayName} (${staff.email}) via email about this new lead.`,
+              leadId: lead.id,
+              userId: staff.id,
+            }
+          });
+          
+          await emailService.sendEmail({
+            role: 'admin',
+            subject: `New Lead Assigned: ${lead.title}`,
+            text: `Hello ${staff.displayName},\n\nA new lead has been assigned to you: ${lead.title}.\n\nPlease check the CRM for details.`,
+            html: `<p>Hello ${staff.displayName},</p><p>A new lead has been assigned to you: <strong>${lead.title}</strong>.</p><p>Please check the CRM for details.</p>`,
+            fromName: 'Vyntrize CRM',
+            to: staff.email,
+            toName: staff.displayName || staff.email,
+            leadId: lead.id,
+            userId: staff.id,
+          });
+        }
+        break;
+      }
+
+      case 'schedule_meeting': {
+        const { generateMeetLink } = (action.config || {}) as { generateMeetLink?: boolean };
+        const staffId = lead.assigneeId;
+        
+        if (!staffId) {
+          this.log('warn', 'Cannot schedule meeting: lead has no assignee', { leadId: lead.id });
+          break;
+        }
+
+        const metadata = context.eventData?.metadata as any;
+        const startTime = metadata?.appointmentStartTime ? new Date(metadata.appointmentStartTime) : null;
+        const endTime = metadata?.appointmentEndTime ? new Date(metadata.appointmentEndTime) : null;
+        const description = metadata?.appointmentDescription || 'VyntRise Booking';
+
+        if (!startTime || !endTime) {
+          this.log('warn', 'Cannot schedule meeting: missing start/end time in event metadata', { leadId: lead.id });
+          break;
+        }
+
+        const staff = await prisma.crmUser.findUnique({ where: { id: staffId } });
+        const contact = await prisma.contact.findUnique({ where: { id: lead.contactId } });
+
+        if (!staff || !contact) break;
+
+        this.log('info', `[SCHEDULE MEETING] Syncing to Google Calendar for ${staff.email}`);
+
+        const eventData = {
+          title: lead.title,
+          description: `Booking for ${contact.firstName} ${contact.lastName}. Service: ${description}`,
+          startTime,
+          endTime,
+          isAllDay: false,
+          generateMeetLink,
+          attendees: [{ email: contact.email }],
+        };
+
+        const result = await syncEventToGoogle(staff.id, eventData);
+        let hangoutLink = '';
+        let externalId = '';
+
+        if (result) {
+          externalId = typeof result === 'string' ? result : result.id||'';
+          hangoutLink = typeof result === 'string' ? '' : (result.hangoutLink || '');
+        }
+
+        // Save CalendarEvent in DB
+        await prisma.calendarEvent.create({
+          data: {
+            title: eventData.title,
+            description: eventData.description,
+            startTime,
+            endTime,
+            isAllDay: false,
+            userId: staff.id,
+            leadId: lead.id,
+            contactId: contact.id,
+            externalId: externalId || null,
+            syncedAt: externalId ? new Date() : null,
+          }
+        });
+
+        // Send Branded HTML Email to the Customer
+        const emailBody = `
+Hi ${contact.firstName},
+
+Your booking is confirmed!
+
+**Service:** ${description}
+**Time:** ${startTime.toLocaleString()} to ${endTime.toLocaleString()}
+
+${hangoutLink ? `**Google Meet Link:** ${hangoutLink}` : ''}
+
+We look forward to speaking with you!
+
+Best,
+${staff.displayName || staff.email}
+        `.trim();
+
+        await emailService.sendEmail({
+            role: 'sales',
+            subject: 'Booking Confirmed - VyntRise',
+            text: emailBody,
+            html: emailBody.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br/>'),
+            from: staff.email,
+            fromName: staff.displayName || 'VyntRise Team',
+            to: contact.email,
+            toName: `${contact.firstName} ${contact.lastName}`,
+            leadId: lead.id,
+            contactId: contact.id,
+            userId: staff.id,
+        });
+
         break;
       }
 

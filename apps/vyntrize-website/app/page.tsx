@@ -353,15 +353,15 @@ export default function Home() {
           </div>
 
           <div className="mt-10 text-center">
-            <Link
-              href="/contact"
+            <a
+              href={`${process.env.NEXT_PUBLIC_CRM_URL || 'http://localhost:3014'}/book`}
               className="inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-sm font-bold text-white transition-colors shadow-md"
               style={{ backgroundColor: 'var(--color-primary)' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary-h)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary)'}
+              onMouseEnter={(e) => (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'var(--color-primary-h)'}
+              onMouseLeave={(e) => (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'var(--color-primary)'}
             >
-              Get started free <ArrowRight className="h-4 w-4" />
-            </Link>
+              Book a free consultation <ArrowRight className="h-4 w-4" />
+            </a>
           </div>
         </div>
       </section>
@@ -724,13 +724,13 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/contact"
+            <a
+              href={`${process.env.NEXT_PUBLIC_CRM_URL || 'http://localhost:3014'}/book`}
               className="group inline-flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-4 text-sm font-bold text-white hover:bg-blue-500 transition-colors shadow-xl shadow-blue-900/40"
             >
-              Start free trial
+              Book a consultation
               <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
+            </a>
             <Link
               href="/services"
               className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-8 py-4 text-sm font-semibold text-white hover:bg-white/10 transition-colors"

@@ -87,6 +87,8 @@ model CrmUser {
 
   connectedAccounts   ConnectedAccount[]
   calendarEvents      CalendarEvent[]
+  availabilityRules   AvailabilityRule[]
+  bookingSettings     BookingSettings?
 
   @@map("crm_users")
 }
@@ -135,6 +137,9 @@ model Contact {
   linkedinUrl      String?
   twitterHandle    String?
   lastContactedAt  DateTime?
+
+  // Stripe Integration
+  stripeCustomerId String? @unique
   
   deletedAt   DateTime?
   createdAt   DateTime  @default(now())
@@ -192,6 +197,7 @@ model Lead {
   leadSource      LeadSource?    @relation("LeadSourceAttribution")
   leadNotes       LeadNote[]
   leadTasks       LeadTask[]
+  deals           Deal[]
   emailTracking   EmailTracking[]
   emailLogs       EmailLog[]     @relation("EmailLogLead")
   agentActions    AgentAction[]
@@ -1183,14 +1189,65 @@ model CalendarEvent {
   contact      Contact? @relation(fields: [contactId], references: [id])
 
   // Sync state
-  externalId   String?  // ID from Google/Outlook Calendar
-  syncedAt     DateTime?
+  externalId      String?   // ID from Google/Outlook Calendar
+  syncedAt        DateTime?
+
+  // Booking: Google Meet
+  meetLink        String?   // e.g. https://meet.google.com/abc-xyz-def
+
+  // Booking: cancel & reschedule tokens (sent in confirmation email)
+  cancelToken     String?   @unique
+  rescheduleToken String?   @unique
+  cancelledAt     DateTime?
 
   @@index([userId])
   @@index([startTime])
   @@index([leadId])
   @@index([contactId])
+  @@index([cancelToken])
+  @@index([rescheduleToken])
   @@map("calendar_events")
+}
+
+// ─── Booking: Availability Rules ─────────────────────────────────────────────
+
+model AvailabilityRule {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  user      CrmUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  dayOfWeek Int      // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+  startHour Int      // e.g. 9
+  startMin  Int      @default(0)
+  endHour   Int      // e.g. 17
+  endMin    Int      @default(0)
+  isActive  Boolean  @default(true)
+
+  @@index([userId])
+  @@unique([userId, dayOfWeek])
+  @@map("availability_rules")
+}
+
+// ─── Booking: Per-Expert Settings ────────────────────────────────────────────
+
+model BookingSettings {
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  userId          String   @unique
+  user            CrmUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title           String   @default("Book a Consultation")
+  description     String?  @db.Text
+  durationMinutes Int      @default(30)  // 15, 30, 45, or 60
+  bufferMinutes   Int      @default(15)  // gap between back-to-back meetings
+  generateMeet    Boolean  @default(true) // auto-create Google Meet room
+
+  @@map("booking_settings")
 }
 
 // ─── System Settings ──────────────────────────────────────────────────────────
@@ -1203,3 +1260,114 @@ model SystemSetting {
   @@map("system_settings")
 }
 
+// ─── Deals ────────────────────────────────────────────────────────────────────
+
+model Deal {
+  id          String     @id @default(cuid())
+  title       String
+  leadId      String
+  lead        Lead       @relation(fields: [leadId], references: [id])
+  contactId   String?
+  companyId   String?
+  value       Decimal    @db.Decimal(12, 2)
+  currency    String     @default("USD")
+  status      DealStatus @default(OPEN)
+  closedAt    DateTime?
+  notes       String?    @db.Text
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  invoices    Invoice[]
+
+  @@index([leadId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("crm_deals")
+}
+
+enum DealStatus {
+  OPEN
+  WON
+  LOST
+  ON_HOLD
+}
+
+// ─── Invoices ─────────────────────────────────────────────────────────────────
+
+model Invoice {
+  id          String        @id @default(cuid())
+  number      String        @unique  // e.g. INV-2026-001
+  dealId      String
+  deal        Deal          @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  status      InvoiceStatus @default(DRAFT)
+  issueDate   DateTime      @default(now())
+  dueDate     DateTime
+  subtotal    Decimal       @db.Decimal(12, 2)
+  taxRate     Decimal?      @db.Decimal(5, 2)   // percentage e.g. 16.00
+  taxAmount   Decimal?      @db.Decimal(12, 2)
+  discount    Decimal?      @db.Decimal(12, 2)  // absolute amount deducted
+  total       Decimal       @db.Decimal(12, 2)
+  amountPaid  Decimal       @default(0) @db.Decimal(12, 2)
+  currency    String        @default("USD")
+  notes       String?       @db.Text
+  sentAt      DateTime?
+  paidAt      DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Stripe Integration
+  stripeInvoiceId  String?  @unique   // Stripe invoice ID (in_xxx)
+  stripePaymentUrl String?            // Hosted payment page URL
+  stripeStatus     String?            // Raw Stripe status for debugging
+
+  lineItems   InvoiceLineItem[]
+  payments    InvoicePayment[]
+
+  @@index([dealId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([createdAt])
+  @@map("crm_invoices")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+// ─── Invoice Line Items ───────────────────────────────────────────────────────
+
+model InvoiceLineItem {
+  id          Int     @id @default(autoincrement())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Decimal @db.Decimal(10, 2)
+  unitPrice   Decimal @db.Decimal(12, 2)
+  total       Decimal @db.Decimal(12, 2)
+
+  @@index([invoiceId])
+  @@map("crm_invoice_line_items")
+}
+
+// ─── Invoice Payments ─────────────────────────────────────────────────────────
+
+model InvoicePayment {
+  id        String   @id @default(cuid())
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount    Decimal  @db.Decimal(12, 2)
+  method    String   // 'bank_transfer' | 'cash' | 'cheque' | 'mobile_money' | 'other'
+  reference String?
+  paidAt    DateTime @default(now())
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@index([invoiceId])
+  @@index([paidAt])
+  @@map("crm_invoice_payments")
+}

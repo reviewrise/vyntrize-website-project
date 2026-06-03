@@ -82,6 +82,8 @@ export async function updateLeadStage(formData: FormData) {
     const id = formData.get('id') as string;
     const stage = formData.get('stage') as string;
     const closingNote = (formData.get('closingNote') as string)?.trim() || null;
+    const hasAssignee = formData.has('assigneeId');
+    const assigneeId = (formData.get('assigneeId') as string)?.trim() || null;
 
     if (!id || !stage) return { error: 'Lead ID and stage are required.' };
 
@@ -103,6 +105,7 @@ export async function updateLeadStage(formData: FormData) {
             data: {
                 stage: stage as 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'PROPOSAL_SENT' | 'WON' | 'LOST',
                 ...(closingNote ? { closingNote } : {}),
+                ...(hasAssignee ? { assigneeId } : {}),
             },
         }),
         prisma.auditLog.create({
