@@ -145,31 +145,17 @@ export class TaskExecutionAgent extends Agent {
     // Inline CSS
     formattedBody = TemplateRenderer.inlineCSS(formattedBody);
     
-    // 3. Send Email
+    // 3. Send Email (which now automatically logs)
     const sendResult = await emailService.sendEmail({
+      role: 'sales',
       to: payload.to,
+      toName: contactName,
       subject,
       html: formattedBody,
+      text: body, // Raw body for reference and logging
       trackingId,
-    });
-    
-    // 4. Create EmailLog
-    await prisma.emailLog.create({
-      data: {
-        subject,
-        body, // raw body
-        htmlBody: formattedBody,
-        fromEmail: process.env.EMAIL_FROM_ADDRESS || 'noreply@vyntrize.com',
-        fromName: process.env.EMAIL_FROM_NAME || 'Vyntrize CRM',
-        toEmail: payload.to,
-        toName: contactName,
-        trackingId,
-        status: sendResult.success ? 'SENT' : 'FAILED',
-        sentAt: new Date(),
-        leadId: lead.id,
-        contactId: lead.contact.id,
-        errorMessage: sendResult.error,
-      }
+      leadId: lead.id,
+      contactId: lead.contact.id,
     });
     
     if (!sendResult.success) {

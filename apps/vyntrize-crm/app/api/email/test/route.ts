@@ -6,23 +6,26 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
-import { emailService } from '@/lib/email/email-service';
+import { emailService, EmailRole } from '@/lib/email/email-service';
 import { TemplateRenderer } from '@/lib/email/template-renderer';
 
 // ─── GET: SMTP connection status ─────────────────────────────────────────────
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session.isLoggedIn) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const role = (searchParams.get('role') || 'admin') as EmailRole;
+
     const serviceStatus = await emailService.getStatus();
     const isConnected = await emailService.verifyConnection();
 
     // Fetch dynamic config instead of .env
-    const config = await emailService.getConfig();
+    const config = await emailService.getConfig(role);
 
     return NextResponse.json({
       configured: serviceStatus.configured,
@@ -51,6 +54,7 @@ export async function GET() {
 interface TestEmailRequest {
   to: string;
   subject?: string;
+  role?: EmailRole;
 }
 
 export async function POST(request: NextRequest) {
@@ -80,8 +84,9 @@ export async function POST(request: NextRequest) {
 
     const subject = data.subject || 'Vyntrize CRM — Email Configuration Test';
     const sentAt = new Date().toUTCString();
+    const role = data.role || 'admin';
 
-    const config = await emailService.getConfig();
+    const config = await emailService.getConfig(role);
 
     const htmlBody = TemplateRenderer.wrapInEmailTemplate(
       `
@@ -116,6 +121,7 @@ export async function POST(request: NextRequest) {
     );
 
     const result = await emailService.sendEmail({
+      role,
       to: data.to,
       subject,
       html: htmlBody,

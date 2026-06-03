@@ -43,6 +43,7 @@ export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [experts, setExperts] = useState<any[]>([]);
+  const [expertsLoading, setExpertsLoading] = useState(true);
   const formRef = useRef<HTMLFormElement>(null);
 
   // Fetch experts on mount
@@ -56,6 +57,8 @@ export default function Contact() {
         }
       } catch (err) {
         console.error('Failed to fetch experts:', err);
+      } finally {
+        setExpertsLoading(false);
       }
     }
     fetchExperts();
@@ -395,7 +398,15 @@ export default function Contact() {
               >
                 <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--color-text-subtle)' }}>Book an Expert Directly</p>
                 
-                {experts.length > 0 ? (
+                {expertsLoading ? (
+                  <div className="flex items-center justify-center gap-2 py-5">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" style={{ color: 'var(--color-primary)' }}>
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Loading experts...</span>
+                  </div>
+                ) : experts.length > 0 ? (
                   <div className="space-y-3">
                     {experts.map((expert) => (
                       <a
@@ -425,8 +436,20 @@ export default function Contact() {
                     </a>
                   </div>
                 ) : (
-                  <div className="text-center py-4 bg-slate-50 rounded-lg border border-dashed border-slate-200">
-                    <p className="text-xs text-slate-500">Loading experts...</p>
+                  <div className="space-y-3">
+                    <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                      Schedule a free 30-minute discovery call with our team to discuss your goals and find the right expert for your project.
+                    </p>
+                    <a
+                      href="mailto:hello@vyntrise.com?subject=Book%20a%20Discovery%20Call"
+                      className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg text-xs font-semibold text-white transition-colors"
+                      style={{ backgroundColor: 'var(--color-primary)' }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary-h)'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary)'}
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                      Book a Discovery Call
+                    </a>
                   </div>
                 )}
               </motion.div>

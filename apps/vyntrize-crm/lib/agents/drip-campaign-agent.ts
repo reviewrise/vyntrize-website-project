@@ -371,36 +371,16 @@ export class DripCampaignAgent extends Agent {
     formattedBody = TemplateRenderer.inlineCSS(formattedBody);
 
     const sendResult = await emailService.sendEmail({
+      role: 'sales',
       to: contactEmail,
+      toName: `${(lead as LeadWithContact).contact.firstName} ${(lead as LeadWithContact).contact.lastName}`.trim(),
       subject,
       html: formattedBody,
+      text: body, // Raw body for reference and logging
       trackingId,
       leadId: lead.id,
+      contactId: (lead as LeadWithContact).contact.id,
     } as Parameters<typeof emailService.sendEmail>[0]);
-
-    // 7b. Create EmailLog so the email appears in the lead's email history
-    // and open/click tracking works via the existing tracking pixel infrastructure
-    try {
-      await prisma.emailLog.create({
-        data: {
-          subject,
-          body, // Store raw body for reference
-          htmlBody: formattedBody, // Store fully rendered html
-          fromEmail: process.env.EMAIL_FROM_ADDRESS || 'noreply@vyntrize.com',
-          fromName: process.env.EMAIL_FROM_NAME || 'Vyntrize CRM',
-          toEmail: contactEmail,
-          toName: `${(lead as LeadWithContact).contact.firstName} ${(lead as LeadWithContact).contact.lastName}`.trim(),
-          trackingId,
-          status: sendResult?.success !== false ? 'SENT' : 'FAILED',
-          sentAt: new Date(),
-          leadId: lead.id,
-          // userId intentionally omitted — this email is sent by the agent (no human user FK)
-        },
-      });
-    } catch (logErr) {
-      // Don't fail the step if logging fails
-      this.log('warn', 'Failed to create EmailLog for drip step', logErr);
-    }
 
     // 8. Update enrollment
     const nextStepIndex = enrollment.currentStepIndex + 1;

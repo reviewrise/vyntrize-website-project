@@ -2,6 +2,9 @@ import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import { convert } from 'html-to-text';
 import { prisma } from '@/lib/prisma';
+import crypto from 'crypto';
+
+export type EmailRole = 'admin' | 'sales' | 'billing' | 'support';
 
 export interface EmailOptions {
   to: string;
@@ -12,7 +15,16 @@ export interface EmailOptions {
   from?: string;
   fromName?: string;
   replyTo?: string;
+  bcc?: string;
   trackingId?: string;
+  role?: EmailRole;
+  
+  // CRM Tracking Details
+  leadId?: string;
+  contactId?: string;
+  campaignId?: string;
+  templateId?: number;
+  userId?: string;
 }
 
 export interface EmailResult {
@@ -40,21 +52,37 @@ export interface EmailConfig {
 }
 
 class EmailService {
-  private transporter: Transporter | null = null;
-  private currentConfigString: string = '';
+  private transporters: Record<string, Transporter> = {};
+  private currentConfigStrings: Record<string, string> = {};
 
   constructor() {}
 
-  async getConfig(): Promise<EmailConfig> {
+  async getConfig(role: EmailRole = 'admin'): Promise<EmailConfig> {
     try {
-      const setting = await prisma.systemSetting.findUnique({
-        where: { key: 'EMAIL_CONFIG' }
+      const settingKey = `EMAIL_CONFIG_${role.toUpperCase()}`;
+      const keysToFetch = [settingKey, 'EMAIL_CONFIG_ADMIN', 'EMAIL_CONFIG'];
+      
+      const settings = await prisma.systemSetting.findMany({
+        where: { key: { in: keysToFetch } }
       });
+
+      let setting = settings.find(s => s.key === settingKey);
+      
+      // Fallback to admin config if specific role not found
+      if (!setting && role !== 'admin') {
+        setting = settings.find(s => s.key === 'EMAIL_CONFIG_ADMIN');
+      }
+
+      // Legacy fallback
+      if (!setting) {
+        setting = settings.find(s => s.key === 'EMAIL_CONFIG');
+      }
+
       if (setting && setting.value) {
         return setting.value as unknown as EmailConfig;
       }
     } catch (error) {
-      console.error('[EmailService] Failed to load config from DB:', error);
+      console.error(`[EmailService] Failed to load config for role ${role}:`, error);
     }
     // Fallback to .env
     return {
@@ -69,8 +97,8 @@ class EmailService {
     };
   }
 
-  private async getTransporter(): Promise<Transporter | null> {
-    const config = await this.getConfig();
+  private async getTransporter(role: EmailRole = 'admin'): Promise<Transporter | null> {
+    const config = await this.getConfig(role);
     if (!config.host || !config.user || !config.pass) {
       return null;
     }
@@ -78,12 +106,12 @@ class EmailService {
     const configString = JSON.stringify({ host: config.host, port: config.port, secure: config.secure, user: config.user, pass: config.pass });
     
     // Recreate transporter if config changed
-    if (this.transporter && this.currentConfigString === configString) {
-      return this.transporter;
+    if (this.transporters[role] && this.currentConfigStrings[role] === configString) {
+      return this.transporters[role];
     }
 
-    this.currentConfigString = configString;
-    this.transporter = nodemailer.createTransport({
+    this.currentConfigStrings[role] = configString;
+    this.transporters[role] = nodemailer.createTransport({
       host: config.host,
       port: config.port,
       secure: config.secure,
@@ -95,7 +123,7 @@ class EmailService {
       maxConnections: 5,
       maxMessages: 100,
     });
-    return this.transporter;
+    return this.transporters[role];
   }
 
   async verifyConnection(): Promise<boolean> {
@@ -112,11 +140,12 @@ class EmailService {
   }
 
   async sendEmail(options: EmailOptions): Promise<EmailResult> {
-    const transporter = await this.getTransporter();
+    const role = options.role || 'admin';
+    const transporter = await this.getTransporter(role);
     if (!transporter) {
       return {
         success: false,
-        error: 'Email service not configured. Check SMTP configuration.',
+        error: `Email service not configured for role: ${role}. Check SMTP configuration.`,
       };
     }
 
@@ -136,7 +165,7 @@ class EmailService {
         ],
       });
 
-      const config = await this.getConfig();
+      const config = await this.getConfig(role);
       const fromAddress = options.from || config.fromAddress || 'noreply@vyntrize.com';
       const fromName = options.fromName || config.fromName || 'Vyntrize CRM';
       const replyTo = options.replyTo || config.replyTo;
@@ -144,6 +173,7 @@ class EmailService {
       const mailOptions = {
         from: `"${fromName}" <${fromAddress}>`,
         to: options.toName ? `"${options.toName}" <${options.to}>` : options.to,
+        bcc: options.bcc,
         replyTo,
         subject: options.subject,
         text,
@@ -161,12 +191,65 @@ class EmailService {
         messageId: info.messageId,
       });
 
+      const trackingId = options.trackingId || crypto.randomUUID();
+      try {
+        await this.logEmail({
+          subject: options.subject,
+          body: text,
+          htmlBody: options.html,
+          fromEmail: fromAddress,
+          fromName: fromName,
+          toEmail: options.to,
+          toName: options.toName,
+          replyTo,
+          trackingId,
+          status: 'SENT',
+          sentAt: new Date(),
+          leadId: options.leadId,
+          contactId: options.contactId,
+          campaignId: options.campaignId,
+          templateId: options.templateId,
+          userId: options.userId,
+        });
+      } catch (logError) {
+        console.error('[EmailService] Failed to log sent email:', logError);
+      }
+
       return {
         success: true,
         messageId: info.messageId,
       };
     } catch (error) {
       console.error('[EmailService] Send error:', error);
+      
+      const trackingId = options.trackingId || crypto.randomUUID();
+      try {
+        const config = await this.getConfig(role);
+        const fromAddress = options.from || config.fromAddress || 'noreply@vyntrize.com';
+        const fromName = options.fromName || config.fromName || 'Vyntrize CRM';
+        
+        await this.logEmail({
+          subject: options.subject,
+          body: options.text || '',
+          htmlBody: options.html,
+          fromEmail: fromAddress,
+          fromName: fromName,
+          toEmail: options.to,
+          toName: options.toName,
+          replyTo: options.replyTo || config.replyTo,
+          trackingId,
+          status: 'FAILED',
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          leadId: options.leadId,
+          contactId: options.contactId,
+          campaignId: options.campaignId,
+          templateId: options.templateId,
+          userId: options.userId,
+        });
+      } catch (logError) {
+        console.error('[EmailService] Failed to log failed email:', logError);
+      }
+
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -228,6 +311,44 @@ class EmailService {
     return {
       configured: !!config.host && !!config.user,
     };
+  }
+
+  /**
+   * Centralized method to log emails into the database
+   */
+  async logEmail(data: {
+    subject: string;
+    body: string;
+    htmlBody?: string;
+    fromEmail: string;
+    fromName?: string;
+    toEmail: string;
+    toName?: string;
+    replyTo?: string;
+    trackingId: string;
+    status: 'QUEUED' | 'SENDING' | 'SENT' | 'FAILED' | 'CANCELLED';
+    errorMessage?: string;
+    sentAt?: Date;
+    leadId?: string;
+    contactId?: string;
+    campaignId?: string;
+    templateId?: number;
+    userId?: string;
+  }) {
+    try {
+      // Strip undefined values to satisfy Prisma's Exact type checks
+      const cleanData = Object.fromEntries(
+        Object.entries(data).filter(([_, v]) => v !== undefined)
+      );
+
+      const emailLog = await prisma.emailLog.create({
+        data: cleanData as any
+      });
+      return emailLog;
+    } catch (error) {
+      console.error('[EmailService] Failed to log email to DB:', error);
+      throw error;
+    }
   }
 }
 

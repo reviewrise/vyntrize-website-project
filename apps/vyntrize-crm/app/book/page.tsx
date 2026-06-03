@@ -16,6 +16,7 @@ export default async function BookingHub() {
       email: true,
       bookingSlug: true,
       role: true,
+      bookingSettings: true,
     }
   });
 
@@ -39,11 +40,19 @@ export default async function BookingHub() {
                 </div>
                 <div className="ml-4">
                   <h3 className="text-xl font-bold text-slate-900">{expert.displayName}</h3>
-                  <p className="text-sm text-slate-500 capitalize">{expert.role?.toLowerCase() || 'Expert'}</p>
+                  <div className="flex items-center space-x-2 mt-0.5">
+                    <span className="text-xs font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded capitalize">
+                      {expert.role?.toLowerCase() || 'Expert'}
+                    </span>
+                    <span className="text-xs font-medium bg-blue-50 text-blue-600 px-2 py-0.5 rounded flex items-center">
+                      <svg className="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      {expert.bookingSettings?.durationMinutes || 30} min
+                    </span>
+                  </div>
                 </div>
               </div>
-              <p className="text-slate-600 mb-6 flex-1">
-                Book a time to discuss your goals and how {expert.displayName.split(' ')[0]} can assist you.
+              <p className="text-slate-600 text-sm mb-6 flex-1 line-clamp-3">
+                {expert.bookingSettings?.description || `Book a time to discuss your goals and how ${expert.displayName.split(' ')[0]} can assist you.`}
               </p>
               <Link href={`/book/${expert.bookingSlug}`} className="w-full text-center py-3 px-4 bg-slate-900 text-white rounded-xl font-medium shadow-sm hover:bg-slate-800 transition-colors">
                 Book with {expert.displayName.split(' ')[0]}

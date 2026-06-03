@@ -227,15 +227,15 @@ const portfolioBar: Record<string, string> = {
                 VyntRise was built on a simple realization: small businesses are the backbone of the economy, yet most operate without the tools, insights, and systems they need to truly grow.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
-                <Link
-                  href="/contact"
+                <a
+                  href={`${process.env.NEXT_PUBLIC_CRM_URL || 'http://localhost:3014'}/book`}
                   className="group inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white transition-colors"
                   style={{ backgroundColor: 'var(--color-primary)' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary-h)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary)'}
+                  onMouseEnter={(e) => (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'var(--color-primary-h)'}
+                  onMouseLeave={(e) => (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'var(--color-primary)'}
                 >
-                  Work with us <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
-                </Link>
+                  Book a consultation <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+                </a>
                 <Link
                   href="/services"
                   className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-colors"
@@ -535,12 +535,12 @@ const portfolioBar: Record<string, string> = {
             Tell us where you are and where you want to go. We&apos;ll map the path and get you there.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/contact"
+            <a
+              href={`${process.env.NEXT_PUBLIC_CRM_URL || 'http://localhost:3014'}/book`}
               className="group inline-flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-4 text-sm font-bold text-white hover:bg-blue-500 transition-colors shadow-xl shadow-blue-900/40"
             >
-              Get started free <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
+              Book a free consultation <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+            </a>
             <Link
               href="/services"
               className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-8 py-4 text-sm font-semibold text-white hover:bg-white/10 transition-colors"

@@ -92,3 +92,58 @@ export async function deactivateUser(formData: FormData) {
     revalidatePath('/admin/users');
     return { success: true };
 }
+
+export async function reactivateUser(formData: FormData) {
+    await requireAdmin();
+
+    const userId = formData.get('userId') as string;
+    if (!userId) return { error: 'User ID is required.' };
+
+    await prisma.crmUser.update({
+        where: { id: userId },
+        data: { isActive: true },
+    });
+
+    revalidatePath('/admin/users');
+    return { success: true };
+}
+
+export async function updateUser(data: {
+    userId: string;
+    displayName?: string;
+    email?: string;
+    role?: 'ADMIN' | 'MEMBER';
+    bookingSlug?: string | null;
+}) {
+    await requireAdmin();
+
+    const { userId, displayName, email, role, bookingSlug } = data;
+    if (!userId) return { error: 'User ID is required.' };
+
+    if (email) {
+        const existing = await prisma.crmUser.findFirst({
+            where: { email: email.toLowerCase().trim(), NOT: { id: userId } },
+        });
+        if (existing) return { error: 'That email is already taken.' };
+    }
+
+    if (bookingSlug) {
+        const existing = await prisma.crmUser.findFirst({
+            where: { bookingSlug, NOT: { id: userId } },
+        });
+        if (existing) return { error: 'That booking slug is already taken.' };
+    }
+
+    const updated = await prisma.crmUser.update({
+        where: { id: userId },
+        data: {
+            ...(displayName && { displayName }),
+            ...(email && { email: email.toLowerCase().trim() }),
+            ...(role && { role }),
+            ...(bookingSlug !== undefined && { bookingSlug: bookingSlug || null }),
+        },
+    });
+
+    revalidatePath('/admin/users');
+    return { success: true, user: updated };
+}

@@ -202,9 +202,9 @@ export default function Services() {
             <div className="mt-8 rounded-xl p-4 shadow-sm" style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
               <p className="text-xs font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Not sure where to start?</p>
               <p className="text-xs mb-3 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>We&apos;ll map the right services to your goals in a free 30-min call.</p>
-              <Link href="/contact" className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors">
-                Talk to us <ArrowRight className="h-3 w-3" />
-              </Link>
+              <a href={`${process.env.NEXT_PUBLIC_CRM_URL || 'http://localhost:3014'}/book`} className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors">
+                Book a free call <ArrowRight className="h-3 w-3" />
+              </a>
             </div>
           </nav>
 
@@ -299,13 +299,13 @@ export default function Services() {
                     <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>No commitment — let&apos;s talk about your goals first.</p>
                   </div>
                   <div className="flex gap-2.5 shrink-0">
-                    <Link href="/contact" className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-colors"
+                    <a href={`${process.env.NEXT_PUBLIC_CRM_URL || 'http://localhost:3014'}/book`} className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-colors"
                       style={{ backgroundColor: 'var(--color-primary)' }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary-h)'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-primary)'}
+                      onMouseEnter={(e) => (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'var(--color-primary-h)'}
+                      onMouseLeave={(e) => (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'var(--color-primary)'}
                     >
-                      Get started <ArrowRight className="h-4 w-4" />
-                    </Link>
+                      Book a call <ArrowRight className="h-4 w-4" />
+                    </a>
                     <Link href={current.href} className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors"
                       style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface)'}

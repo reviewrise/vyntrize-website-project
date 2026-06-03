@@ -42,7 +42,7 @@ export default async function DashboardPage() {
             </div>
 
             {/* Stat Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div className="rounded-2xl p-5" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
                     <div className="h-9 w-9 rounded-lg flex items-center justify-center mb-3 bg-blue-900/30">
                         <Users className="h-4 w-4 text-blue-400" />
@@ -74,7 +74,27 @@ export default async function DashboardPage() {
                     <p className="text-2xl font-extrabold" style={{ color: 'var(--color-text)' }}>
                         ${data.totalOpenDealValue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                     </p>
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Open Pipeline Value</p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Open Pipeline</p>
+                </div>
+
+                <div className="rounded-2xl p-5" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                    <div className="h-9 w-9 rounded-lg flex items-center justify-center mb-3 bg-green-900/30">
+                        <TrendingUp className="h-4 w-4 text-green-400" />
+                    </div>
+                    <p className="text-2xl font-extrabold" style={{ color: 'var(--color-text)' }}>
+                        ${data.revenueThisMonth.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    </p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Revenue This Month</p>
+                </div>
+
+                <div className="rounded-2xl p-5" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                    <div className="h-9 w-9 rounded-lg flex items-center justify-center mb-3 bg-orange-900/30">
+                        <DollarSign className="h-4 w-4 text-orange-400" />
+                    </div>
+                    <p className="text-2xl font-extrabold" style={{ color: 'var(--color-text)' }}>
+                        ${data.outstandingInvoices.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    </p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Outstanding Balance</p>
                 </div>
             </div>
 

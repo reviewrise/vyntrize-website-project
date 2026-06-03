@@ -68,6 +68,7 @@ const CONDITION_FIELDS = [
   { value: 'daysInStage', label: 'Days in current stage' },
   { value: 'scoreChangedBy', label: 'Score recently changed by' },
   { value: 'assigneeId', label: 'Assigned User ID' },
+  { value: 'source', label: 'Lead Source' },
 ];
 
 const NUMERIC_OPERATORS = [
@@ -83,7 +84,9 @@ const ACTION_TYPES = [
   { value: 'change_stage', label: 'Change lead stage' },
   { value: 'create_task', label: 'Create a task' },
   { value: 'assign_lead', label: 'Assign lead to user' },
+  { value: 'notify_staff', label: 'Notify assigned staff via email' },
   { value: 'enroll_drip', label: 'Enroll in drip sequence' },
+  { value: 'schedule_meeting', label: 'Schedule Meeting & Send Invite' },
 ];
 
 const STAGES = ['NEW', 'CONTACTED', 'QUALIFIED', 'PROPOSAL_SENT', 'WON', 'LOST'];
@@ -122,13 +125,13 @@ function ConditionBuilder({ conditions, onChange }: { conditions: RuleCondition[
 
       {conditions.map((cond, i) => (
         <div key={i} className="flex items-center gap-2 p-2 rounded-xl" style={{ backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
-          <select value={cond.field} onChange={(e) => updateCondition(i, { field: e.target.value, value: (e.target.value === 'stage' || e.target.value === 'assigneeId') ? '' : 0 })}
+          <select value={cond.field} onChange={(e) => updateCondition(i, { field: e.target.value, value: (e.target.value === 'stage' || e.target.value === 'assigneeId' || e.target.value === 'source') ? '' : 0 })}
             className="flex-1 px-2 py-1.5 rounded-lg text-xs font-medium"
             style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)' }}>
             {CONDITION_FIELDS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
           </select>
 
-          {(cond.field === 'stage' || cond.field === 'assigneeId') ? (
+          {(cond.field === 'stage' || cond.field === 'assigneeId' || cond.field === 'source') ? (
             <>
               <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>is</span>
               {cond.field === 'stage' ? (
@@ -138,6 +141,11 @@ function ConditionBuilder({ conditions, onChange }: { conditions: RuleCondition[
                   <option value="" disabled>Select stage...</option>
                   {STAGES.map((s) => <option key={s} value={s}>{STAGE_ICONS[s]} {friendlyStage(s)}</option>)}
                 </select>
+              ) : cond.field === 'source' ? (
+                <input type="text" value={cond.value as string} onChange={(e) => updateCondition(i, { value: e.target.value })}
+                  placeholder="e.g. website"
+                  className="flex-1 px-2 py-1.5 rounded-lg text-xs"
+                  style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)' }} />
               ) : (
                 <input type="text" value={cond.value as string} onChange={(e) => updateCondition(i, { value: e.target.value })}
                   placeholder="User ID"
@@ -198,10 +206,26 @@ function ActionConfigFields({ action, onChange }: { action: RuleAction; onChange
       );
     case 'assign_lead':
       return (
-        <input type="text" value={(cfg.assigneeId as string) ?? ''} placeholder="User ID to assign to"
-          onChange={(e) => onChange({ ...action, config: { assigneeId: e.target.value } })}
-          className="flex-1 px-2 py-1.5 rounded-lg text-xs"
-          style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)' }} />
+        <div className="flex-1 flex gap-2">
+          <select 
+            value={(cfg.strategy as string) || 'specific'} 
+            onChange={(e) => {
+              const strategy = e.target.value;
+              onChange({ ...action, config: { ...cfg, strategy, assigneeId: strategy === 'round-robin' ? undefined : '' } });
+            }}
+            className="w-1/2 px-2 py-1.5 rounded-lg text-xs"
+            style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)' }}
+          >
+            <option value="specific">Specific User</option>
+            <option value="round-robin">Round-Robin (Auto)</option>
+          </select>
+          {(!cfg.strategy || cfg.strategy === 'specific') && (
+            <input type="text" value={(cfg.assigneeId as string) ?? ''} placeholder="User ID to assign to"
+              onChange={(e) => onChange({ ...action, config: { ...cfg, assigneeId: e.target.value } })}
+              className="w-1/2 px-2 py-1.5 rounded-lg text-xs"
+              style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)' }} />
+          )}
+        </div>
       );
     case 'enroll_drip':
       return (
@@ -216,6 +240,22 @@ function ActionConfigFields({ action, onChange }: { action: RuleAction; onChange
           onChange={(e) => onChange({ ...action, config: { templateHint: e.target.value } })}
           className="flex-1 px-2 py-1.5 rounded-lg text-xs"
           style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)' }} />
+      );
+    case 'notify_staff':
+      return (
+        <span className="flex-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>Automatically emails the assigned staff member</span>
+      );
+    case 'schedule_meeting':
+      return (
+        <label className="flex-1 flex items-center gap-2 cursor-pointer text-xs" style={{ color: 'var(--color-text)' }}>
+          <input 
+            type="checkbox" 
+            checked={!!cfg.generateMeetLink} 
+            onChange={(e) => onChange({ ...action, config: { ...cfg, generateMeetLink: e.target.checked } })}
+            className="rounded border-gray-300"
+          />
+          Generate Google Meet Link
+        </label>
       );
     default:
       return <span className="flex-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>No config needed</span>;
@@ -553,8 +593,16 @@ export function WorkflowRulesTab() {
       const res = await fetch('/api/automation/workflow-rules');
       if (res.ok) {
         const data = await res.json();
+        
+        // Normalize single-object conditions/actions from seed script
+        const normalizedRules = (data.rules ?? []).map((r: any) => ({
+          ...r,
+          conditions: Array.isArray(r.conditions) ? r.conditions : (r.conditions ? [r.conditions] : []),
+          actions: Array.isArray(r.actions) ? r.actions : (r.actions ? [r.actions] : []),
+        }));
+
         // Sort active rules first, then by priority
-        const sortedRules = (data.rules ?? []).sort((a: WorkflowRule, b: WorkflowRule) => {
+        const sortedRules = normalizedRules.sort((a: WorkflowRule, b: WorkflowRule) => {
           if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
           return a.priority - b.priority;
         });

@@ -144,13 +144,13 @@ export default function Hero() {
             transition={{ duration: 0.55, delay: 0.32, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-12"
           >
-            <Link href="/contact"
+            <a href={`${process.env.NEXT_PUBLIC_CRM_URL || 'http://localhost:3014'}/book`}
               className="group inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-sm font-bold text-white shadow-lg transition-all hover:opacity-90 hover:shadow-xl"
               style={{ background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)', boxShadow: '0 4px 24px rgba(99,102,241,0.35)' }}
             >
-              Start free — no card needed
+              Book a free consultation
               <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
+            </a>
             <Link href="/work"
               className="inline-flex items-center gap-1.5 px-4 py-3.5 text-sm font-semibold rounded-xl transition-colors"
               style={{ color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}

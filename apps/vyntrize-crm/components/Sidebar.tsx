@@ -9,6 +9,7 @@ import {
     UserCircle, Settings, ChevronRight, BarChart2,
     CheckSquare, Mail, Send, Sparkles, Inbox,
     FileText, GitBranch, ChevronDown, CalendarDays,
+    Receipt,
 } from 'lucide-react';
 import { logout } from '@/lib/actions/auth';
 
@@ -26,6 +27,11 @@ const CRM_NAV = [
     { href: '/tasks', label: 'Tasks', icon: CheckSquare },
     { href: '/calendar', label: 'Calendar', icon: CalendarDays },
     { href: '/analytics', label: 'Analytics', icon: BarChart2 },
+];
+
+const SALES_NAV = [
+    { href: '/deals', label: 'Deals', icon: Briefcase },
+    { href: '/invoices', label: 'Invoices', icon: Receipt },
 ];
 
 const EMAIL_NAV = [
@@ -184,6 +190,11 @@ export function Sidebar({ role, displayName, email }: SidebarProps) {
                 <div className="space-y-0.5">
                     {CRM_NAV.map(item => <NavItem key={item.href} {...item} />)}
                     <EmailSection />
+                </div>
+
+                <SectionLabel label="Sales" />
+                <div className="space-y-0.5">
+                    {SALES_NAV.map(item => <NavItem key={item.href} {...item} />)}
                 </div>
 
                 <SectionLabel label="Website" />

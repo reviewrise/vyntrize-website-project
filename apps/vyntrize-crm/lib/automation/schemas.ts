@@ -61,7 +61,7 @@ export const dripSequencePayloadSchema = z.object({
 // ─── Workflow Rules ───────────────────────────────────────────────────────────
 
 export const ruleConditionSchema = z.object({
-  field: z.enum(['score', 'stage', 'daysInStage', 'scoreChangedBy', 'assigneeId']),
+  field: z.enum(['score', 'stage', 'daysInStage', 'scoreChangedBy', 'assigneeId', 'source']),
   operator: z.enum(['gt', 'lt', 'eq', 'gte', 'lte']),
   value: z.union([z.number(), z.string()]),
 });
@@ -85,11 +85,22 @@ export const ruleActionSchema = z.discriminatedUnion('type', [
   }),
   z.object({
     type: z.literal('assign_lead'),
-    config: z.object({ assigneeId: z.string().min(1) }),
+    config: z.object({ 
+      assigneeId: z.string().optional(),
+      strategy: z.enum(['specific', 'round-robin']).optional().default('specific'),
+    }),
   }),
   z.object({
     type: z.literal('enroll_drip'),
     config: z.object({ sequenceId: z.string().min(1) }),
+  }),
+  z.object({
+    type: z.literal('notify_staff'),
+    config: z.object({ messageTemplate: z.string().optional() }),
+  }),
+  z.object({
+    type: z.literal('schedule_meeting'),
+    config: z.object({ generateMeetLink: z.boolean().optional() }),
   }),
 ]);
 

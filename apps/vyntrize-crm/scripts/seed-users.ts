@@ -1,4 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+/// <reference types="node" />
+import { PrismaClient } from '@platform/vyntrize-db/src/generated/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -13,7 +14,7 @@ const users = [
     { email: 'gedion@vyntrise.com', displayName: 'Gedion Bula', role: 'MEMBER' as const },
     { email: 'mahlet@vyntrise.com', displayName: 'Mahlet Getachew', role: 'MEMBER' as const },
     { email: 'abel@vyntrise.com', displayName: 'Abel Legesse', role: 'MEMBER' as const },
-];
+];  
 
 async function main() {
     console.log(`Seeding ${users.length} CRM users with default password...`);
