@@ -354,7 +354,7 @@ export default function Home() {
 
           <div className="mt-10 text-center">
             <a
-              href={`${process.env.NEXT_PUBLIC_CRM_URL || 'http://localhost:3014'}/book`}
+              href={`${process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com'}/book`}
               className="inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-sm font-bold text-white transition-colors shadow-md"
               style={{ backgroundColor: 'var(--color-primary)' }}
               onMouseEnter={(e) => (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'var(--color-primary-h)'}
@@ -725,7 +725,7 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
-              href={`${process.env.NEXT_PUBLIC_CRM_URL || 'http://localhost:3014'}/book`}
+              href={`${process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com'}/book`}
               className="group inline-flex items-center gap-2 rounded-xl bg-blue-600 px-8 py-4 text-sm font-bold text-white hover:bg-blue-500 transition-colors shadow-xl shadow-blue-900/40"
             >
               Book a consultation
