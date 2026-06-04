@@ -8,6 +8,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
   const tabs = [
     { name: 'Profile', href: '/settings/profile' },
+    { name: 'Company', href: '/settings/company' },
     { name: 'Availability', href: '/settings/availability' },
     { name: 'Pipeline', href: '/settings/pipeline' },
     { name: 'Email', href: '/settings/email' },

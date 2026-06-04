@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, Receipt, Briefcase } from 'lucide-react';
 import { DealStatusBadge, InvoiceStatusBadge } from '@/components/InvoiceStatusBadge';
 import { DealDetailClient } from './DealDetailClient';
+import { InstallmentPlan } from '@/components/InstallmentPlan';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -88,7 +89,19 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <DealStatusBadge status={deal.status} />
-                <DealDetailClient deal={{ ...deal, value: Number(deal.value) }} mode="edit-button" />
+                <DealDetailClient 
+                  deal={{ 
+                    id: deal.id,
+                    title: deal.title,
+                    value: Number(deal.value),
+                    currency: deal.currency,
+                    status: deal.status,
+                    notes: deal.notes,
+                    leadId: deal.leadId,
+                    contactId: deal.lead?.contactId || null,
+                  }} 
+                  mode="edit-button" 
+                />
               </div>
             </div>
 
@@ -144,7 +157,19 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                   Invoices ({deal.invoices.length})
                 </span>
               </div>
-              <DealDetailClient deal={{ ...deal, value: Number(deal.value) }} mode="new-invoice-button" />
+              <DealDetailClient 
+                deal={{
+                  id: deal.id,
+                  title: deal.title,
+                  value: Number(deal.value),
+                  currency: deal.currency,
+                  status: deal.status,
+                  notes: deal.notes,
+                  leadId: deal.leadId,
+                  contactId: deal.lead?.contactId || null,
+                }} 
+                mode="new-invoice-button" 
+              />
             </div>
 
             {deal.invoices.length === 0 ? (
@@ -209,6 +234,14 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
               </table>
             )}
           </div>
+
+          {/* Installment Plan */}
+          <InstallmentPlan
+            dealId={deal.id}
+            dealValue={Number(deal.value)}
+            currency={deal.currency}
+            alreadyInvoiced={totalInvoiced}
+          />
         </div>
 
         {/* Right — Contact sidebar */}

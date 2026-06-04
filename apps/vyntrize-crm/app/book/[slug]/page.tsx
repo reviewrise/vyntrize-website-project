@@ -28,7 +28,7 @@ export default function BookingPage({ params }: { params: Promise<{ slug: string
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
-  const [formState, setFormState] = useState({ firstName: "", lastName: "", email: "", notes: "" });
+  const [formState, setFormState] = useState({ firstName: "", lastName: "", email: "", phone: "", notes: "" });
   const [bookingStatus, setBookingStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [bookingResult, setBookingResult] = useState<{ meetLink?: string | null; cancelToken?: string | null; rescheduleToken?: string | null } | null>(null);
@@ -73,6 +73,7 @@ export default function BookingPage({ params }: { params: Promise<{ slug: string
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formState,
+          phone: formState.phone || undefined,
           startTime: selectedSlot.start,
           endTime: selectedSlot.end,
         }),
@@ -136,7 +137,13 @@ export default function BookingPage({ params }: { params: Promise<{ slug: string
             )}
           </div>
 
-          <div className="flex items-center justify-center space-x-4 text-sm font-medium">
+          <div className="flex items-center justify-center space-x-4 text-sm font-medium mt-6">
+            <a href="https://vyntrise.com" className="w-full py-2 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-md transition-colors block text-center">
+              Return to Website
+            </a>
+          </div>
+
+          <div className="flex items-center justify-center space-x-4 text-xs font-medium mt-4">
             {bookingResult?.cancelToken && (
               <a href={`/book/cancel?token=${bookingResult.cancelToken}`} className="text-slate-500 hover:text-slate-800 transition-colors">
                 Cancel Meeting
@@ -287,15 +294,27 @@ export default function BookingPage({ params }: { params: Promise<{ slug: string
                   </div>
                 </div>
                 
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-slate-700">Email *</label>
-                  <input 
-                    required 
-                    type="email" 
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                    value={formState.email}
-                    onChange={e => setFormState({...formState, email: e.target.value})}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-slate-700">Email *</label>
+                    <input 
+                      required 
+                      type="email" 
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                      value={formState.email}
+                      onChange={e => setFormState({...formState, email: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium text-slate-700">Phone number</label>
+                    <input 
+                      type="tel" 
+                      placeholder="+1 (555) 000-0000"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                      value={formState.phone}
+                      onChange={e => setFormState({...formState, phone: e.target.value})}
+                    />
+                  </div>
                 </div>
                 
                 <div className="space-y-1">

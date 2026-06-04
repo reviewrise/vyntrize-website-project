@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import { emailService } from '@/lib/email/email-service';
 import crypto from 'crypto';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3014';
+const APP_URL = process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com';
 const BRAND_COLOR = '#0f172a'; // slate-900
 const ACCENT_COLOR = '#3b82f6'; // blue-500
 

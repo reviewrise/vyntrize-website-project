@@ -42,7 +42,7 @@ export function NotificationCenter() {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/notifications');
+      const res = await fetch('/api/alerts');
       if (res.ok) {
         const data = await res.json();
         setNotifications(data.notifications ?? []);
@@ -56,7 +56,7 @@ export function NotificationCenter() {
 
   const markAllRead = async () => {
     try {
-      await fetch('/api/notifications/read-all', { method: 'POST' });
+      await fetch('/api/alerts/read-all', { method: 'POST' });
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     } catch (err) {
       console.error('Failed to mark all read', err);
@@ -65,7 +65,7 @@ export function NotificationCenter() {
 
   const markRead = async (id: string) => {
     try {
-      await fetch(`/api/notifications/${id}/read`, { method: 'POST' });
+      await fetch(`/api/alerts/${id}/read`, { method: 'POST' });
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     } catch (err) {
       console.error('Failed to mark read', err);

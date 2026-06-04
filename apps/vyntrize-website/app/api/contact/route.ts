@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { firstName, lastName, email, company, intent, message, visitorId, sessionId } = body;
+        const { firstName, lastName, email, phone, company, intent, message, visitorId, sessionId } = body;
 
         if (!firstName || !lastName || !email || !message) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -50,7 +50,13 @@ export async function POST(req: NextRequest) {
                     firstName,
                     lastName,
                     email,
+                    ...(phone ? { phone } : {}),
                 },
+            });
+        } else if (phone && !contact.phone) {
+            contact = await prisma.contact.update({
+                where: { email },
+                data: { phone },
             });
         }
 
@@ -107,6 +113,7 @@ export async function POST(req: NextRequest) {
                 activityData: {
                     intent,
                     hasCompany: !!company,
+                    hasPhone: !!phone,
                     messageLength: message.length,
                 },
                 sessionId: sessionId || undefined,

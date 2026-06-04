@@ -119,7 +119,7 @@ export class TemplateRenderer {
    * Generate tracking pixel HTML
    */
   private static generateTrackingPixel(trackingId: string): string {
-    const trackingDomain = process.env.EMAIL_TRACKING_DOMAIN || 'http://localhost:3014';
+    const trackingDomain = process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com';
     const trackingEnabled = process.env.EMAIL_TRACKING_ENABLED !== 'false';
 
     if (!trackingEnabled) return '';
@@ -131,7 +131,7 @@ export class TemplateRenderer {
    * Wrap links with tracking URLs
    */
   private static wrapLinksWithTracking(html: string, trackingId: string): string {
-    const trackingDomain = process.env.EMAIL_TRACKING_DOMAIN || 'http://localhost:3014';
+    const trackingDomain = process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com';
     const trackingEnabled = process.env.EMAIL_TRACKING_ENABLED !== 'false';
 
     if (!trackingEnabled) return html;

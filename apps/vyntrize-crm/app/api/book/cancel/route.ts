@@ -32,13 +32,9 @@ export async function POST(request: NextRequest) {
       await deleteEventFromGoogle(event.userId, event.externalId);
     }
 
-    // 2. Mark as cancelled in DB
-    await db.calendarEvent.update({
-      where: { id: event.id },
-      data: {
-        cancelledAt: new Date(),
-        status: 'CANCELLED'
-      }
+    // 2. Delete the booking from DB as requested
+    await db.calendarEvent.delete({
+      where: { id: event.id }
     });
 
     // 3. Send cancellation email (Phase 8)

@@ -353,7 +353,7 @@ export class DripCampaignAgent extends Agent {
       lastName: (lead as LeadWithContact).contact.lastName || '',
       email: contactEmail,
       leadTitle: lead.title || '',
-      unsubscribeUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3014'}/api/email/unsubscribe?email=${encodeURIComponent(contactEmail)}`,
+      unsubscribeUrl: `${process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com'}/api/email/unsubscribe?email=${encodeURIComponent(contactEmail)}`,
     };
     
     // Format body: convert newlines to <p> tags or <br/> and wrap in the beautiful template

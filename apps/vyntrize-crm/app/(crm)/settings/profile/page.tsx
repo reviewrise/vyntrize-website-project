@@ -68,7 +68,7 @@ export default function ProfileSettingsPage() {
   }
 
   const bookingUrl = bookingSlug
-    ? `http://localhost:3014/book/${bookingSlug}`
+    ? `${process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com'}/book/${bookingSlug}`
     : null;
 
   return (

@@ -12,7 +12,7 @@ export async function POST(
   try {
     const { slug } = await params;
     const body = await request.json();
-    const { firstName, lastName, email, startTime, endTime, notes } = body;
+    const { firstName, lastName, email, phone, startTime, endTime, notes } = body;
 
     if (!firstName || !email || !startTime || !endTime) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -57,11 +57,13 @@ export async function POST(
       update: {
         firstName,
         lastName: lastName || '',
+        ...(phone ? { phone } : {}),
       },
       create: {
         email,
         firstName,
         lastName: lastName || '',
+        ...(phone ? { phone } : {}),
       }
     });
 
