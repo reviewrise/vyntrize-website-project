@@ -65,6 +65,7 @@ RUN addgroup --system --gid 1001 nodejs \
 # with only the server-side runtime dependencies.
 COPY --from=builder --chown=nextjs:nodejs /app/apps/vyntrize-crm/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/vyntrize-crm/.next/static ./apps/vyntrize-crm/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/vyntrize-crm/public ./apps/vyntrize-crm/public
 
 # Copy Prisma generated client and pg adapter dependencies
 COPY --from=builder --chown=nextjs:nodejs /app/packages/@platform/vyntrize-db/src/generated ./packages/@platform/vyntrize-db/src/generated

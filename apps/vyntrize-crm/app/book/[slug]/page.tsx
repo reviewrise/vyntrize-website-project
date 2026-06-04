@@ -144,12 +144,6 @@ export default function BookingPage({ params }: { params: Promise<{ slug: string
           </div>
 
           <div className="flex items-center justify-center space-x-4 text-xs font-medium mt-4">
-            {bookingResult?.cancelToken && (
-              <a href={`/book/cancel?token=${bookingResult.cancelToken}`} className="text-slate-500 hover:text-slate-800 transition-colors">
-                Cancel Meeting
-              </a>
-            )}
-            <span className="text-slate-300">|</span>
             {bookingResult?.rescheduleToken && (
               <a href={`/book/reschedule?token=${bookingResult.rescheduleToken}`} className="text-slate-500 hover:text-slate-800 transition-colors">
                 Reschedule

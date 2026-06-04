@@ -10,7 +10,7 @@ export async function getGoogleCalendarClient(userId: string) {
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com'}/api/auth/google/callback`;
 
   if (!clientId || !clientSecret || !redirectUri) return null;
 
