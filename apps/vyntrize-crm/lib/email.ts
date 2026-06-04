@@ -147,10 +147,9 @@ export async function sendBookingConfirmation({
     <div style="margin-top: 48px; background-color: #f8fafc; border-radius: 12px; padding: 24px; text-align: center; border: 1px dashed #cbd5e1;">
       <p style="margin: 0 0 16px; color: #475569; font-size: 15px; font-weight: 600;">Need to adjust the schedule?</p>
       <div style="margin: 0;">
-        <a href="${APP_URL}/book/reschedule?token=${rescheduleToken}" style="display: inline-block; padding: 10px 20px; background-color: #ffffff; color: ${ACCENT_COLOR}; border: 1px solid #cbd5e1; border-radius: 6px; text-decoration: none; font-weight: 600; margin-right: 12px; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">Reschedule</a> 
-        <a href="${APP_URL}/book/cancel?token=${cancelToken}" style="display: inline-block; padding: 10px 20px; background-color: #ffffff; color: #ef4444; border: 1px solid #cbd5e1; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">Cancel Meeting</a>
+        <a href="${APP_URL}/book/reschedule?token=${rescheduleToken}" style="display: inline-block; padding: 10px 20px; background-color: #ffffff; color: ${ACCENT_COLOR}; border: 1px solid #cbd5e1; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">Reschedule Meeting</a> 
       </div>
-      <p style="margin: 16px 0 0 0; color: #94a3b8; font-size: 12px;">We kindly ask for 24 hours notice if you need to cancel.</p>
+      <p style="margin: 16px 0 0 0; color: #94a3b8; font-size: 12px;">We kindly ask for 24 hours notice if you need to reschedule.</p>
     </div>
   `;
 
