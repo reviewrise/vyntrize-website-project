@@ -94,7 +94,7 @@ export function EmailTestPanel({ role = 'admin' }: { role?: 'admin' | 'sales' | 
       setCheckError(err instanceof Error ? err.message : 'Unknown error');
       setCheckState('error');
     }
-  }, []);
+  }, [role]);
 
   // Auto-check on mount and when role changes
   useEffect(() => {
@@ -171,6 +171,20 @@ export function EmailTestPanel({ role = 'admin' }: { role?: 'admin' | 'sales' | 
                 Verify your email server is reachable
               </p>
             </div>
+          </div>
+
+          {/* Active role badge */}
+          <div className="flex items-center gap-3">
+            <span
+              className="px-2.5 py-1 rounded-lg text-xs font-semibold capitalize"
+              style={{
+                backgroundColor: 'var(--color-primary-subtle, #eff6ff)',
+                color: 'var(--color-primary)',
+                border: '1px solid var(--color-primary)',
+              }}
+            >
+              {role}
+            </span>
           </div>
 
           <button
