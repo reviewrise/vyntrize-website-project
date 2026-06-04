@@ -41,8 +41,11 @@ RUN pnpm --filter @platform/vyntrize-db db:generate
 # Build vyntrize-crm in standalone mode.
 # NEXT_OUTPUT=standalone tells next.config.ts to set output: 'standalone'.
 # CRM_DATABASE_URL is a dummy value — the real URL is injected at runtime.
+# NEXT_PUBLIC_* vars must be baked in at build time (Next.js requirement).
 ENV NEXT_OUTPUT=standalone
 ENV CRM_DATABASE_URL=postgresql://build:build@localhost:5432/build
+ARG NEXT_PUBLIC_CRM_URL=https://crm.vyntrise.com
+ENV NEXT_PUBLIC_CRM_URL=$NEXT_PUBLIC_CRM_URL
 RUN pnpm --filter vyntrize-crm build
 
 # ─── Stage 4: runner ─────────────────────────────────────────────────────────

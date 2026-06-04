@@ -208,7 +208,7 @@ export default function Header() {
           <Link href="/contact" className="text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors px-2">
             Contact
           </Link>
-          <a href={`${process.env.NEXT_PUBLIC_CRM_URL || 'http://localhost:3014'}/book`} className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--color-primary-h)] transition-colors">
+          <a href={`${process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com'}/book`} className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--color-primary-h)] transition-colors">
             Book a Consultation <ArrowRight className="h-3.5 w-3.5" />
           </a>
         </div>
@@ -316,7 +316,7 @@ export default function Header() {
                 >
                   Contact
                 </Link>
-                <a href={`${process.env.NEXT_PUBLIC_CRM_URL || 'http://localhost:3014'}/book`} onClick={() => setMobileOpen(false)}
+                <a href={`${process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com'}/book`} onClick={() => setMobileOpen(false)}
                   className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-colors"
                   style={{ backgroundColor: 'var(--color-primary)' }}
                 >

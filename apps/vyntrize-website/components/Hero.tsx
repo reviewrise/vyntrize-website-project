@@ -144,7 +144,7 @@ export default function Hero() {
             transition={{ duration: 0.55, delay: 0.32, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-12"
           >
-            <a href={`${process.env.NEXT_PUBLIC_CRM_URL || 'http://localhost:3014'}/book`}
+            <a href={`${process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com'}/book`}
               className="group inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-sm font-bold text-white shadow-lg transition-all hover:opacity-90 hover:shadow-xl"
               style={{ background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)', boxShadow: '0 4px 24px rgba(99,102,241,0.35)' }}
             >

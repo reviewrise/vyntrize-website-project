@@ -452,7 +452,7 @@ export default function Contact() {
                     {experts.map((expert) => (
                       <a
                         key={expert.id}
-                        href={`${process.env.NEXT_PUBLIC_CRM_URL || 'http://localhost:3014'}/book/${expert.bookingSlug}`}
+                        href={`${process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com'}/book/${expert.bookingSlug}`}
                         className="flex items-center justify-between gap-3 group rounded-lg p-2.5 transition-all border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30"
                       >
                         <div className="flex items-center gap-3">
@@ -470,7 +470,7 @@ export default function Contact() {
                       </a>
                     ))}
                     <a
-                      href={`${process.env.NEXT_PUBLIC_CRM_URL || 'http://localhost:3014'}/book`}
+                      href={`${process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com'}/book`}
                       className="block w-full text-center mt-2 py-2 px-3 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
                     >
                       Let Us Match You
