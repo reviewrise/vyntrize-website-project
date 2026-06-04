@@ -12,6 +12,7 @@ export interface CompanySettings {
   address: string;
   taxId: string;
   logoUrl: string;
+  paymentInstructions?: string;
 }
 
 const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
@@ -22,6 +23,7 @@ const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   address: '123 Business Rd., Ste 100\nCity, State 12345',
   taxId: '',
   logoUrl: '',
+  paymentInstructions: '',
 };
 
 const SETTINGS_KEY = 'COMPANY_PROFILE';

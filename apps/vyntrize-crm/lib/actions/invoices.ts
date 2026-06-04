@@ -307,14 +307,38 @@ export async function sendInvoice(id: string) {
         <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #475569;">
           Your invoice for <strong style="color: #0f172a;">${invoice.deal.title}</strong> is attached below.
         </p>
-        ${invoice.stripePaymentUrl && invoice.status !== 'PAID' ? `
+
         <table cellpadding="0" cellspacing="0" border="0" style="margin-top: 16px;">
           <tr>
-            <td style="background: #4f6ef7; border-radius: 6px;">
-              <a href="${invoice.stripePaymentUrl}" style="display: inline-block; padding: 12px 24px; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none;">Pay Invoice Securely</a>
+            ${invoice.stripePaymentUrl && invoice.status !== 'PAID' ? `
+            <td style="padding-right: 12px;">
+              <table cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="background: #22c55e; border-radius: 6px;">
+                    <a href="${invoice.stripePaymentUrl}" style="display: inline-block; padding: 12px 24px; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none;">Pay Now Online</a>
+                  </td>
+                </tr>
+              </table>
+            </td>` : ''}
+            <td>
+              <table cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="background: #4f6ef7; border-radius: 6px;">
+                    <a href="${process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com'}/pay/${invoice.id}" style="display: inline-block; padding: 12px 24px; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none;">
+                      ${invoice.status !== 'PAID' ? 'View Full Invoice' : 'View Invoice Receipt'}
+                    </a>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
-        </table>` : ''}
+        </table>
+
+        ${invoice.status !== 'PAID' && company.paymentInstructions ? `
+        <div style="margin-top: 24px; padding: 16px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
+          <h4 style="margin: 0 0 8px; color: #0f172a; font-size: 14px;">Offline Payment Instructions</h4>
+          <p style="margin: 0; font-size: 13px; color: #475569; white-space: pre-wrap; font-family: ui-monospace, monospace;">${company.paymentInstructions}</p>
+        </div>` : ''}
       </td>
     </tr>
   </table>
@@ -533,6 +557,21 @@ export async function recordPayment(
 export async function getInvoice(id: string) {
   await getSession();
 
+  return prisma.invoice.findUnique({
+    where: { id },
+    include: {
+      lineItems: { orderBy: { id: 'asc' } },
+      payments: { orderBy: { paidAt: 'desc' } },
+      deal: {
+        include: {
+          lead: { include: { contact: true, company: true } },
+        },
+      },
+    },
+  });
+}
+
+export async function getPublicInvoice(id: string) {
   return prisma.invoice.findUnique({
     where: { id },
     include: {
