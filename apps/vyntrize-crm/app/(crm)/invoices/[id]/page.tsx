@@ -1,4 +1,5 @@
 import { getInvoice } from '@/lib/actions/invoices';
+import { getCompanySettings } from '@/lib/actions/company-settings';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
@@ -15,6 +16,8 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
   const { id } = await params;
   const invoice = await getInvoice(id);
   if (!invoice) notFound();
+
+  const companySettings = await getCompanySettings();
 
   const remaining = Number(invoice.total) - Number(invoice.amountPaid);
 
@@ -69,7 +72,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
       </div>
 
       {/* Invoice preview */}
-      <InvoicePreview invoice={serializedInvoice} />
+      <InvoicePreview invoice={serializedInvoice} companySettings={companySettings} />
     </div>
   );
 }

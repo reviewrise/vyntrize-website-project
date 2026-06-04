@@ -51,6 +51,15 @@ interface InvoicePreviewProps {
   };
   /** When true, hides interactive action buttons (for PDF/print contexts) */
   printMode?: boolean;
+  companySettings?: {
+    name: string;
+    email: string;
+    phone?: string;
+    website?: string;
+    address: string;
+    taxId?: string;
+    logoUrl?: string;
+  } | null;
 }
 
 function fmt(n: number | string, currency = 'USD') {
@@ -70,7 +79,7 @@ const methodLabel: Record<string, string> = {
   other: 'Other',
 };
 
-export function InvoicePreview({ invoice, printMode = false }: InvoicePreviewProps) {
+export function InvoicePreview({ invoice, printMode = false, companySettings }: InvoicePreviewProps) {
   const remaining = Number(invoice.total) - Number(invoice.amountPaid);
   const contact = invoice.deal.lead.contact;
   const company = invoice.deal.lead.company;
@@ -100,6 +109,40 @@ export function InvoicePreview({ invoice, printMode = false }: InvoicePreviewPro
         boxShadow: printMode ? 'none' : '0 4px 24px rgba(0,0,0,0.06)',
       }}
     >
+      {/* ── Visual Pipeline (UI Only) ── */}
+      {!printMode && invoice.status !== 'CANCELLED' && (
+        <div className="print:hidden" style={{ padding: '1.5rem 2.5rem', borderBottom: '1px solid #f1f5f9', background: '#fafbfc', borderTopLeftRadius: '0.75rem', borderTopRightRadius: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
+            <div style={{ position: 'absolute', top: '50%', left: '0', right: '0', height: '2px', background: '#e2e8f0', zIndex: 0, transform: 'translateY(-50%)' }} />
+            
+            {[
+              { id: 'DRAFT', label: 'Draft', active: true, completed: invoice.status !== 'DRAFT' },
+              { id: 'SENT', label: 'Sent', active: ['SENT', 'PARTIALLY_PAID', 'PAID', 'OVERDUE'].includes(invoice.status), completed: ['PARTIALLY_PAID', 'PAID'].includes(invoice.status) },
+              { id: 'PAID', label: 'Paid', active: invoice.status === 'PAID', completed: invoice.status === 'PAID' }
+            ].map((step, idx, arr) => {
+              const isActive = step.active || step.completed;
+              return (
+                <div key={step.id} style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#fafbfc', padding: '0 1rem' }}>
+                  <div style={{ 
+                    width: '1.75rem', height: '1.75rem', borderRadius: '50%', 
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: step.completed ? '#22c55e' : isActive ? '#3b82f6' : '#fff',
+                    border: `2px solid ${step.completed ? '#22c55e' : isActive ? '#3b82f6' : '#cbd5e1'}`,
+                    color: isActive || step.completed ? '#fff' : '#94a3b8',
+                    fontSize: '0.75rem', fontWeight: 600
+                  }}>
+                    {step.completed ? '✓' : idx + 1}
+                  </div>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 600, color: isActive ? '#1e293b' : '#94a3b8', marginTop: '0.375rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {step.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ── Header ── */}
       <div
         style={{
@@ -110,22 +153,38 @@ export function InvoicePreview({ invoice, printMode = false }: InvoicePreviewPro
           borderBottom: '1px solid #f1f5f9',
         }}
       >
-        {/* Brand */}
-        <div>
-          <div
-            style={{
-              fontSize: '1.5rem',
-              fontWeight: 800,
-              letterSpacing: '-0.03em',
-              background: 'linear-gradient(135deg, #4f6ef7, #7c5bf7)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              marginBottom: '0.25rem',
-            }}
-          >
-            VyntRise
+        {/* Brand — logo + name side by side */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+            {companySettings?.logoUrl && (
+              <img
+                src={companySettings.logoUrl}
+                alt={companySettings?.name || 'Logo'}
+                style={{ maxHeight: '36px', maxWidth: '120px', objectFit: 'contain', display: 'block' }}
+              />
+            )}
+            <div
+              style={{
+                fontSize: companySettings?.logoUrl ? '1.1rem' : '1.5rem',
+                fontWeight: 800,
+                letterSpacing: '-0.03em',
+                background: 'linear-gradient(135deg, #4f6ef7, #7c5bf7)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              {companySettings?.name || 'VyntRise'}
+            </div>
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>hello@vyntrize.com · vyntrize.com</div>
+          <div style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.5 }}>
+            {companySettings?.address
+              ? companySettings.address.replace(/\n/g, ' · ')
+              : '205 Van Buren Street, Suite 120 · Herndon, VA 20170'}
+            <br />
+            {companySettings?.email || 'hello@vyntrize.com'}
+            {companySettings?.website ? ` · ${companySettings.website.replace(/^https?:\/\//, '')}` : ' · vyntrize.com'}
+            {companySettings?.taxId && <><br />Tax ID: {companySettings.taxId}</>}
+          </div>
         </div>
 
         {/* Invoice meta */}
@@ -351,7 +410,7 @@ export function InvoicePreview({ invoice, printMode = false }: InvoicePreviewPro
           color: '#94a3b8',
         }}
       >
-        Thank you for your business · VyntRise · hello@vyntrize.com
+        Thank you for your business · {companySettings?.name || 'VyntRise'} · {companySettings?.email || 'hello@vyntrize.com'}
       </div>
     </div>
   );

@@ -3,9 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
+import { getCompanySettings } from '@/lib/actions/company-settings';
 import { InvoiceStatus } from '@platform/vyntrize-db/src/generated/client';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type LineItemInput = {
   description: string;
@@ -23,7 +24,7 @@ export type InvoiceCreateInput = {
   currency?: string;
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function calcTotals(
   lineItems: LineItemInput[],
@@ -72,7 +73,7 @@ async function refreshInvoiceStatus(invoiceId: string) {
   return status;
 }
 
-// ─── Create Invoice ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Create Invoice â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function createInvoice(input: InvoiceCreateInput) {
   await getSession();
@@ -110,10 +111,84 @@ export async function createInvoice(input: InvoiceCreateInput) {
 
   revalidatePath('/invoices');
   revalidatePath(`/deals/${input.dealId}`);
-  return invoice;
+  return { success: true, id: invoice.id };
 }
 
-// ─── Update Invoice (draft only) ─────────────────────────────────────────────
+// â”€â”€â”€ Create Installment Plan â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Atomically creates N installment invoices inside one transaction,
+// ensuring sequential invoice numbers with no race conditions.
+
+export type InstallmentInput = {
+  label: string;
+  amount: number;
+  dueDate: Date;
+  notes?: string;
+};
+
+export async function createInstallmentPlan(
+  dealId: string,
+  installments: InstallmentInput[],
+  currency = 'USD',
+) {
+  await getSession();
+
+  if (!installments.length) throw new Error('No installments provided');
+
+  // Run everything in a single transaction to guarantee sequential numbers
+  const invoices = await prisma.$transaction(async (tx) => {
+    const year = new Date().getFullYear();
+
+    // Lock-count inside transaction for safe sequential numbering
+    const count = await tx.invoice.count({
+      where: { number: { startsWith: `INV-${year}-` } },
+    });
+
+    const created = [];
+    for (let i = 0; i < installments.length; i++) {
+      const inst = installments[i];
+      const seq = String(count + i + 1).padStart(3, '0');
+      const number = `INV-${year}-${seq}`;
+
+      const { subtotal, taxAmount, total } = calcTotals([
+        { description: inst.label, quantity: 1, unitPrice: inst.amount },
+      ]);
+
+      const inv = await tx.invoice.create({
+        data: {
+          number,
+          dealId,
+          dueDate: inst.dueDate,
+          currency,
+          subtotal,
+          taxAmount: taxAmount > 0 ? taxAmount : undefined,
+          total,
+          notes: inst.notes,
+          lineItems: {
+            create: [
+              {
+                description: inst.label,
+                quantity: 1,
+                unitPrice: inst.amount,
+                total: inst.amount,
+              },
+            ],
+          },
+        },
+        include: { lineItems: true },
+      });
+
+      created.push(inv);
+    }
+
+    return created;
+  });
+
+  revalidatePath('/invoices');
+  revalidatePath(`/deals/${dealId}`);
+  return { success: true };
+}
+
+// â”€â”€â”€ Update Invoice (draft only) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function updateInvoice(
   id: string,
@@ -165,7 +240,7 @@ export async function updateInvoice(
 
   revalidatePath('/invoices');
   revalidatePath(`/invoices/${id}`);
-  return invoice;
+  return { success: true, id: invoice.id };
 }
 
 // ─── Send Invoice ─────────────────────────────────────────────────────────────
@@ -178,24 +253,22 @@ export async function sendInvoice(id: string) {
     where: { id },
     include: {
       lineItems: { orderBy: { id: 'asc' } },
+      payments: true,
       deal: {
         include: {
-          lead: { include: { contact: true } },
+          lead: { include: { contact: true, company: true } },
         },
       },
     },
   });
+
+  const company = await getCompanySettings();
 
   const contact = invoice.deal.lead.contact;
   const contactName = contact
     ? `${contact.firstName} ${contact.lastName}`.trim()
     : 'Valued Client';
   const contactEmail = contact?.email;
-
-  // ── Build email HTML ──────────────────────────────────────────────────────
-  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3014';
-  const BRAND_COLOR = '#0f172a';
-  const ACCENT_COLOR = '#3b82f6';
 
   const fmt = (n: any, currency: string) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(Number(n));
@@ -204,137 +277,197 @@ export async function sendInvoice(id: string) {
     .map(
       (li) => `
       <tr>
-        <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px;">${li.description}</td>
-        <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px; text-align: center;">${Number(li.quantity)}</td>
-        <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px; text-align: right;">${fmt(li.unitPrice, invoice.currency)}</td>
-        <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${fmt(li.total, invoice.currency)}</td>
+        <td style="padding: 16px 0; border-bottom: 1px solid #f1f5f9; color: #1e293b; font-size: 14px;">${li.description}</td>
+        <td style="padding: 16px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; font-size: 14px; text-align: center;">${Number(li.quantity)}</td>
+        <td style="padding: 16px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; font-size: 14px; text-align: right;">${fmt(li.unitPrice, invoice.currency)}</td>
+        <td style="padding: 16px 0; border-bottom: 1px solid #f1f5f9; color: #1e293b; font-size: 14px; font-weight: 600; text-align: right;">${fmt(li.total, invoice.currency)}</td>
       </tr>`,
     )
     .join('');
 
-  const dueDate = new Intl.DateTimeFormat('en-US', {
-    year: 'numeric', month: 'long', day: 'numeric',
-  }).format(new Date(invoice.dueDate));
+  const issueDate = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(invoice.issueDate));
+  const dueDate = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(invoice.dueDate));
 
-  const stripeButton = invoice.stripePaymentUrl
-    ? `<div style="text-align: center; margin: 32px 0;">
-        <a href="${invoice.stripePaymentUrl}" style="display: inline-block; background: linear-gradient(135deg, #635bff, #0070f3); color: #fff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 12px rgba(99,91,255,0.3);">
-          Pay Now — ${fmt(invoice.total, invoice.currency)}
-        </a>
-        <p style="margin: 12px 0 0; font-size: 12px; color: #94a3b8;">Secure payment powered by Stripe</p>
-      </div>`
-    : `<p style="margin: 24px 0; padding: 16px; background: #f8fafc; border-radius: 8px; color: #475569; font-size: 14px; text-align: center;">
-        Please arrange payment by <strong>${dueDate}</strong>. Contact us for bank transfer details.
-      </p>`;
+  const statusBg = invoice.status === 'PAID' ? '#f0fdf4' : ['SENT', 'PARTIALLY_PAID', 'OVERDUE'].includes(invoice.status) ? '#eff6ff' : '#f1f5f9';
+  const statusColor = invoice.status === 'PAID' ? '#22c55e' : ['SENT', 'PARTIALLY_PAID', 'OVERDUE'].includes(invoice.status) ? '#3b82f6' : '#64748b';
 
   const htmlBody = `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; margin: 0; padding: 40px 20px;">
-  <table width="100%" cellpadding="0" cellspacing="0" border="0">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice ${invoice.number} — ${company.name}</title>
+</head>
+<body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f8fafc; margin: 0; padding: 40px 20px;">
+  <!-- Greeting -->
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 650px; margin: 0 auto 24px;">
+    <tr>
+      <td>
+        <p style="margin: 0 0 8px; font-size: 16px; font-weight: 600; color: #0f172a;">Hi ${contactName},</p>
+        <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #475569;">
+          Your invoice for <strong style="color: #0f172a;">${invoice.deal.title}</strong> is attached below.
+        </p>
+        ${invoice.stripePaymentUrl && invoice.status !== 'PAID' ? `
+        <table cellpadding="0" cellspacing="0" border="0" style="margin-top: 16px;">
+          <tr>
+            <td style="background: #4f6ef7; border-radius: 6px;">
+              <a href="${invoice.stripePaymentUrl}" style="display: inline-block; padding: 12px 24px; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none;">Pay Invoice Securely</a>
+            </td>
+          </tr>
+        </table>` : ''}
+      </td>
+    </tr>
+  </table>
 
-        <!-- Header -->
-        <tr>
-          <td style="background: ${BRAND_COLOR}; padding: 32px 40px; text-align: center;">
-            <h1 style="color: #fff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">VyntRise</h1>
-            <p style="color: #94a3b8; margin: 6px 0 0; font-size: 13px;">Invoice ${invoice.number}</p>
-          </td>
-        </tr>
-
-        <!-- Body -->
-        <tr>
-          <td style="padding: 40px;">
-            <div style="text-align: center; margin-bottom: 28px;">
-              <div style="display: inline-block; background: #e0e7ff; color: #4338ca; padding: 8px 18px; border-radius: 50px; font-weight: 700; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase;">Invoice</div>
-            </div>
-
-            <p style="color: #334155; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">Hi ${contactName},</p>
-            <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 32px;">
-              Please find your invoice from <strong>VyntRise</strong> for <strong>${invoice.deal.title}</strong>. 
-              Payment is due by <strong>${dueDate}</strong>.
-            </p>
-
-            <!-- Invoice Meta -->
-            <div style="background: #f8fafc; border-radius: 12px; padding: 20px 24px; margin-bottom: 32px; border: 1px solid #e2e8f0;">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <!-- Main Invoice Card -->
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 650px; margin: 0 auto; background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden;">
+    <!-- Header -->
+    <tr>
+      <td style="padding: 40px; border-bottom: 1px solid #f1f5f9;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td valign="top">
+              <table cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td style="font-size: 13px; color: #64748b; font-weight: 600; padding: 6px 0;">Invoice Number</td>
-                  <td style="font-size: 13px; color: #0f172a; font-weight: 600; text-align: right; padding: 6px 0;">${invoice.number}</td>
-                </tr>
-                <tr>
-                  <td style="font-size: 13px; color: #64748b; font-weight: 600; padding: 6px 0;">Issue Date</td>
-                  <td style="font-size: 13px; color: #0f172a; text-align: right; padding: 6px 0;">${new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(invoice.issueDate))}</td>
-                </tr>
-                <tr>
-                  <td style="font-size: 13px; color: #64748b; font-weight: 600; padding: 6px 0;">Due Date</td>
-                  <td style="font-size: 13px; color: #ef4444; font-weight: 600; text-align: right; padding: 6px 0;">${dueDate}</td>
+                  ${company.logoUrl ? `<td style="padding-right: 12px;"><img src="${company.logoUrl}" alt="Logo" style="max-height: 36px; max-width: 120px; object-fit: contain; display: block;" /></td>` : ''}
+                  <td valign="middle">
+                    <span style="font-size: ${company.logoUrl ? '18px' : '24px'}; font-weight: 800; letter-spacing: -0.5px; color: #4f6ef7;">${company.name}</span>
+                  </td>
                 </tr>
               </table>
-            </div>
+              <p style="margin: 12px 0 0; font-size: 12px; color: #94a3b8; line-height: 1.5;">
+                ${company.address ? company.address.replace(/\n/g, ' &middot; ') : ''}<br />
+                ${company.email} ${company.website ? `&middot; ${company.website.replace(/^https?:\/\//, '')}` : ''}
+                ${company.taxId ? `<br />Tax ID: ${company.taxId}` : ''}
+              </p>
+            </td>
+            <td valign="top" align="right">
+              <p style="margin: 0 0 4px; font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px;">Invoice</p>
+              <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px;">${invoice.number}</h1>
+              <div style="margin-top: 8px;">
+                <span style="display: inline-block; padding: 4px 12px; border-radius: 50px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: ${statusBg}; color: ${statusColor};">
+                  ${invoice.status.replace('_', ' ')}
+                </span>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
 
-            <!-- Line Items -->
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;">
-              <thead>
+    <!-- Bill To + Dates -->
+    <tr>
+      <td style="padding: 32px 40px; border-bottom: 1px solid #f1f5f9;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td width="33%" valign="top">
+              <p style="margin: 0 0 8px; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.2px;">Bill To</p>
+              <p style="margin: 0 0 2px; font-size: 14px; font-weight: 600; color: #1e293b;">${contactName}</p>
+              ${invoice.deal.lead.company?.name ? `<p style="margin: 0 0 2px; font-size: 13px; color: #64748b;">${invoice.deal.lead.company.name}</p>` : ''}
+              <p style="margin: 0 0 2px; font-size: 13px; color: #64748b;">${contactEmail}</p>
+              ${contact.phone ? `<p style="margin: 0; font-size: 13px; color: #64748b;">${contact.phone}</p>` : ''}
+            </td>
+            <td width="33%" valign="top">
+              <p style="margin: 0 0 8px; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.2px;">For</p>
+              <p style="margin: 0; font-size: 14px; font-weight: 600; color: #1e293b;">${invoice.deal.title}</p>
+            </td>
+            <td width="33%" valign="top">
+              <p style="margin: 0 0 8px; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.2px;">Dates</p>
+              <table cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
-                  <th style="text-align: left; font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 8px; border-bottom: 2px solid #e2e8f0;">Description</th>
-                  <th style="text-align: center; font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 8px; border-bottom: 2px solid #e2e8f0;">Qty</th>
-                  <th style="text-align: right; font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 8px; border-bottom: 2px solid #e2e8f0;">Unit Price</th>
-                  <th style="text-align: right; font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 8px; border-bottom: 2px solid #e2e8f0;">Total</th>
+                  <td style="font-size: 12px; color: #94a3b8; padding-bottom: 4px;">Issued</td>
+                  <td style="font-size: 13px; color: #1e293b; padding-bottom: 4px; text-align: right;">${issueDate}</td>
                 </tr>
-              </thead>
-              <tbody>${lineItemsRows}</tbody>
-            </table>
+                <tr>
+                  <td style="font-size: 12px; color: #94a3b8;">Due</td>
+                  <td style="font-size: 13px; color: #1e293b; text-align: right;">${dueDate}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
 
-            <!-- Totals -->
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 32px;">
-              ${Number(invoice.discount) > 0 ? `<tr><td style="font-size: 14px; color: #64748b; padding: 6px 0;">Subtotal</td><td style="text-align: right; font-size: 14px; color: #334155; padding: 6px 0;">${fmt(invoice.subtotal, invoice.currency)}</td></tr><tr><td style="font-size: 14px; color: #64748b; padding: 6px 0;">Discount</td><td style="text-align: right; font-size: 14px; color: #16a34a; padding: 6px 0;">−${fmt(invoice.discount!, invoice.currency)}</td></tr>` : ''}
-              ${Number(invoice.taxAmount) > 0 ? `<tr><td style="font-size: 14px; color: #64748b; padding: 6px 0;">Tax (${Number(invoice.taxRate)}%)</td><td style="text-align: right; font-size: 14px; color: #334155; padding: 6px 0;">${fmt(invoice.taxAmount!, invoice.currency)}</td></tr>` : ''}
-              <tr>
-                <td style="font-size: 16px; color: #0f172a; font-weight: 700; padding: 14px 0 0; border-top: 2px solid #0f172a;">Total Due</td>
-                <td style="text-align: right; font-size: 20px; color: #0f172a; font-weight: 800; padding: 14px 0 0; border-top: 2px solid #0f172a;">${fmt(invoice.total, invoice.currency)}</td>
-              </tr>
-            </table>
+    <!-- Line Items -->
+    <tr>
+      <td style="padding: 32px 40px;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <thead>
+            <tr>
+              <th align="left" style="padding-bottom: 16px; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #e2e8f0;">Description</th>
+              <th align="center" style="padding-bottom: 16px; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #e2e8f0;">Qty</th>
+              <th align="right" style="padding-bottom: 16px; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #e2e8f0;">Unit Price</th>
+              <th align="right" style="padding-bottom: 16px; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #e2e8f0;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${lineItemsRows}
+          </tbody>
+        </table>
 
-            ${stripeButton}
+        <!-- Totals -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 16px;">
+          <tr>
+            <td width="50%"></td>
+            <td width="50%">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                ${Number(invoice.subtotal) !== Number(invoice.total) ? `
+                <tr>
+                  <td align="left" style="padding: 6px 0; font-size: 13px; color: #64748b;">Subtotal</td>
+                  <td align="right" style="padding: 6px 0; font-size: 13px; color: #1e293b;">${fmt(invoice.subtotal, invoice.currency)}</td>
+                </tr>` : ''}
+                ${Number(invoice.discount) > 0 ? `
+                <tr>
+                  <td align="left" style="padding: 6px 0; font-size: 13px; color: #64748b;">Discount</td>
+                  <td align="right" style="padding: 6px 0; font-size: 13px; color: #16a34a;">−${fmt(invoice.discount!, invoice.currency)}</td>
+                </tr>` : ''}
+                ${Number(invoice.taxAmount) > 0 ? `
+                <tr>
+                  <td align="left" style="padding: 6px 0; font-size: 13px; color: #64748b;">Tax (${Number(invoice.taxRate)}%)</td>
+                  <td align="right" style="padding: 6px 0; font-size: 13px; color: #1e293b;">${fmt(invoice.taxAmount!, invoice.currency)}</td>
+                </tr>` : ''}
+                <tr>
+                  <td align="left" style="padding: 12px 0 4px; font-size: 16px; font-weight: 800; color: #1e293b;">Total</td>
+                  <td align="right" style="padding: 12px 0 4px; font-size: 16px; font-weight: 800; color: #4f6ef7;">${invoice.currency} ${fmt(invoice.total, invoice.currency).replace('$', '').replace('€', '').replace('£', '').trim()}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
 
-            ${invoice.notes ? `<div style="background: #f8fafc; border-left: 4px solid #cbd5e1; padding: 16px 20px; border-radius: 0 8px 8px 0; margin-bottom: 24px;"><p style="margin: 0; font-size: 14px; color: #475569;"><strong>Note:</strong> ${invoice.notes}</p></div>` : ''}
-
-            <p style="color: #94a3b8; font-size: 13px; margin: 32px 0 0; text-align: center;">
-              Questions? Reply to this email or contact us directly.
-            </p>
-          </td>
-        </tr>
-
-        <!-- Footer -->
-        <tr>
-          <td style="background: #f1f5f9; padding: 20px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
-            <p style="margin: 0; color: #94a3b8; font-size: 12px;">© ${new Date().getFullYear()} VyntRise. All rights reserved.</p>
-          </td>
-        </tr>
-
-      </table>
-    </td></tr>
+        ${invoice.notes ? `
+        <!-- Notes -->
+        <div style="margin-top: 40px; padding: 20px; background: #f8fafc; border-left: 4px solid #4f6ef7; border-radius: 0 8px 8px 0;">
+          <p style="margin: 0 0 8px; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.2px;">Notes & Terms</p>
+          <p style="margin: 0; font-size: 13px; color: #475569; line-height: 1.6;">${invoice.notes.replace(/\n/g, '<br />')}</p>
+        </div>` : ''}
+      </td>
+    </tr>
   </table>
+
+  <!-- Footer -->
+  <p style="margin: 32px 0 0; text-align: center; font-size: 12px; color: #94a3b8;">
+    Thank you for your business &middot; ${company.name} &middot; <a href="mailto:${company.email}" style="color: #4f6ef7; text-decoration: none;">${company.email}</a>
+  </p>
 </body>
 </html>`;
 
-  // ── Send the email ────────────────────────────────────────────────────────
+  // -- Send the email -----------------------------------------------------------
   if (contactEmail) {
     const { emailService } = await import('@/lib/email/email-service');
     await emailService.sendEmail({
       role: 'billing',
       to: contactEmail,
       toName: contactName,
-      subject: `Invoice ${invoice.number} from VyntRise — ${fmt(invoice.total, invoice.currency)} due ${dueDate}`,
+      subject: `Invoice ${invoice.number} from ${company.name} - ${fmt(invoice.total, invoice.currency)} due ${dueDate}`,
       html: htmlBody,
       leadId: invoice.deal.leadId,
       contactId: contact?.id,
     });
   }
 
-  // ── Mark as SENT in DB ────────────────────────────────────────────────────
+  // -- Mark as SENT in DB -------------------------------------------------------
   const updated = await prisma.invoice.update({
     where: { id },
     data: { status: 'SENT', sentAt: new Date() },
@@ -343,11 +476,9 @@ export async function sendInvoice(id: string) {
 
   revalidatePath('/invoices');
   revalidatePath(`/invoices/${id}`);
-  return updated;
+  return { success: true };
 }
-
-
-// ─── Record Payment ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Record Payment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function recordPayment(
   invoiceId: string,
@@ -394,10 +525,10 @@ export async function recordPayment(
 
   revalidatePath('/invoices');
   revalidatePath(`/invoices/${invoiceId}`);
-  return payment;
+  return { success: true };
 }
 
-// ─── Get Invoice ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Get Invoice â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function getInvoice(id: string) {
   await getSession();
@@ -416,7 +547,7 @@ export async function getInvoice(id: string) {
   });
 }
 
-// ─── List Invoices ────────────────────────────────────────────────────────────
+// â”€â”€â”€ List Invoices â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type InvoiceListFilters = {
   status?: InvoiceStatus;
@@ -447,7 +578,7 @@ export async function listInvoices(filters: InvoiceListFilters = {}) {
   });
 }
 
-// ─── Dashboard revenue stats ──────────────────────────────────────────────────
+// â”€â”€â”€ Dashboard revenue stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function getInvoiceStats() {
   await getSession();

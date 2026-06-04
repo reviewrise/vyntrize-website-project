@@ -42,7 +42,36 @@ export function InvoiceDetailClient({ invoice, remaining }: Props) {
   const router = useRouter();
 
   function handlePrint() {
-    window.open(`/invoices/${invoice.id}/print`, '_blank');
+    // Inject a temporary @media print stylesheet that hides everything except the invoice
+    const style = document.createElement('style');
+    style.id = '__invoice-print-style__';
+    style.textContent = `
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        #invoice-print-area, #invoice-print-area * {
+          visibility: visible;
+        }
+        #invoice-print-area {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          margin: 0 !important;
+          padding: 0 !important;
+          border: none !important;
+          box-shadow: none !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    window.print();
+    // Remove the injected style after printing dialogue closes
+    setTimeout(() => {
+      const el = document.getElementById('__invoice-print-style__');
+      if (el) el.remove();
+    }, 1000);
   }
 
   async function handleSend() {

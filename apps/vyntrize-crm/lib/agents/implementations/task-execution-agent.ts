@@ -129,7 +129,7 @@ export class TaskExecutionAgent extends Agent {
       lastName: lead.contact.lastName || '',
       email: payload.to,
       leadTitle: lead.title || '',
-      unsubscribeUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3014'}/api/email/unsubscribe?email=${encodeURIComponent(payload.to)}`,
+      unsubscribeUrl: `${process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com'}/api/email/unsubscribe?email=${encodeURIComponent(payload.to)}`,
     };
     
     // Format body: convert newlines to <p> tags or <br/> and wrap in the beautiful template

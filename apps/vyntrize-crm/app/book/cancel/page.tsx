@@ -51,6 +51,9 @@ export default function CancelPage({ searchParams }: { searchParams: Promise<{ t
           <p className="text-slate-600 mb-6">
             Your meeting has been successfully cancelled and removed from the calendar.
           </p>
+          <a href="https://vyntrise.com" className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-medium transition-colors block text-center">
+            Return to Website
+          </a>
         </div>
       </div>
     );

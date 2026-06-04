@@ -171,6 +171,19 @@ jobs:
             AGENT_DRIP_CAMPAIGN_ENABLED=true
             AGENT_WORKFLOW_RULE_ENABLED=true
             AGENT_JOB_CONCURRENCY=5
+
+            # ─── Google OAuth ─────────────────────────────────────────────────────────────
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
+
+            # ─── Webhook ──────────────────────────────────────────────────────────────────
+            VYNTRISE_WEBHOOK_SECRET=${{ secrets.VYNTRISE_WEBHOOK_SECRET }}
+
+            # ─── AI Provider ──────────────────────────────────────────────────────────────
+            AI_PROVIDER=${{ secrets.AI_PROVIDER }}
+            GEMINI_MODEL=${{ secrets.GEMINI_MODEL }}
+            OPENAI_MODEL=${{ secrets.OPENAI_MODEL }}
             EOF
 
             echo "Pulling latest Docker images..."

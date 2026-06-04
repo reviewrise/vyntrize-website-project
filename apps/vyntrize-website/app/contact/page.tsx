@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { motion } from 'motion/react';
 import {
   ArrowRight, Mail, MessageSquare, Clock, CheckCircle2,
-  MapPin, Search, Bot, Code, Database, Sparkles,
+  MapPin, Search, Bot, Code, Database, Sparkles, Phone
 } from 'lucide-react';
 import { getAnalytics } from '@/lib/analytics';
 
@@ -83,6 +83,7 @@ export default function Contact() {
           firstName: formData.get('firstName'),
           lastName: formData.get('lastName'),
           email: formData.get('email'),
+          phone: formData.get('phone'),
           company: formData.get('company'),
           intent: selected,
           message: formData.get('message'),
@@ -239,13 +240,28 @@ export default function Contact() {
                     </div>
                   </div>
 
-                  {/* Email + Company */}
+                  {/* Email — full width */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="email" className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>Work email</label>
+                    <input
+                      type="email" id="email" name="email" required
+                      placeholder="alex@company.com"
+                      className="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all"
+                      style={{ 
+                        border: '1px solid var(--color-border)', 
+                        backgroundColor: 'var(--color-surface)',
+                        color: 'var(--color-text)'
+                      }}
+                    />
+                  </div>
+
+                  {/* Phone + Company */}
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label htmlFor="email" className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>Work email</label>
+                      <label htmlFor="phone" className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>Phone number</label>
                       <input
-                        type="email" id="email" name="email" required
-                        placeholder="alex@company.com"
+                        type="tel" id="phone" name="phone"
+                        placeholder="+1 (555) 000-0000"
                         className="w-full rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all"
                         style={{ 
                           border: '1px solid var(--color-border)', 
@@ -386,6 +402,31 @@ export default function Contact() {
                     </a>
                   ))}
                 </div>
+              </motion.div>
+
+              {/* Call us */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.22 }}
+                className="rounded-2xl p-6 shadow-sm"
+                style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
+              >
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--color-text-subtle)' }}>Call us directly</p>
+                <a
+                  href="tel:+18005551234"
+                  className="flex items-center justify-between gap-3 group rounded-lg px-3 py-2 transition-colors"
+                  onMouseEnter={(ev) => ev.currentTarget.style.backgroundColor = 'var(--color-surface)'}
+                  onMouseLeave={(ev) => ev.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-7 w-7 rounded-lg flex items-center justify-center transition-colors shrink-0" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                      <Phone className="h-3.5 w-3.5 transition-colors" style={{ color: 'var(--color-text-muted)' }} />
+                    </div>
+                    <span className="text-sm font-semibold transition-colors" style={{ color: 'var(--color-text)' }}>+1 (800) 555-1234</span>
+                  </div>
+                  <span className="text-[10px] shrink-0" style={{ color: 'var(--color-text-subtle)' }}>Sales & Support</span>
+                </a>
               </motion.div>
 
               {/* Address */}
