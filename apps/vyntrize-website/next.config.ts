@@ -1,5 +1,7 @@
 import type { NextConfig } from 'next';
 
+const enableStandalone = process.env.NEXT_STANDALONE === 'true' || process.platform !== 'win32';
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   eslint: {
@@ -25,7 +27,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  output: 'standalone',
+  ...(enableStandalone ? { output: 'standalone' } : {}),
   transpilePackages: ['motion', '@platform/vyntrize-db'],
   serverExternalPackages: [
     '@prisma/client',
