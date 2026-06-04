@@ -137,6 +137,24 @@ export function CompanySettingsClient({ initialData }: { initialData: CompanySet
         />
       </div>
 
+      {/* Payment Instructions */}
+      <div className="space-y-1.5">
+        <label className="flex items-center gap-2 text-xs font-semibold" style={{ color: 'var(--color-text)' }}>
+          <Receipt className="h-3.5 w-3.5" /> Payment Instructions (Offline / Bank Details)
+        </label>
+        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+          These instructions will be shown on the public invoice page for clients who want to pay manually.
+        </p>
+        <textarea
+          rows={4}
+          value={data.paymentInstructions || ''}
+          onChange={(e) => update('paymentInstructions', e.target.value)}
+          placeholder="Bank Name: Example Bank&#10;Account Name: VyntRise LLC&#10;Account Number: 123456789&#10;Routing Number: 987654321"
+          className={inputClasses}
+          style={{ ...inputStyle, resize: 'vertical' }}
+        />
+      </div>
+
       {/* Logo */}
       <div className="space-y-1.5">
         <label className="flex items-center gap-2 text-xs font-semibold" style={{ color: 'var(--color-text)' }}>
