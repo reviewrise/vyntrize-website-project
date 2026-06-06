@@ -22,7 +22,7 @@ const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   website: 'https://vyntrise.com',
   address: '123 Business Rd., Ste 100\nCity, State 12345',
   taxId: '',
-  logoUrl: '',
+  logoUrl: '/images/logo.png',
   paymentInstructions: '',
 };
 

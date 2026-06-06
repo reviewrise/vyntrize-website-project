@@ -1,8 +1,8 @@
 /**
- * InvoicePreview — renders a professional invoice layout.
- * Used by the invoice detail page for display, and as the source
- * for the PDF generation API route.
+ * InvoicePreview — premium professional invoice layout for screen, print, and PDF.
  */
+
+import type { ReactNode } from 'react';
 
 interface InvoiceLineItem {
   id: number;
@@ -49,7 +49,6 @@ interface InvoicePreviewProps {
       };
     };
   };
-  /** When true, hides interactive action buttons (for PDF/print contexts) */
   printMode?: boolean;
   companySettings?: {
     name: string;
@@ -62,14 +61,26 @@ interface InvoicePreviewProps {
   } | null;
 }
 
-function fmt(n: number | string, currency = 'USD') {
-  const num = typeof n === 'string' ? parseFloat(n) : n;
-  return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+const DEFAULT_LOGO_URL = '/images/logo.png';
 
-function fmtDate(d: Date | string) {
-  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-}
+/* Premium palette */
+const INK = '#0B101A';
+const INK_MID = '#1E293B';
+const MUTED = '#64748B';
+const SUBTLE = '#94A3B8';
+const BORDER = '#E8ECF0';
+const SURFACE = '#F7F8FA';
+const ACCENT = '#4F6EF7';
+const ACCENT_END = '#7C5BF7';
+
+const statusStyles: Record<string, { bg: string; color: string; dot: string }> = {
+  DRAFT:          { bg: '#F1F5F9', color: '#475569', dot: '#94A3B8' },
+  SENT:           { bg: '#EEF2FF', color: '#4338CA', dot: '#6366F1' },
+  PARTIALLY_PAID: { bg: '#FFFBEB', color: '#B45309', dot: '#F59E0B' },
+  PAID:           { bg: '#ECFDF5', color: '#047857', dot: '#10B981' },
+  OVERDUE:        { bg: '#FEF2F2', color: '#B91C1C', dot: '#EF4444' },
+  CANCELLED:      { bg: '#F8FAFC', color: '#94A3B8', dot: '#CBD5E1' },
+};
 
 const methodLabel: Record<string, string> = {
   bank_transfer: 'Bank Transfer',
@@ -79,264 +90,554 @@ const methodLabel: Record<string, string> = {
   other: 'Other',
 };
 
+function fmtCurrency(n: number | string, currency = 'USD') {
+  const num = typeof n === 'string' ? parseFloat(n) : n;
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(num);
+}
+
+function fmtQty(n: number | string) {
+  const num = typeof n === 'string' ? parseFloat(n) : n;
+  return num.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+
+function fmtDate(d: Date | string) {
+  return new Date(d).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+function Label({ children }: { children: ReactNode }) {
+  return (
+    <div
+      style={{
+        fontSize: '0.625rem',
+        fontWeight: 600,
+        color: SUBTLE,
+        textTransform: 'uppercase',
+        letterSpacing: '0.14em',
+        marginBottom: '0.5rem',
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function MetaRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1.5rem', alignItems: 'baseline' }}>
+      <span style={{ fontSize: '0.8125rem', color: MUTED, flexShrink: 0 }}>{label}</span>
+      <span
+        style={{
+          fontSize: '0.8125rem',
+          color: highlight ? ACCENT : INK_MID,
+          fontWeight: highlight ? 600 : 500,
+          textAlign: 'right',
+        }}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function CompanyBrand({
+  name,
+  logoUrl,
+  address,
+  email,
+  phone,
+  website,
+  taxId,
+}: {
+  name: string;
+  logoUrl: string;
+  address: string;
+  email: string;
+  phone?: string;
+  website: string;
+  taxId?: string;
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.875rem' }}>
+      <img
+        src={logoUrl}
+        alt={`${name} logo`}
+        style={{ width: 44, height: 44, objectFit: 'contain', display: 'block', flexShrink: 0, marginTop: '0.125rem' }}
+      />
+      <div>
+        <div
+          style={{
+            fontSize: '1.125rem',
+            fontWeight: 600,
+            letterSpacing: '-0.025em',
+            color: INK,
+            lineHeight: 1.2,
+          }}
+        >
+          {name}
+        </div>
+        <div
+          style={{
+            fontSize: '0.8125rem',
+            color: MUTED,
+            marginTop: '0.5rem',
+            lineHeight: 1.7,
+            whiteSpace: 'pre-line',
+            maxWidth: '20rem',
+          }}
+        >
+          {address}
+        </div>
+        <div style={{ fontSize: '0.8125rem', color: '#475569', marginTop: '0.5rem', lineHeight: 1.7 }}>
+          {email}
+          {phone && (
+            <>
+              <br />
+              {phone}
+            </>
+          )}
+          <br />
+          {website}
+          {taxId && (
+            <>
+              <br />
+              Tax ID: {taxId}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const s = statusStyles[status] ?? statusStyles.DRAFT;
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.375rem',
+        padding: '0.3125rem 0.75rem',
+        borderRadius: '9999px',
+        fontSize: '0.625rem',
+        fontWeight: 700,
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase',
+        backgroundColor: s.bg,
+        color: s.color,
+      }}
+    >
+      <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: s.dot, flexShrink: 0 }} />
+      {status.replace('_', ' ')}
+    </span>
+  );
+}
+
 export function InvoicePreview({ invoice, printMode = false, companySettings }: InvoicePreviewProps) {
   const remaining = Number(invoice.total) - Number(invoice.amountPaid);
   const contact = invoice.deal.lead.contact;
-  const company = invoice.deal.lead.company;
+  const clientCompany = invoice.deal.lead.company;
+  const currency = invoice.currency || 'USD';
+  const isOverdue = invoice.status === 'OVERDUE';
 
-  const statusColors: Record<string, { bg: string; color: string }> = {
-    DRAFT:          { bg: '#f1f5f9', color: '#64748b' },
-    SENT:           { bg: '#eff6ff', color: '#3b82f6' },
-    PARTIALLY_PAID: { bg: '#fffbeb', color: '#f59e0b' },
-    PAID:           { bg: '#f0fdf4', color: '#22c55e' },
-    OVERDUE:        { bg: '#fef2f2', color: '#ef4444' },
-    CANCELLED:      { bg: '#f8fafc', color: '#94a3b8' },
-  };
-  const sc = statusColors[invoice.status] ?? { bg: '#f1f5f9', color: '#64748b' };
+  const companyName = companySettings?.name || 'VyntRise';
+  const companyEmail = companySettings?.email || 'hello@vyntrize.com';
+  const companyAddress = companySettings?.address || '205 Van Buren Street, Suite 120\nHerndon, VA 20170';
+  const companyWebsite = companySettings?.website?.replace(/^https?:\/\//, '') || 'vyntrize.com';
+  const logoUrl = companySettings?.logoUrl?.trim() || DEFAULT_LOGO_URL;
+
+  const pad = '2.75rem';
 
   return (
+    <>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            @media print {
+              @page { margin: 0.45in; size: auto; }
+              html, body { background: #fff !important; }
+              .invoice-screen-only { display: none !important; }
+              #invoice-print-area {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+                border: none !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                overflow: visible !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              #invoice-print-area table { page-break-inside: auto; }
+              #invoice-print-area tr { page-break-inside: avoid; page-break-after: auto; }
+              #invoice-print-area thead { display: table-header-group; }
+            }
+          `,
+        }}
+      />
     <div
       id="invoice-print-area"
       style={{
         background: '#ffffff',
-        color: '#1e293b',
+        color: INK,
         fontFamily: '"Inter", "Segoe UI", system-ui, sans-serif',
-        maxWidth: '56rem',
+        maxWidth: '50rem',
         margin: '0 auto',
-        padding: printMode ? '0' : '2rem',
-        borderRadius: printMode ? '0' : '0.75rem',
-        border: printMode ? 'none' : '1px solid #e2e8f0',
-        boxShadow: printMode ? 'none' : '0 4px 24px rgba(0,0,0,0.06)',
+        borderRadius: printMode ? 0 : '0.75rem',
+        border: printMode ? 'none' : `1px solid ${BORDER}`,
+        boxShadow: printMode
+          ? 'none'
+          : '0 0 0 1px rgba(15, 23, 42, 0.03), 0 2px 4px rgba(15, 23, 42, 0.04), 0 12px 48px rgba(15, 23, 42, 0.07)',
+        overflow: 'hidden',
+        position: 'relative',
       }}
     >
-      {/* ── Visual Pipeline (UI Only) ── */}
+
+      {/* Status pipeline — screen only */}
       {!printMode && invoice.status !== 'CANCELLED' && (
-        <div className="print:hidden" style={{ padding: '1.5rem 2.5rem', borderBottom: '1px solid #f1f5f9', background: '#fafbfc', borderTopLeftRadius: '0.75rem', borderTopRightRadius: '0.75rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
-            <div style={{ position: 'absolute', top: '50%', left: '0', right: '0', height: '2px', background: '#e2e8f0', zIndex: 0, transform: 'translateY(-50%)' }} />
-            
+        <div
+          className="invoice-screen-only"
+          style={{
+            padding: '1rem 2.75rem',
+            background: SURFACE,
+            borderBottom: `1px solid ${BORDER}`,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3rem' }}>
             {[
-              { id: 'DRAFT', label: 'Draft', active: true, completed: invoice.status !== 'DRAFT' },
-              { id: 'SENT', label: 'Sent', active: ['SENT', 'PARTIALLY_PAID', 'PAID', 'OVERDUE'].includes(invoice.status), completed: ['PARTIALLY_PAID', 'PAID'].includes(invoice.status) },
-              { id: 'PAID', label: 'Paid', active: invoice.status === 'PAID', completed: invoice.status === 'PAID' }
-            ].map((step, idx, arr) => {
-              const isActive = step.active || step.completed;
-              return (
-                <div key={step.id} style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#fafbfc', padding: '0 1rem' }}>
-                  <div style={{ 
-                    width: '1.75rem', height: '1.75rem', borderRadius: '50%', 
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: step.completed ? '#22c55e' : isActive ? '#3b82f6' : '#fff',
-                    border: `2px solid ${step.completed ? '#22c55e' : isActive ? '#3b82f6' : '#cbd5e1'}`,
-                    color: isActive || step.completed ? '#fff' : '#94a3b8',
-                    fontSize: '0.75rem', fontWeight: 600
-                  }}>
-                    {step.completed ? '✓' : idx + 1}
+              { label: 'Draft', done: invoice.status !== 'DRAFT', active: invoice.status === 'DRAFT' },
+              {
+                label: 'Sent',
+                done: ['PARTIALLY_PAID', 'PAID'].includes(invoice.status),
+                active: ['SENT', 'PARTIALLY_PAID', 'OVERDUE'].includes(invoice.status),
+              },
+              { label: 'Paid', done: invoice.status === 'PAID', active: invoice.status === 'PAID' },
+            ].map((step, i, arr) => (
+              <div key={step.label} style={{ display: 'flex', alignItems: 'center', gap: '3rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.375rem' }}>
+                  <div
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.6875rem',
+                      fontWeight: 700,
+                      background: step.done ? ACCENT : step.active ? INK : '#fff',
+                      color: step.done || step.active ? '#fff' : SUBTLE,
+                      border: `2px solid ${step.done ? ACCENT : step.active ? INK : BORDER}`,
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    {step.done ? '✓' : i + 1}
                   </div>
-                  <span style={{ fontSize: '0.7rem', fontWeight: 600, color: isActive ? '#1e293b' : '#94a3b8', marginTop: '0.375rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <span
+                    style={{
+                      fontSize: '0.625rem',
+                      fontWeight: 600,
+                      color: step.done || step.active ? INK : SUBTLE,
+                      letterSpacing: '0.06em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
                     {step.label}
                   </span>
                 </div>
-              );
-            })}
+                {i < arr.length - 1 && (
+                  <div
+                    style={{
+                      width: 48,
+                      height: 1,
+                      background: step.done ? ACCENT : BORDER,
+                      marginBottom: '1.25rem',
+                    }}
+                  />
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
 
       {/* ── Header ── */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          padding: '2.5rem 2.5rem 2rem',
-          borderBottom: '1px solid #f1f5f9',
-        }}
-      >
-        {/* Brand — logo + name side by side */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-            {companySettings?.logoUrl && (
-              <img
-                src={companySettings.logoUrl}
-                alt={companySettings?.name || 'Logo'}
-                style={{ maxHeight: '36px', maxWidth: '120px', objectFit: 'contain', display: 'block' }}
-              />
-            )}
+      <div style={{ padding: `${pad} ${pad} 2rem` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '2rem' }}>
+          <CompanyBrand
+            name={companyName}
+            logoUrl={logoUrl}
+            address={companyAddress}
+            email={companyEmail}
+            phone={companySettings?.phone}
+            website={companyWebsite}
+            taxId={companySettings?.taxId}
+          />
+
+          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            <StatusBadge status={invoice.status} />
             <div
               style={{
-                fontSize: companySettings?.logoUrl ? '1.1rem' : '1.5rem',
-                fontWeight: 800,
-                letterSpacing: '-0.03em',
-                background: 'linear-gradient(135deg, #4f6ef7, #7c5bf7)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
+                marginTop: '1rem',
+                fontSize: '2rem',
+                fontWeight: 300,
+                letterSpacing: '-0.04em',
+                color: INK,
+                lineHeight: 1,
               }}
             >
-              {companySettings?.name || 'VyntRise'}
+              {invoice.number}
+            </div>
+            <div style={{ fontSize: '0.6875rem', color: SUBTLE, marginTop: '0.375rem', letterSpacing: '0.1em' }}>
+              INVOICE REFERENCE
             </div>
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8', lineHeight: 1.5 }}>
-            {companySettings?.address
-              ? companySettings.address.replace(/\n/g, ' · ')
-              : '205 Van Buren Street, Suite 120 · Herndon, VA 20170'}
-            <br />
-            {companySettings?.email || 'hello@vyntrize.com'}
-            {companySettings?.website ? ` · ${companySettings.website.replace(/^https?:\/\//, '')}` : ' · vyntrize.com'}
-            {companySettings?.taxId && <><br />Tax ID: {companySettings.taxId}</>}
-          </div>
-        </div>
-
-        {/* Invoice meta */}
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>
-            Invoice
-          </div>
-          <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1e293b', letterSpacing: '-0.02em' }}>
-            {invoice.number}
-          </div>
-          <span
-            style={{
-              display: 'inline-block',
-              marginTop: '0.5rem',
-              padding: '0.15rem 0.75rem',
-              borderRadius: '9999px',
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              letterSpacing: '0.04em',
-              textTransform: 'uppercase',
-              backgroundColor: sc.bg,
-              color: sc.color,
-            }}
-          >
-            {invoice.status.replace('_', ' ')}
-          </span>
         </div>
       </div>
 
-      {/* ── Bill To + Dates ── */}
+      {/* ── Parties + meta ── */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr',
-          gap: '2rem',
-          padding: '2rem 2.5rem',
-          borderBottom: '1px solid #f1f5f9',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '1px',
+          background: BORDER,
+          borderTop: `1px solid ${BORDER}`,
+          borderBottom: `1px solid ${BORDER}`,
         }}
       >
         {/* Bill To */}
-        <div>
-          <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
-            Bill To
-          </div>
-          <div style={{ fontWeight: 600, color: '#1e293b', marginBottom: '0.15rem' }}>
+        <div style={{ background: '#fff', padding: '1.75rem 2.75rem' }}>
+          <Label>Bill To</Label>
+          <div style={{ fontSize: '1rem', fontWeight: 600, color: INK, letterSpacing: '-0.01em' }}>
             {contact.firstName} {contact.lastName}
           </div>
-          {company && (
-            <div style={{ fontSize: '0.8125rem', color: '#64748b', marginBottom: '0.15rem' }}>{company.name}</div>
+          {clientCompany && (
+            <div style={{ fontSize: '0.875rem', color: MUTED, marginTop: '0.25rem' }}>{clientCompany.name}</div>
           )}
-          <div style={{ fontSize: '0.8125rem', color: '#64748b' }}>{contact.email}</div>
-          {contact.phone && <div style={{ fontSize: '0.8125rem', color: '#64748b' }}>{contact.phone}</div>}
+          <div style={{ fontSize: '0.8125rem', color: MUTED, marginTop: '0.625rem', lineHeight: 1.8 }}>
+            {contact.email}
+            {contact.phone && <><br />{contact.phone}</>}
+          </div>
         </div>
 
-        {/* Deal */}
-        <div>
-          <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
-            For
-          </div>
-          <div style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.875rem' }}>{invoice.deal.title}</div>
-        </div>
-
-        {/* Dates */}
-        <div>
-          <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
-            Dates
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Issued</span>
-              <span style={{ fontSize: '0.8rem', color: '#1e293b', fontWeight: 500 }}>{fmtDate(invoice.issueDate)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Due</span>
-              <span style={{ fontSize: '0.8rem', color: '#1e293b', fontWeight: 500 }}>{fmtDate(invoice.dueDate)}</span>
-            </div>
+        {/* Invoice details */}
+        <div style={{ background: SURFACE, padding: '1.75rem 2.75rem' }}>
+          <Label>Details</Label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <MetaRow label="Issue date" value={fmtDate(invoice.issueDate)} />
+            <MetaRow label="Due date" value={fmtDate(invoice.dueDate)} highlight={isOverdue} />
+            <MetaRow label="Project" value={invoice.deal.title} />
+            <MetaRow label="Currency" value={currency} />
           </div>
         </div>
       </div>
 
-      {/* ── Line Items ── */}
-      <div style={{ padding: '2rem 2.5rem' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      {/* ── Line items ── */}
+      <div style={{ paddingBottom: '2rem' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+          <colgroup>
+            <col />
+            <col style={{ width: '5rem' }} />
+            <col style={{ width: '7.5rem' }} />
+            <col style={{ width: '8rem' }} />
+          </colgroup>
           <thead>
-            <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
-              {['Description', 'Qty', 'Unit Price', 'Total'].map((h, i) => (
+            <tr>
+              {[
+                { label: 'Description', align: 'left' as const, padSide: 'left' as const },
+                { label: 'Qty', align: 'right' as const, padSide: 'none' as const },
+                { label: 'Rate', align: 'right' as const, padSide: 'none' as const },
+                { label: 'Amount', align: 'right' as const, padSide: 'right' as const },
+              ].map((col) => (
                 <th
-                  key={h}
+                  key={col.label}
                   style={{
-                    padding: '0 0 0.75rem',
-                    fontSize: '0.7rem',
-                    fontWeight: 700,
-                    color: '#94a3b8',
+                    padding: '0.75rem 1rem',
+                    paddingLeft: col.padSide === 'left' ? pad : '1rem',
+                    paddingRight: col.padSide === 'right' ? pad : '1rem',
+                    fontSize: '0.625rem',
+                    fontWeight: 600,
+                    color: '#fff',
                     textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
-                    textAlign: i === 0 ? 'left' : 'right',
+                    letterSpacing: '0.12em',
+                    textAlign: col.align,
+                    background: INK,
                   }}
                 >
-                  {h}
+                  {col.label}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {invoice.lineItems.map((li) => (
-              <tr key={li.id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                <td style={{ padding: '0.875rem 0', color: '#1e293b', fontSize: '0.875rem' }}>{li.description}</td>
-                <td style={{ padding: '0.875rem 0', color: '#64748b', fontSize: '0.875rem', textAlign: 'right' }}>
-                  {Number(li.quantity).toLocaleString()}
+            {invoice.lineItems.map((li, index) => (
+              <tr
+                key={li.id}
+                style={{
+                  borderBottom: `1px solid ${BORDER}`,
+                  background: index % 2 === 0 ? '#fff' : '#FDFDFE',
+                }}
+              >
+                <td style={{ padding: '0.875rem 1rem', paddingLeft: pad, fontSize: '0.875rem', color: INK_MID, lineHeight: 1.55 }}>
+                  {li.description}
                 </td>
-                <td style={{ padding: '0.875rem 0', color: '#64748b', fontSize: '0.875rem', textAlign: 'right' }}>
-                  ${fmt(li.unitPrice)}
+                <td
+                  style={{
+                    padding: '0.875rem 1rem',
+                    fontSize: '0.875rem',
+                    color: MUTED,
+                    textAlign: 'right',
+                    fontVariantNumeric: 'tabular-nums',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {fmtQty(li.quantity)}
                 </td>
-                <td style={{ padding: '0.875rem 0', color: '#1e293b', fontSize: '0.875rem', fontWeight: 500, textAlign: 'right' }}>
-                  ${fmt(li.total)}
+                <td
+                  style={{
+                    padding: '0.875rem 1rem',
+                    fontSize: '0.875rem',
+                    color: MUTED,
+                    textAlign: 'right',
+                    fontVariantNumeric: 'tabular-nums',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {fmtCurrency(li.unitPrice, currency)}
+                </td>
+                <td
+                  style={{
+                    padding: '0.875rem 1rem',
+                    paddingRight: pad,
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: INK,
+                    textAlign: 'right',
+                    fontVariantNumeric: 'tabular-nums',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {fmtCurrency(li.total, currency)}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        {/* Totals block */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
-          <div style={{ width: '16rem' }}>
+        {/* Totals */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem', paddingRight: pad, paddingLeft: pad }}>
+          <div style={{ width: '20rem' }}>
             {[
-              { label: 'Subtotal', value: `$${fmt(invoice.subtotal)}` },
+              { label: 'Subtotal', value: fmtCurrency(invoice.subtotal, currency) },
               ...(invoice.discount && Number(invoice.discount) > 0
-                ? [{ label: 'Discount', value: `-$${fmt(invoice.discount)}` }]
+                ? [{ label: 'Discount', value: `−${fmtCurrency(invoice.discount, currency)}` }]
                 : []),
               ...(invoice.taxRate && Number(invoice.taxRate) > 0
-                ? [{ label: `Tax (${invoice.taxRate}%)`, value: `$${fmt(invoice.taxAmount ?? 0)}` }]
+                ? [{ label: `Tax (${invoice.taxRate}%)`, value: fmtCurrency(invoice.taxAmount ?? 0, currency) }]
                 : []),
             ].map(({ label, value }) => (
-              <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.3rem 0', borderBottom: '1px solid #f1f5f9' }}>
-                <span style={{ fontSize: '0.8125rem', color: '#64748b' }}>{label}</span>
-                <span style={{ fontSize: '0.8125rem', color: '#1e293b' }}>{value}</span>
+              <div
+                key={label}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  padding: '0.5rem 0',
+                  borderBottom: `1px solid ${BORDER}`,
+                }}
+              >
+                <span style={{ fontSize: '0.8125rem', color: MUTED }}>{label}</span>
+                <span style={{ fontSize: '0.8125rem', color: INK_MID, fontVariantNumeric: 'tabular-nums' }}>
+                  {value}
+                </span>
               </div>
             ))}
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 0 0.25rem' }}>
-              <span style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b' }}>Total</span>
-              <span style={{ fontSize: '1rem', fontWeight: 800, color: '#4f6ef7' }}>{invoice.currency} {fmt(invoice.total)}</span>
+
+            {/* Total due hero */}
+            <div
+              style={{
+                marginTop: '1rem',
+                padding: '1.25rem 1.375rem',
+                background: `linear-gradient(135deg, ${INK} 0%, #1a2744 100%)`,
+                borderRadius: '0.625rem',
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: 3,
+                  height: '100%',
+                  background: `linear-gradient(180deg, ${ACCENT}, ${ACCENT_END})`,
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  Total Due
+                </span>
+                <span
+                  style={{
+                    fontSize: '1.375rem',
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    letterSpacing: '-0.02em',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  {fmtCurrency(invoice.total, currency)}
+                </span>
+              </div>
             </div>
+
             {Number(invoice.amountPaid) > 0 && (
               <>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.25rem 0' }}>
-                  <span style={{ fontSize: '0.8125rem', color: '#22c55e' }}>Amount Paid</span>
-                  <span style={{ fontSize: '0.8125rem', color: '#22c55e', fontWeight: 600 }}>-${fmt(invoice.amountPaid)}</span>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    padding: '0.625rem 0.125rem 0',
+                    marginTop: '0.625rem',
+                  }}
+                >
+                  <span style={{ fontSize: '0.8125rem', color: '#059669' }}>Paid to date</span>
+                  <span style={{ fontSize: '0.8125rem', color: '#059669', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+                    −{fmtCurrency(invoice.amountPaid, currency)}
+                  </span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.375rem 0 0', borderTop: '2px solid #f1f5f9', marginTop: '0.25rem' }}>
-                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1e293b' }}>Balance Due</span>
-                  <span style={{ fontSize: '0.9rem', fontWeight: 800, color: remaining > 0 ? '#f59e0b' : '#22c55e' }}>
-                    {invoice.currency} {fmt(remaining)}
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '0.875rem 1rem',
+                    marginTop: '0.5rem',
+                    background: remaining > 0 ? '#FFFBEB' : '#ECFDF5',
+                    borderRadius: '0.5rem',
+                    border: `1px solid ${remaining > 0 ? '#FDE68A' : '#A7F3D0'}`,
+                  }}
+                >
+                  <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: INK }}>Balance remaining</span>
+                  <span
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: 700,
+                      color: remaining > 0 ? '#B45309' : '#047857',
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {fmtCurrency(remaining, currency)}
                   </span>
                 </div>
               </>
@@ -345,73 +646,105 @@ export function InvoicePreview({ invoice, printMode = false, companySettings }: 
         </div>
       </div>
 
-      {/* ── Payment History ── */}
+      {/* Payment history */}
       {invoice.payments.length > 0 && (
-        <div style={{ padding: '0 2.5rem 2rem' }}>
-          <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>
-            Payment History
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {invoice.payments.map((p) => (
-              <div
-                key={p.id}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '0.5rem 0.75rem',
-                  background: '#f8fafc',
-                  borderRadius: '0.5rem',
-                }}
-              >
-                <div>
-                  <span style={{ fontSize: '0.8125rem', color: '#1e293b', fontWeight: 500 }}>
-                    {methodLabel[p.method] ?? p.method}
-                  </span>
-                  {p.reference && (
-                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginLeft: '0.5rem' }}>#{p.reference}</span>
-                  )}
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{fmtDate(p.paidAt)}</div>
-                </div>
-                <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#22c55e' }}>
-                  +${fmt(p.amount)}
-                </span>
-              </div>
-            ))}
+        <div style={{ padding: `0 ${pad} 2rem` }}>
+          <Label>Payment History</Label>
+          <div style={{ border: `1px solid ${BORDER}`, borderRadius: '0.625rem', overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: SURFACE }}>
+                  {['Date', 'Method', 'Reference', 'Amount'].map((h, i) => (
+                    <th
+                      key={h}
+                      style={{
+                        padding: '0.75rem 1rem',
+                        fontSize: '0.625rem',
+                        fontWeight: 600,
+                        color: SUBTLE,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.1em',
+                        textAlign: i === 3 ? 'right' : 'left',
+                        borderBottom: `1px solid ${BORDER}`,
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {invoice.payments.map((p) => (
+                  <tr key={p.id} style={{ borderBottom: `1px solid ${BORDER}` }}>
+                    <td style={{ padding: '0.875rem 1rem', fontSize: '0.8125rem', color: MUTED }}>
+                      {fmtDate(p.paidAt)}
+                    </td>
+                    <td style={{ padding: '0.875rem 1rem', fontSize: '0.8125rem', color: INK_MID, fontWeight: 500 }}>
+                      {methodLabel[p.method] ?? p.method}
+                    </td>
+                    <td style={{ padding: '0.875rem 1rem', fontSize: '0.8125rem', color: MUTED }}>
+                      {p.reference || '—'}
+                    </td>
+                    <td
+                      style={{
+                        padding: '0.875rem 1rem',
+                        fontSize: '0.8125rem',
+                        fontWeight: 600,
+                        color: '#059669',
+                        textAlign: 'right',
+                        fontVariantNumeric: 'tabular-nums',
+                      }}
+                    >
+                      {fmtCurrency(p.amount, currency)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
-      {/* ── Notes ── */}
+      {/* Notes */}
       {invoice.notes && (
-        <div
-          style={{
-            margin: '0 2.5rem 2rem',
-            padding: '1rem 1.25rem',
-            background: '#f8fafc',
-            borderRadius: '0.5rem',
-            borderLeft: '3px solid #4f6ef7',
-          }}
-        >
-          <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.375rem' }}>
-            Notes & Terms
+        <div style={{ padding: `0 ${pad} 2rem` }}>
+          <div
+            style={{
+              padding: '1.25rem 1.5rem',
+              background: SURFACE,
+              borderRadius: '0.625rem',
+              borderLeft: `3px solid ${ACCENT}`,
+            }}
+          >
+            <Label>Notes &amp; Payment Terms</Label>
+            <p style={{ fontSize: '0.8125rem', color: INK_MID, margin: 0, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
+              {invoice.notes}
+            </p>
           </div>
-          <p style={{ fontSize: '0.8125rem', color: '#475569', margin: 0, lineHeight: 1.6 }}>{invoice.notes}</p>
         </div>
       )}
 
-      {/* ── Footer ── */}
+      {/* Footer */}
       <div
         style={{
-          padding: '1.25rem 2.5rem',
-          borderTop: '1px solid #f1f5f9',
-          textAlign: 'center',
-          fontSize: '0.75rem',
-          color: '#94a3b8',
+          padding: '1.5rem 2.75rem',
+          borderTop: `1px solid ${BORDER}`,
+          background: SURFACE,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '1rem',
+          flexWrap: 'wrap',
         }}
       >
-        Thank you for your business · {companySettings?.name || 'VyntRise'} · {companySettings?.email || 'hello@vyntrize.com'}
+        <div style={{ fontSize: '0.8125rem', color: MUTED, fontStyle: 'italic' }}>
+          Thank you for your business.
+        </div>
+        <div style={{ fontSize: '0.75rem', color: SUBTLE }}>
+          {companyName} · {companyEmail}
+        </div>
       </div>
     </div>
+    </>
   );
 }
