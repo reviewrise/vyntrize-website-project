@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { DealStatus } from '@platform/vyntrize-db/src/generated/client';
 import { createDeal, updateDeal } from '@/lib/actions/deals';
 import { X, Briefcase } from 'lucide-react';
@@ -187,9 +188,29 @@ export function DealForm({ leadId, contactId, companyId, leads, deal, onClose, o
                   ))}
                 </select>
               ) : (
-                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', margin: 0 }}>
-                  No leads yet. Create a lead from the pipeline first.
-                </p>
+                <div
+                  style={{
+                    padding: '0.75rem 0.875rem',
+                    background: 'var(--color-primary-soft)',
+                    border: '1px solid color-mix(in srgb, var(--color-primary) 20%, transparent)',
+                    borderRadius: '0.5rem',
+                  }}
+                >
+                  <p style={{ fontSize: '0.8125rem', color: 'var(--color-text)', margin: '0 0 0.375rem', fontWeight: 600 }}>
+                    No leads available
+                  </p>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.55 }}>
+                    Add a{' '}
+                    <Link href="/contacts" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
+                      contact
+                    </Link>
+                    , then create a{' '}
+                    <Link href="/pipeline" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
+                      lead on Pipeline
+                    </Link>
+                    . Deals must be linked to a lead.
+                  </p>
+                </div>
               )}
             </div>
           )}
