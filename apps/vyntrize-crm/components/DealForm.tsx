@@ -5,10 +5,19 @@ import { DealStatus } from '@platform/vyntrize-db/src/generated/client';
 import { createDeal, updateDeal } from '@/lib/actions/deals';
 import { X, Briefcase } from 'lucide-react';
 
+export type DealLeadOption = {
+  id: string;
+  title: string;
+  contactId: string;
+  companyId: string | null;
+  contact: { firstName: string; lastName: string };
+};
+
 interface DealFormProps {
-  leadId: string;
+  leadId?: string;
   contactId?: string;
   companyId?: string;
+  leads?: DealLeadOption[];
   /** If provided, the form is in edit mode */
   deal?: {
     id: string;
@@ -29,10 +38,17 @@ const STATUS_OPTIONS: { value: DealStatus; label: string }[] = [
   { value: 'ON_HOLD', label: 'On Hold' },
 ];
 
-export function DealForm({ leadId, contactId, companyId, deal, onClose, onSuccess }: DealFormProps) {
+export function DealForm({ leadId, contactId, companyId, leads, deal, onClose, onSuccess }: DealFormProps) {
   const isEdit = !!deal;
+  const needsLeadPicker = !isEdit && !leadId;
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [selectedLeadId, setSelectedLeadId] = useState(leadId ?? '');
+
+  const selectedLead = leads?.find((l) => l.id === selectedLeadId);
+  const resolvedLeadId = leadId ?? selectedLeadId;
+  const resolvedContactId = contactId ?? selectedLead?.contactId;
+  const resolvedCompanyId = companyId ?? selectedLead?.companyId ?? undefined;
 
   const [form, setForm] = useState({
     title:    deal?.title    ?? '',
@@ -52,6 +68,7 @@ export function DealForm({ leadId, contactId, companyId, deal, onClose, onSucces
 
     if (!form.title.trim()) return setError('Title is required');
     if (!form.value || isNaN(Number(form.value))) return setError('Valid amount is required');
+    if (needsLeadPicker && !resolvedLeadId) return setError('Select a lead for this deal');
 
     startTransition(async () => {
       try {
@@ -66,9 +83,9 @@ export function DealForm({ leadId, contactId, companyId, deal, onClose, onSucces
         } else {
           await createDeal({
             title: form.title,
-            leadId,
-            contactId,
-            companyId,
+            leadId: resolvedLeadId,
+            contactId: resolvedContactId,
+            companyId: resolvedCompanyId,
             value: parseFloat(form.value),
             currency: form.currency,
             status: form.status,
@@ -139,6 +156,44 @@ export function DealForm({ leadId, contactId, companyId, deal, onClose, onSucces
 
         {/* Form */}
         <form onSubmit={handleSubmit} style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+          {needsLeadPicker && (
+            <div>
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '0.375rem' }}>
+                Lead *
+              </label>
+              {leads && leads.length > 0 ? (
+                <select
+                  value={selectedLeadId}
+                  onChange={(e) => setSelectedLeadId(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem 0.75rem',
+                    background: 'var(--color-raised)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '0.5rem',
+                    color: 'var(--color-text)',
+                    fontSize: '0.875rem',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  <option value="">Select a lead…</option>
+                  {leads.map((lead) => (
+                    <option key={lead.id} value={lead.id}>
+                      {lead.title} — {lead.contact.firstName} {lead.contact.lastName}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', margin: 0 }}>
+                  No leads yet. Create a lead from the pipeline first.
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Title */}
           <div>
             <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '0.375rem' }}>
@@ -277,7 +332,7 @@ export function DealForm({ leadId, contactId, companyId, deal, onClose, onSucces
             </button>
             <button
               type="submit"
-              disabled={isPending}
+              disabled={isPending || (needsLeadPicker && (!leads || leads.length === 0))}
               className="btn-primary"
               style={{ fontSize: '0.875rem', opacity: isPending ? 0.6 : 1 }}
             >
