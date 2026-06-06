@@ -255,12 +255,32 @@ body {
   .no-print {
     display: none !important;
   }
-  
+
+  /* Hide CRM chrome if user prints from the detail page directly */
+  aside,
+  header {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
   body {
-    background: white;
+    background: white !important;
     color: black;
   }
-  
+
+  #invoice-print-area {
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   .crm-card {
     border: 1px solid #000;
     box-shadow: none;

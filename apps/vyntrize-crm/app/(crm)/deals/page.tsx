@@ -1,13 +1,31 @@
 import { listDeals, getDealStats } from '@/lib/actions/deals';
 import { DealStatusBadge } from '@/components/InvoiceStatusBadge';
+import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
-import { Briefcase, Plus, TrendingUp, DollarSign, CheckCircle } from 'lucide-react';
+import { Briefcase, TrendingUp, DollarSign, CheckCircle } from 'lucide-react';
 import { DealsClient } from './DealsClient';
+import { DealsSetupNotice } from './DealsSetupNotice';
 
 export const metadata = { title: 'Deals — VyntRise CRM' };
 
 export default async function DealsPage() {
-  const [deals, stats] = await Promise.all([listDeals(), getDealStats()]);
+  const [deals, stats, leads, contactCount] = await Promise.all([
+    listDeals(),
+    getDealStats(),
+    prisma.lead.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        contactId: true,
+        companyId: true,
+        contact: { select: { firstName: true, lastName: true } },
+      },
+    }),
+    prisma.contact.count(),
+  ]);
+
+  const hasLeads = leads.length > 0;
 
   return (
     <div style={{ padding: '1.5rem', maxWidth: '80rem', margin: '0 auto' }}>
@@ -33,8 +51,10 @@ export default async function DealsPage() {
           </div>
         </div>
 
-        <DealsClient mode="new-button" />
+        <DealsClient mode="new-button" leads={leads} hasLeads={hasLeads} contactCount={contactCount} />
       </div>
+
+      <DealsSetupNotice contactCount={contactCount} leadCount={leads.length} />
 
       {/* KPI strip */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.875rem', marginBottom: '1.5rem' }}>
@@ -113,10 +133,11 @@ export default async function DealsPage() {
         >
           <Briefcase style={{ width: 40, height: 40, color: 'var(--color-text-subtle)', margin: '0 auto 0.875rem' }} />
           <p style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--color-text)', margin: '0 0 0.375rem' }}>No deals yet</p>
-          <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', margin: '0 0 1.25rem' }}>
-            Create your first deal from a lead or click below.
+          <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', margin: 0, maxWidth: '28rem', marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
+            {hasLeads
+              ? 'Select a lead and add deal details to get started.'
+              : 'Follow the steps above to add a contact and lead first — then you can create deals here.'}
           </p>
-          <DealsClient mode="new-button" />
         </div>
       ) : (
         <div
