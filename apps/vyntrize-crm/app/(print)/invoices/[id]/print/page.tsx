@@ -2,6 +2,7 @@ import { getInvoice } from '@/lib/actions/invoices';
 import { getCompanySettings } from '@/lib/actions/company-settings';
 import { notFound } from 'next/navigation';
 import { InvoicePreview } from '@/components/InvoicePreview';
+import { PrintOnLoad } from './PrintOnLoad';
 
 export const metadata = { title: 'Print Invoice' };
 
@@ -30,12 +31,16 @@ export default async function InvoicePrintPage({ params }: { params: Promise<{ i
       ...p,
       amount: Number(p.amount),
     })),
+    deal: {
+      ...invoice.deal,
+      value: invoice.deal?.value ? Number(invoice.deal.value) : null,
+    },
   };
 
   return (
-    <div style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
-      <InvoicePreview invoice={serializedInvoice} printMode={true} companySettings={companySettings} />
-      <script dangerouslySetInnerHTML={{ __html: `window.onload = () => window.print();` }} />
-    </div>
+    <>
+      <PrintOnLoad />
+      <InvoicePreview invoice={serializedInvoice} printMode companySettings={companySettings} />
+    </>
   );
 }
