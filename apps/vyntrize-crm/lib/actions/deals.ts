@@ -27,12 +27,25 @@ export type DealUpdateInput = Partial<DealCreateInput> & {
 export async function createDeal(input: DealCreateInput) {
   await getSession(); // auth guard
 
+  if (!input.leadId?.trim()) {
+    throw new Error('A lead is required to create a deal.');
+  }
+
+  const lead = await prisma.lead.findUnique({
+    where: { id: input.leadId },
+    select: { id: true, contactId: true, companyId: true },
+  });
+
+  if (!lead) {
+    throw new Error('The selected lead no longer exists.');
+  }
+
   const deal = await prisma.deal.create({
     data: {
       title: input.title,
-      leadId: input.leadId,
-      contactId: input.contactId,
-      companyId: input.companyId,
+      leadId: lead.id,
+      contactId: input.contactId ?? lead.contactId,
+      companyId: input.companyId ?? lead.companyId,
       value: input.value,
       currency: input.currency ?? 'USD',
       status: input.status ?? 'OPEN',

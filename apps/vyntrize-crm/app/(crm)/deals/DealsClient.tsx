@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { DealForm } from '@/components/DealForm';
+import { DealForm, type DealLeadOption } from '@/components/DealForm';
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -10,9 +10,10 @@ interface Props {
   leadId?: string;
   contactId?: string;
   companyId?: string;
+  leads?: DealLeadOption[];
 }
 
-export function DealsClient({ mode, leadId = '', contactId, companyId }: Props) {
+export function DealsClient({ mode, leadId, contactId, companyId, leads }: Props) {
   const [showForm, setShowForm] = useState(false);
   const router = useRouter();
 
@@ -32,6 +33,7 @@ export function DealsClient({ mode, leadId = '', contactId, companyId }: Props) 
           leadId={leadId}
           contactId={contactId}
           companyId={companyId}
+          leads={leads}
           onClose={() => setShowForm(false)}
           onSuccess={() => router.refresh()}
         />

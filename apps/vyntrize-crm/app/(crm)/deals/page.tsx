@@ -1,5 +1,6 @@
 import { listDeals, getDealStats } from '@/lib/actions/deals';
 import { DealStatusBadge } from '@/components/InvoiceStatusBadge';
+import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { Briefcase, Plus, TrendingUp, DollarSign, CheckCircle } from 'lucide-react';
 import { DealsClient } from './DealsClient';
@@ -7,7 +8,20 @@ import { DealsClient } from './DealsClient';
 export const metadata = { title: 'Deals — VyntRise CRM' };
 
 export default async function DealsPage() {
-  const [deals, stats] = await Promise.all([listDeals(), getDealStats()]);
+  const [deals, stats, leads] = await Promise.all([
+    listDeals(),
+    getDealStats(),
+    prisma.lead.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        contactId: true,
+        companyId: true,
+        contact: { select: { firstName: true, lastName: true } },
+      },
+    }),
+  ]);
 
   return (
     <div style={{ padding: '1.5rem', maxWidth: '80rem', margin: '0 auto' }}>
@@ -33,7 +47,7 @@ export default async function DealsPage() {
           </div>
         </div>
 
-        <DealsClient mode="new-button" />
+        <DealsClient mode="new-button" leads={leads} />
       </div>
 
       {/* KPI strip */}
@@ -116,7 +130,7 @@ export default async function DealsPage() {
           <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', margin: '0 0 1.25rem' }}>
             Create your first deal from a lead or click below.
           </p>
-          <DealsClient mode="new-button" />
+          <DealsClient mode="new-button" leads={leads} />
         </div>
       ) : (
         <div
