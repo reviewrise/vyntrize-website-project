@@ -414,7 +414,7 @@ export default function Contact() {
               >
                 <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--color-text-subtle)' }}>Call us directly</p>
                 <a
-                  href="tel:+18005551234"
+                  href="tel:+15714843141"
                   className="flex items-center justify-between gap-3 group rounded-lg px-3 py-2 transition-colors"
                   onMouseEnter={(ev) => ev.currentTarget.style.backgroundColor = 'var(--color-surface)'}
                   onMouseLeave={(ev) => ev.currentTarget.style.backgroundColor = 'transparent'}
@@ -423,7 +423,7 @@ export default function Contact() {
                     <div className="h-7 w-7 rounded-lg flex items-center justify-center transition-colors shrink-0" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
                       <Phone className="h-3.5 w-3.5 transition-colors" style={{ color: 'var(--color-text-muted)' }} />
                     </div>
-                    <span className="text-sm font-semibold transition-colors" style={{ color: 'var(--color-text)' }}>+1 (800) 555-1234</span>
+                    <span className="text-sm font-semibold transition-colors" style={{ color: 'var(--color-text)' }}>+1 (571) 484-3141</span>
                   </div>
                   <span className="text-[10px] shrink-0" style={{ color: 'var(--color-text-subtle)' }}>Sales & Support</span>
                 </a>

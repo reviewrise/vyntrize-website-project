@@ -18,7 +18,7 @@ export interface CompanySettings {
 const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   name: 'VyntRise LLC',
   email: 'billing@vyntrise.com',
-  phone: '',
+  phone: '571 484 3141',
   website: 'https://vyntrise.com',
   address: '123 Business Rd., Ste 100\nCity, State 12345',
   taxId: '',
