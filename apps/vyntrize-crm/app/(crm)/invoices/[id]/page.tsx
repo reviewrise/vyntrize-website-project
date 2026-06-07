@@ -52,7 +52,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
   return (
     <div style={{ padding: '1.5rem', maxWidth: '80rem', margin: '0 auto' }}>
       {/* Back */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+      <div className="no-print" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
         <Link
           href={`/deals/${invoice.dealId}`}
           style={{
