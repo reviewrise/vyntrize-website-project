@@ -46,14 +46,10 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      // Redirect bare domain to www — belt-and-suspenders alongside the Caddy 301.
-      // Ensures Google always sees www.vyntrise.com as the canonical host.
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'vyntrise.com' }],
-        destination: 'https://www.vyntrise.com/:path*',
-        permanent: true,
-      },
+      // NOTE: bare domain → www redirect is handled exclusively by Caddy (redir 301).
+      // Do NOT add a www redirect here — it creates a redirect loop when Caddy
+      // passes the original Host header to Next.js.
+
       // Kill the phantom /en locale prefix — no i18n is configured on this site.
       // Redirect /en → / and /en/<anything> → /<anything> so Google stops crawling it.
       {
