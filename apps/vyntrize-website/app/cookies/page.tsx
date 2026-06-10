@@ -1,5 +1,13 @@
+import type { Metadata } from 'next';
+import { buildMeta } from '@/app/page-metadata';
 import LegalLayout, { LegalSection } from '@/components/LegalLayout';
 import Link from 'next/link';
+
+export const metadata: Metadata = buildMeta({
+  title: 'Cookie Policy',
+  description: 'VyntRise Cookie Policy — how we use cookies and tracking technologies, and how you can manage your preferences.',
+  path: '/cookies',
+});
 
 const sections: LegalSection[] = [
     { id: 'what-are-cookies', title: 'What Are Cookies' },

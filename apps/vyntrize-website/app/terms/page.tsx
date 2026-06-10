@@ -1,5 +1,13 @@
+import type { Metadata } from 'next';
+import { buildMeta } from '@/app/page-metadata';
 import LegalLayout, { LegalSection } from '@/components/LegalLayout';
 import Link from 'next/link';
+
+export const metadata: Metadata = buildMeta({
+  title: 'Terms of Service',
+  description: 'VyntRise Terms of Service — the terms that govern your use of the VyntRise platform and services.',
+  path: '/terms',
+});
 
 const sections: LegalSection[] = [
     { id: 'acceptance', title: 'Acceptance of Terms' },

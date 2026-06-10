@@ -45,6 +45,10 @@ export const metadata: Metadata = {
   authors: [{ name: 'VyntRise', url: BASE_URL }],
   creator: 'VyntRise',
   publisher: 'VyntRise Technologies',
+  // Canonical for the homepage — subpages override this via buildMeta()
+  alternates: {
+    canonical: BASE_URL,
+  },
   robots: {
     index: true,
     follow: true,

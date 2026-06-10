@@ -4,6 +4,11 @@ vyntrise.com {
 }
 
 www.vyntrise.com {
+    # Block the phantom /en locale prefix — redirect to canonical paths.
+    redir /en                 https://www.vyntrise.com{uri}  301
+    @enLocale path_regexp     ^/en/(.*)$
+    redir @enLocale           https://www.vyntrise.com/{re.enLocale.1} 301
+
     reverse_proxy vyntrize-website:3013
 }
 

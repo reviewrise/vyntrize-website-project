@@ -1,5 +1,13 @@
+import type { Metadata } from 'next';
+import { buildMeta } from '@/app/page-metadata';
 import LegalLayout, { LegalSection } from '@/components/LegalLayout';
 import Link from 'next/link';
+
+export const metadata: Metadata = buildMeta({
+  title: 'Privacy Policy',
+  description: 'VyntRise Privacy Policy — how we collect, use, and protect your personal data. GDPR and CCPA compliant.',
+  path: '/privacy',
+});
 
 const sections: LegalSection[] = [
     { id: 'overview', title: 'Overview' },

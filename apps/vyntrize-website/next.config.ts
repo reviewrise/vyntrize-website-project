@@ -44,6 +44,30 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
+  async redirects() {
+    return [
+      // Redirect bare domain to www — belt-and-suspenders alongside the Caddy 301.
+      // Ensures Google always sees www.vyntrise.com as the canonical host.
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'vyntrise.com' }],
+        destination: 'https://www.vyntrise.com/:path*',
+        permanent: true,
+      },
+      // Kill the phantom /en locale prefix — no i18n is configured on this site.
+      // Redirect /en → / and /en/<anything> → /<anything> so Google stops crawling it.
+      {
+        source: '/en',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/en/:path*',
+        destination: '/:path*',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
