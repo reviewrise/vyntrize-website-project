@@ -76,7 +76,7 @@ class AgentEventBus extends EventEmitter {
       }
     }
 
-    // ── In-memory fallback path (no Redis / local dev) ────────────────────
+    // ── In-memory fallback path (no Redis / local dev/ server dev) ────────────────────
     await this._dispatchInMemory(event, payload);
   }
 
