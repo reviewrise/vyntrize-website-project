@@ -24,7 +24,11 @@ export default async function ContactDetailPage({
             company: true,
             leads: {
                 orderBy: { createdAt: 'desc' },
-                include: { assignee: true },
+                include: {
+                    assignee: {
+                        select: { id: true, displayName: true, bookingSlug: true },
+                    },
+                },
             },
             activities: {
                 orderBy: { createdAt: 'desc' },
@@ -34,6 +38,17 @@ export default async function ContactDetailPage({
     });
 
     if (!contact) notFound();
+
+    // Resolve booking slug: prefer most-recent lead's assignee, fall back to session user
+    const mostRecentAssigneeSlug = contact.leads[0]?.assignee?.bookingSlug ?? null;
+    const sessionUserSlug = mostRecentAssigneeSlug
+        ? null
+        : (await prisma.crmUser.findUnique({
+            where: { id: session.userId as string },
+            select: { bookingSlug: true },
+        }))?.bookingSlug ?? null;
+
+    const resolvedBookingSlug = mostRecentAssigneeSlug ?? sessionUserSlug;
 
     // Audit log queried separately (polymorphic — not a direct relation on Contact)
     const auditLogs = session.role === 'ADMIN'
@@ -83,6 +98,7 @@ export default async function ContactDetailPage({
                         contactId={contact.id}
                         contactEmail={contact.email}
                         contactName={`${contact.firstName} ${contact.lastName}`}
+                        bookingSlug={resolvedBookingSlug}
                     />
                 </div>
             </div>

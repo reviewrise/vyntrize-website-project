@@ -1,6 +1,6 @@
 // Email Generation Agent - AI-powered email draft generation
 
-import { Agent, AgentType, ActionType, AutonomyLevel, AgentContext, AgentActionResult, AgentConfig } from './base-agent';
+import { Agent, AgentType, ActionType, ActionStatus, AutonomyLevel, AgentContext, AgentActionResult, AgentConfig } from './base-agent';
 import { prisma } from '@/lib/prisma';
 import { getAIProvider } from './ai-provider-factory';
 import { getEmailThrottlingService } from './email-throttling-service';
@@ -146,19 +146,87 @@ export class EmailGenerationAgent extends Agent {
       const tone = this.selectTone(lead.stage);
 
       // Get appropriate template based on trigger
-      const templateService = getEmailTemplateService();
       const template = await this.selectTemplate(trigger, lead);
-
-      // Generate email using AI (with trigger context and template)
       const emailDraft = await this.generateEmail(emailContext, tone, trigger, template, lead);
 
-      // Record action (requires approval)
-      const reasoning = this.generateReasoning(lead, tone, trigger);
+      // ── Decide: auto-send vs. save as approval draft ─────────────────────
+      const ruleAutonomyLevel = context.eventData?.ruleAutonomyLevel as string | undefined;
+      const autoSend = calledFromRule && ruleAutonomyLevel === 'FULLY_AUTONOMOUS';
+
+      const reasoning = this.generateReasoning(lead, tone, trigger, autoSend);
+
+      if (autoSend) {
+        // Auto-send immediately — no human approval needed
+        if (!lead.contact?.email) {
+          return {
+            success: false,
+            error: 'Contact has no email address',
+            reasoning: 'Cannot auto-send: contact email missing',
+          };
+        }
+
+        const { emailService } = await import('@/lib/email/email-service');
+        const sendResult = await emailService.sendEmail({
+          role: 'sales',
+          to: lead.contact.email,
+          toName: `${lead.contact.firstName} ${lead.contact.lastName}`.trim(),
+          subject: emailDraft.subject,
+          html: emailDraft.body.replace(/\n/g, '<br>'),
+          leadId: lead.id,
+          contactId: lead.contact.id,
+          userId: lead.assigneeId ?? undefined,
+        });
+
+        if (!sendResult.success) {
+          throw new Error(`Auto-send failed: ${sendResult.error}`);
+        }
+
+        // Record as COMPLETED (already sent)
+        const actionId = await this.recordAction(
+          ActionType.EMAIL_SEND,
+          context.leadId!,
+          reasoning,
+          AutonomyLevel.FULLY_AUTONOMOUS,
+          {
+            subject: emailDraft.subject,
+            body: emailDraft.body,
+            tone,
+            stage: lead.stage,
+            auto_generated: true,
+            auto_sent: true,
+            trigger_type: trigger.type,
+            trigger_reason: trigger.reason,
+            messageId: sendResult.messageId,
+          }
+        );
+
+        // Mark it executed immediately
+        await prisma.agentAction.update({
+          where: { id: actionId },
+          data: { status: ActionStatus.EXECUTED, executedAt: new Date() },
+        });
+
+        this.log('info', 'Email auto-sent by workflow rule', {
+          leadId: context.leadId,
+          to: lead.contact.email,
+          subject: emailDraft.subject,
+          messageId: sendResult.messageId,
+        });
+
+        return {
+          success: true,
+          actionId,
+          reasoning,
+          metadata: { emailDraft, tone, autoSent: true },
+        };
+      }
+
+      // ── SUGGEST_APPROVE path: save as pending draft for human review ──────
       const actionId = await this.recordAction(
         ActionType.EMAIL_SEND,
-        context.leadId,
+        context.leadId!,
         reasoning,
-        AutonomyLevel.SUGGEST_APPROVE, // Requires approval
+        AutonomyLevel.SUGGEST_APPROVE,
         {
           subject: emailDraft.subject,
           body: emailDraft.body,
@@ -173,7 +241,7 @@ export class EmailGenerationAgent extends Agent {
         }
       );
 
-      this.log('info', 'Email draft generated', {
+      this.log('info', 'Email draft generated (pending approval)', {
         leadId: context.leadId,
         tone,
         actionId,
@@ -585,10 +653,13 @@ Remember:
   /**
    * Generate human-readable reasoning
    */
-  private generateReasoning(lead: any, tone: string, trigger: EmailTrigger): string {
+  private generateReasoning(lead: any, tone: string, trigger: EmailTrigger, autoSent = false): string {
     const contactName = `${lead.contact.firstName} ${lead.contact.lastName}`;
     const triggerText = trigger.type !== 'manual' ? ` (${trigger.reason})` : '';
-    return `Generated AI-powered email draft for ${contactName} (${lead.stage} stage) with ${tone} tone${triggerText}. Email requires approval before sending.`;
+    const suffix = autoSent
+      ? 'Email was auto-sent by workflow rule.'
+      : 'Email requires approval before sending.';
+    return `Generated AI-powered email draft for ${contactName} (${lead.stage} stage) with ${tone} tone${triggerText}. ${suffix}`;
   }
 
   getConfig(): AgentConfig {

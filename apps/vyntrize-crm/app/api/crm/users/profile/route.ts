@@ -19,6 +19,8 @@ export async function GET() {
         role: true,
         bookingSlug: true,
         isActive: true,
+        jobTitle: true,
+        phone: true,
       },
     });
 
@@ -42,7 +44,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { displayName, bookingSlug, email } = body;
+    const { displayName, bookingSlug, email, jobTitle, phone } = body;
 
     // Validate email uniqueness
     if (email !== undefined && email !== '') {
@@ -91,6 +93,8 @@ export async function PATCH(request: NextRequest) {
         ...(displayName !== undefined && { displayName }),
         ...(email !== undefined && email !== '' && { email: email.toLowerCase().trim() }),
         ...(bookingSlug !== undefined && { bookingSlug: bookingSlug || null }),
+        ...(jobTitle !== undefined && { jobTitle: jobTitle || null }),
+        ...(phone !== undefined && { phone: phone || null }),
       },
       select: {
         id: true,
@@ -98,6 +102,8 @@ export async function PATCH(request: NextRequest) {
         email: true,
         role: true,
         bookingSlug: true,
+        jobTitle: true,
+        phone: true,
       },
     });
 

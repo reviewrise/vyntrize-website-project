@@ -479,6 +479,7 @@ export async function sendInvoice(id: string) {
 
   // -- Send the email -----------------------------------------------------------
   if (contactEmail) {
+    const session = await getSession();
     const { emailService } = await import('@/lib/email/email-service');
     await emailService.sendEmail({
       role: 'billing',
@@ -488,6 +489,10 @@ export async function sendInvoice(id: string) {
       html: htmlBody,
       leadId: invoice.deal.leadId,
       contactId: contact?.id,
+      userId: session.userId as string | undefined,
+      // Invoice already has its own fully-styled HTML shell with company branding
+      // inline — skip the generic layout wrapper to avoid double-wrapping.
+      skipLayout: true,
     });
   }
 

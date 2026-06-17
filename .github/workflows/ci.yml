@@ -192,6 +192,11 @@ jobs:
 
             # ─── Public URLs (also baked into Docker at build time) ───────────────
             NEXT_PUBLIC_CRM_URL=${{ secrets.NEXT_PUBLIC_CRM_URL }}
+
+            # ─── Email Tracking (runtime — overrides the build-time NEXT_PUBLIC_CRM_URL) ─
+            # Set to the public CRM hostname so tracking pixels resolve correctly.
+            EMAIL_TRACKING_DOMAIN=${{ secrets.EMAIL_TRACKING_DOMAIN }}
+            EMAIL_TRACKING_ENABLED=true
             EOF
 
             echo "Pulling latest Docker images..."

@@ -102,6 +102,19 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                   }} 
                   mode="edit-button" 
                 />
+                <DealDetailClient 
+                  deal={{ 
+                    id: deal.id,
+                    title: deal.title,
+                    value: Number(deal.value),
+                    currency: deal.currency,
+                    status: deal.status,
+                    notes: deal.notes,
+                    leadId: deal.leadId,
+                    contactId: deal.lead?.contactId || null,
+                  }} 
+                  mode="send-proposal-button" 
+                />
               </div>
             </div>
 

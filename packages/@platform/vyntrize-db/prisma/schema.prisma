@@ -1,4 +1,4 @@
-// @platform/vyntrize-db — Prisma schema for the shared vyntrize_db database
+ // @platform/vyntrize-db — Prisma schema for the shared vyntrize_db database
 // Used by: apps/vyntrize-website (contact_submissions)
 //          apps/vyntrize-crm (crm_* tables)
 
@@ -68,6 +68,10 @@ model CrmUser {
   isActive     Boolean   @default(true)
   bookingSlug  String?   @unique
   timezone     String?   @default("America/New_York")
+  // Profile fields used in email footers
+  jobTitle     String?
+  phone        String?
+  avatarUrl    String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 

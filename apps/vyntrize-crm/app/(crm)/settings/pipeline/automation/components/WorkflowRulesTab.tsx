@@ -236,10 +236,15 @@ function ActionConfigFields({ action, onChange }: { action: RuleAction; onChange
       );
     case 'send_email':
       return (
-        <input type="text" value={(cfg.templateHint as string) ?? ''} placeholder="Template name or prompt hint"
-          onChange={(e) => onChange({ ...action, config: { templateHint: e.target.value } })}
-          className="flex-1 px-2 py-1.5 rounded-lg text-xs"
-          style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)' }} />
+        <div className="flex-1 flex flex-col gap-1.5">
+          <input type="text" value={(cfg.templateHint as string) ?? ''} placeholder="Prompt hint, e.g. 'follow up after demo, mention pricing'"
+            onChange={(e) => onChange({ ...action, config: { ...cfg, templateHint: e.target.value } })}
+            className="flex-1 px-2 py-1.5 rounded-lg text-xs"
+            style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)' }} />
+          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+            💡 Set <strong>Execution Mode</strong> to <em>Run Automatically</em> to send without approval.
+          </p>
+        </div>
       );
     case 'notify_staff':
       return (

@@ -147,6 +147,7 @@ export class WorkflowRuleEngine extends Agent {
           await this.executeAction(lead as Lead, action, {
             id: rule.id,
             name: rule.name,
+            autonomyLevel: rule.autonomyLevel,
           }, context);
           actionsExecuted++;
         } catch (err) {
@@ -298,7 +299,7 @@ export class WorkflowRuleEngine extends Agent {
   private async executeAction(
     lead: Lead,
     action: RuleAction,
-    rule: { id: string; name: string },
+    rule: { id: string; name: string; autonomyLevel: string },
     context: AgentContext
   ): Promise<void> {
     switch (action.type) {
@@ -310,8 +311,11 @@ export class WorkflowRuleEngine extends Agent {
           eventData: {
             ...context.eventData,
             templateHint,
-            triggeredByRule: rule.id,  // bypass stage-change filter & throttling
+            triggeredByRule: rule.id,
             ruleName: rule.name,
+            // Pass the rule's autonomy level so the agent knows whether to
+            // auto-send immediately (FULLY_AUTONOMOUS) or park as an approval draft.
+            ruleAutonomyLevel: rule.autonomyLevel,
           }
         });
         if (!result.success) {

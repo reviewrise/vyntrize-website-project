@@ -5,12 +5,15 @@ import { EnvelopeIcon } from '@heroicons/react/24/outline';
 import EmailComposer from '@/components/EmailComposer';
 import EmailHistory from '@/components/EmailHistory';
 import ActivityLogger from '@/components/ActivityLogger';
+import { SendMeetingLinkButton } from '@/components/SendMeetingLinkButton';
 
 interface LeadDetailClientProps {
   leadId: string;
   contactEmail: string;
   contactName: string;
   initialManualOverride?: boolean;
+  /** bookingSlug of the lead's assignee (or null if unassigned / no slug set) */
+  assigneeBookingSlug?: string | null;
 }
 
 export default function LeadDetailClient({
@@ -18,6 +21,7 @@ export default function LeadDetailClient({
   contactEmail,
   contactName,
   initialManualOverride = false,
+  assigneeBookingSlug,
 }: LeadDetailClientProps) {
   const [isEmailComposerOpen, setIsEmailComposerOpen] = useState(false);
   const [manualOverride, setManualOverride] = useState(initialManualOverride);
@@ -104,6 +108,14 @@ export default function LeadDetailClient({
         <ActivityLogger
           leadId={leadId}
           onLogged={() => window.location.reload()}
+        />
+
+        {/* Send Meeting Link button */}
+        <SendMeetingLinkButton
+          to={contactEmail}
+          toName={contactName}
+          leadId={leadId}
+          bookingSlug={assigneeBookingSlug}
         />
 
         {/* Send Email button */}

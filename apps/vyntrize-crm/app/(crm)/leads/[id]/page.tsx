@@ -35,7 +35,9 @@ export default async function LeadDetailPage({
         include: {
             contact: true,
             company: true,
-            assignee: true,
+            assignee: {
+                select: { id: true, displayName: true, bookingSlug: true },
+            },
             activities: {
                 orderBy: { createdAt: 'desc' },
                 include: { user: true },
@@ -100,6 +102,7 @@ export default async function LeadDetailPage({
                     contactEmail={lead.contact.email}
                     contactName={`${lead.contact.firstName} ${lead.contact.lastName}`}
                     initialManualOverride={lead.manualOverride ?? false}
+                    assigneeBookingSlug={lead.assignee?.bookingSlug ?? null}
                 />
             </div>
 

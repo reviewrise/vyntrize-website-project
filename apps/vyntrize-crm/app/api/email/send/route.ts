@@ -88,7 +88,8 @@ export async function POST(request: NextRequest) {
     // Inline CSS for better email client compatibility
     const finalBody = TemplateRenderer.inlineCSS(trackedBody);
 
-    // Send email
+    // Send email — emailService handles layout wrapping, logging, and transporting.
+    // Pass userId so the branded footer includes the sender's name/title.
     const sendResult = await emailService.sendEmail({
       role: 'sales',
       to: data.to,
@@ -97,75 +98,41 @@ export async function POST(request: NextRequest) {
       html: finalBody,
       replyTo: data.replyTo,
       trackingId,
+      contactId: data.contactId,
+      leadId: data.leadId,
+      templateId: data.templateId,
+      userId: session.userId as string,
     });
 
     if (!sendResult.success) {
-      // Create failed email log
-      const failedLog = await vyntrizeDb.emailLog.create({
-        data: {
-          subject: emailSubject,
-          body: emailBody,
-          htmlBody: finalBody,
-          fromEmail: process.env.EMAIL_FROM_ADDRESS || 'noreply@vyntrize.com',
-          fromName: process.env.EMAIL_FROM_NAME || 'Vyntrize CRM',
-          toEmail: data.to,
-          toName: data.toName,
-          replyTo: data.replyTo,
-          trackingId,
-          status: 'FAILED',
-          errorMessage: sendResult.error,
-          sentAt: new Date(),
-          contactId: data.contactId,
-          leadId: data.leadId,
-          templateId: data.templateId,
-          userId: session.userId,
-        },
-      });
-      // Enqueue log for background processing (e.g., enrichment)
-      try {
-        const { emailLogQueue } = await import('@/lib/queues/emailLogQueue');
-        await emailLogQueue.add('process', { logId: failedLog.id });
-      } catch (qErr) {
-        console.error('[Email API] Failed to enqueue failed log:', qErr);
-      }
-
       return NextResponse.json(
         { error: sendResult.error || 'Failed to send email' },
         { status: 500 }
       );
     }
 
-    // Create email log
-    const emailLog = await vyntrizeDb.emailLog.create({
-      data: {
-        subject: emailSubject,
-        body: emailBody,
-        htmlBody: finalBody,
-        fromEmail: process.env.EMAIL_FROM_ADDRESS || 'noreply@vyntrize.com',
-        fromName: process.env.EMAIL_FROM_NAME || 'Vyntrize CRM',
-        toEmail: data.to,
-        toName: data.toName,
-        replyTo: data.replyTo,
-        trackingId,
-        status: 'SENT',
-        sentAt: new Date(),
-        contactId: data.contactId,
-        leadId: data.leadId,
-        templateId: data.templateId,
-        userId: session.userId,
-      },
-    });
-
-    // Create sent event
-    await vyntrizeDb.emailEvent.create({
-      data: {
-        emailLogId: emailLog.id,
-        eventType: 'SENT',
-        eventData: {
-          messageId: sendResult.messageId,
-        },
-      },
-    });
+    // emailService.sendEmail() already logs the email to the DB.
+    // We only need to create the EmailEvent (SENT) for tracking history.
+    if (sendResult.messageId) {
+      try {
+        // Find the log that emailService just created
+        const emailLog = await vyntrizeDb.emailLog.findFirst({
+          where: { trackingId },
+          orderBy: { createdAt: 'desc' },
+        });
+        if (emailLog) {
+          await vyntrizeDb.emailEvent.create({
+            data: {
+              emailLogId: emailLog.id,
+              eventType: 'SENT',
+              eventData: { messageId: sendResult.messageId },
+            },
+          });
+        }
+      } catch (evtErr) {
+        console.error('[Email API] Failed to create sent event:', evtErr);
+      }
+    }
 
     console.log('[Email API] Email sent successfully:', {
       to: data.to,
@@ -175,7 +142,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      emailId: emailLog.id,
       trackingId,
       messageId: sendResult.messageId,
     });

@@ -3,6 +3,7 @@ import type { Transporter } from 'nodemailer';
 import { convert } from 'html-to-text';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
+import { wrapWithEmailLayout } from './email-layout';
 
 export type EmailRole = 'admin' | 'sales' | 'billing' | 'support';
 
@@ -19,12 +20,19 @@ export interface EmailOptions {
   trackingId?: string;
   role?: EmailRole;
   
-  // CRM Tracking Details
+  // CRM Tracking Details 
   leadId?: string;
   contactId?: string;
   campaignId?: string;
   templateId?: number;
   userId?: string;
+
+  /**
+   * When true, skip the branded header/footer layout wrapper.
+   * Use this for emails that manage their own complete HTML shell
+   * (e.g. invoice emails which include company branding inline).
+   */
+  skipLayout?: boolean;
 }
 
 export interface EmailResult {
@@ -157,18 +165,29 @@ class EmailService {
         };
       }
 
-      const text = options.text || convert(options.html, {
+      const config = await this.getConfig(role);
+      const fromAddress = options.from || config.fromAddress || 'noreply@vyntrize.com';
+      const fromName = options.fromName || config.fromName || 'Vyntrize CRM';
+      const replyTo = options.replyTo || config.replyTo;
+
+      // ── Wrap HTML in branded header/footer layout ─────────────────────────
+      // Adds company logo header + role-aware sender vCard footer to every email.
+      // skipLayout=true is used by emails that manage their own complete HTML shell
+      // (e.g. invoice emails which already include company branding inline).
+      const wrappedHtml = options.skipLayout
+        ? options.html
+        : await wrapWithEmailLayout(options.html, {
+            userId: options.userId,
+            trackingId: options.trackingId,
+          });
+
+      const text = options.text || convert(wrappedHtml, {
         wordwrap: 130,
         selectors: [
           { selector: 'a', options: { ignoreHref: false } },
           { selector: 'img', format: 'skip' },
         ],
       });
-
-      const config = await this.getConfig(role);
-      const fromAddress = options.from || config.fromAddress || 'noreply@vyntrize.com';
-      const fromName = options.fromName || config.fromName || 'Vyntrize CRM';
-      const replyTo = options.replyTo || config.replyTo;
 
       const mailOptions = {
         from: `"${fromName}" <${fromAddress}>`,
@@ -177,7 +196,7 @@ class EmailService {
         replyTo,
         subject: options.subject,
         text,
-        html: options.html,
+        html: wrappedHtml,
         headers: options.trackingId ? {
           'X-Tracking-ID': options.trackingId,
         } : undefined,
@@ -196,7 +215,7 @@ class EmailService {
         await this.logEmail({
           subject: options.subject,
           body: text,
-          htmlBody: options.html,
+          htmlBody: wrappedHtml,
           fromEmail: fromAddress,
           fromName: fromName,
           toEmail: options.to,
