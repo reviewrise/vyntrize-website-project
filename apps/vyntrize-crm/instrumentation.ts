@@ -6,5 +6,8 @@ export async function register() {
     // Only initialize on Node.js runtime (not Edge)
     const { initializeAgentSystem } = await import('./lib/agents/init');
     await initializeAgentSystem();
+
+    // Initialize Notification Center: register event bus listener + SSE ping loop
+    await import('./lib/notifications/index');
   }
 }

@@ -2,7 +2,7 @@ import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
 import { ThemeToggle } from '@/components/ThemeProvider';
-import { NotificationCenter } from '@/components/NotificationCenter';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 export default async function CrmLayout({ children }: { children: React.ReactNode }) {
     const session = await getSession();
@@ -25,7 +25,7 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
                         borderBottom: '1px solid var(--color-border)',
                     }}
                 >
-                    <NotificationCenter />
+                    <NotificationBell />
                     <ThemeToggle />
                 </header>
 

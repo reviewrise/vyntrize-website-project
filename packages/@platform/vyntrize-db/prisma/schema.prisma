@@ -94,6 +94,9 @@ model CrmUser {
   availabilityRules   AvailabilityRule[]
   bookingSettings     BookingSettings?
 
+  notifications            Notification[]           @relation("UserNotifications")
+  notificationPreferences  NotificationPreference[] @relation("UserNotificationPreferences")
+
   @@map("crm_users")
 }
 
@@ -1374,4 +1377,59 @@ model InvoicePayment {
   @@index([invoiceId])
   @@index([paidAt])
   @@map("crm_invoice_payments")
+}
+
+// ─── Notification Center: Enums ───────────────────────────────────────────────
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+}
+
+enum NotificationEventType {
+  LEAD_CREATED
+  STAGE_CHANGED
+  TASK_CREATED
+  TASK_COMPLETED
+  CALENDAR_EVENT_CREATED
+  CALENDAR_EVENT_UPDATED
+  AGENT_ACTION_PENDING
+  MEETING_ATTENDED
+  MEETING_MISSED
+}
+
+// ─── Notification Center: Models ──────────────────────────────────────────────
+
+model Notification {
+  id          String                @id @default(cuid())
+  userId      String
+  user        CrmUser               @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  eventType   NotificationEventType
+  title       String                @db.VarChar(255)
+  body        String?               @db.VarChar(2000)
+  entityType  String?
+  entityId    String?
+  channel     NotificationChannel   @default(IN_APP)
+  isRead      Boolean               @default(false)
+  isDismissed Boolean               @default(false)
+  readAt      DateTime?
+  createdAt   DateTime              @default(now())
+
+  @@index([userId, isDismissed, isRead, createdAt(sort: Desc)])
+  @@map("crm_notifications")
+}
+
+model NotificationPreference {
+  id        String                @id @default(cuid())
+  userId    String
+  user      CrmUser               @relation("UserNotificationPreferences", fields: [userId], references: [id], onDelete: Cascade)
+  eventType NotificationEventType
+  channel   NotificationChannel
+  isEnabled Boolean               @default(true)
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+
+  @@unique([userId, eventType, channel])
+  @@map("crm_notification_preferences")
 }
