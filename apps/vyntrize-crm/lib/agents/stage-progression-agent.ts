@@ -213,7 +213,7 @@ export class StageProgressionAgent extends Agent {
         leadId: lead.id,
         previousValue: rule.fromStage,
         newValue: rule.toStage,
-        metadata: { agentActionId: actionId, ruleId: rule.id },
+        metadata: { agentActionId: actionId, ruleId: rule.id, assigneeId: lead.assigneeId ?? undefined },
       });
 
       this.log('info', 'Lead stage progressed autonomously', {

@@ -103,7 +103,11 @@ export async function PATCH(
         leadId: updatedTask.leadId,
         previousValue: existingTask.status,
         newValue: 'COMPLETED',
-        metadata: { taskId: updatedTask.id, taskTitle: updatedTask.title },
+        metadata: {
+          taskId:    updatedTask.id,
+          taskTitle: updatedTask.title,
+          createdById: existingTask.createdById ?? undefined,
+        },
       });
     }
 

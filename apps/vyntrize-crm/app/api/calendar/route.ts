@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (event.leadId) {
-      await emitCalendarEventCreated(event.id, event.leadId, event.contactId || undefined, session.userId);
+      await emitCalendarEventCreated(event.id, event.leadId, event.contactId || undefined, session.userId, event.title);
     }
 
     return NextResponse.json({ event }, { status: 201 });

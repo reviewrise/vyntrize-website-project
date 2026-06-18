@@ -3,6 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
+import { eventBus, CRMEvent } from '@/lib/agents/event-bus';
+import { agentRegistry } from '@/lib/agents/registry';
 
 async function requireAuth() {
     const session = await getSession();
@@ -47,9 +49,6 @@ export async function createLead(formData: FormData) {
 
     // Emit lead created event for agents
     try {
-        const { eventBus, CRMEvent } = await import('@/lib/agents/event-bus');
-        const { agentRegistry } = await import('@/lib/agents/registry');
-        
         // Ensure agents are registered (in case this runs before instrumentation)
         if (!agentRegistry.isInitialized()) {
             console.log('[createLead] Agent registry not initialized, initializing now...');
@@ -60,7 +59,7 @@ export async function createLead(formData: FormData) {
             leadId: lead.id,
             userId: session.userId,
             metadata: {
-                title,
+                leadTitle: title,
                 contactId,
                 companyId,
                 assigneeId,
@@ -130,9 +129,6 @@ export async function updateLeadStage(formData: FormData) {
 
     // Emit stage change event for agents
     try {
-        const { eventBus, CRMEvent } = await import('@/lib/agents/event-bus');
-        const { agentRegistry } = await import('@/lib/agents/registry');
-        
         // Ensure agents are registered (in case this runs before instrumentation)
         if (!agentRegistry.isInitialized()) {
             console.log('[updateLeadStage] Agent registry not initialized, initializing now...');
@@ -146,6 +142,8 @@ export async function updateLeadStage(formData: FormData) {
             newValue: stage,
             metadata: {
                 closingNote,
+                // Use the updated assigneeId if the form changed it, otherwise fall back to the current one
+                assigneeId: (hasAssignee ? assigneeId : current.assigneeId) ?? undefined,
             },
         });
         console.log(`[updateLeadStage] Emitted STAGE_CHANGED event for lead ${id}: ${prevStage} → ${stage}`);
@@ -201,9 +199,6 @@ export async function updateLeadDeal(formData: FormData) {
 
     // Emit lead updated event for agents
     try {
-        const { eventBus, CRMEvent } = await import('@/lib/agents/event-bus');
-        const { agentRegistry } = await import('@/lib/agents/registry');
-        
         if (!agentRegistry.isInitialized()) {
             console.log('[updateLeadDeal] Agent registry not initialized, initializing now...');
             await agentRegistry.registerAllAgents();

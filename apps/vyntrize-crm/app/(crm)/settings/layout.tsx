@@ -13,6 +13,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
     { name: 'Pipeline', href: '/settings/pipeline' },
     { name: 'Email', href: '/settings/email' },
     { name: 'AI Providers', href: '/settings/ai-providers' },
+    { name: 'Notifications', href: '/settings/notifications' },
     { name: 'Integrations', href: '/settings/integrations' },
   ];
 

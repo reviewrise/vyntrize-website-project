@@ -4,6 +4,8 @@ import { emitCalendarEventCreated } from '@/lib/agents/event-emitter';
 import { syncEventToGoogle } from '@/lib/google-calendar';
 import crypto from 'crypto';
 import { sendBookingConfirmation } from '@/lib/email';
+import { sendCustomerSms }         from '@/lib/sms/send-customer-sms';
+import { buildBookingConfirmationSms } from '@/lib/sms/booking-sms';
 
 export async function POST(
   request: NextRequest,
@@ -130,10 +132,10 @@ export async function POST(
 
     // 5. Emit event for AI agents
     if (lead.id) {
-      await emitCalendarEventCreated(event.id, lead.id, contact.id, user.id);
+      await emitCalendarEventCreated(event.id, lead.id, contact.id, user.id, event.title);
     }
 
-    // 5. Send Hostinger SMTP Email
+    // 5. Send booking confirmation email
     await sendBookingConfirmation({
       toEmail: contact.email,
       contactName: `${contact.firstName} ${contact.lastName}`,
@@ -145,6 +147,27 @@ export async function POST(
       cancelToken: event.cancelToken ?? '',
       rescheduleToken: event.rescheduleToken ?? ''
     });
+
+    // 6. Send booking confirmation SMS (fire-and-forget — never blocks the response)
+    if (contact.phone) {
+      try {
+        const crmBase = process.env.NEXT_PUBLIC_CRM_URL ?? 'https://crm.vyntrize.com';
+        const smsMessage = buildBookingConfirmationSms({
+          hostName:  user.displayName,
+          startTime: event.startTime,
+          meetLink:  event.meetLink ?? undefined,
+          optOutUrl: `${crmBase}/api/sms/unsubscribe?phone=${encodeURIComponent(contact.phone)}`,
+        });
+        await sendCustomerSms({
+          to:        contact.phone,
+          message:   smsMessage,
+          contactId: contact.id,
+          leadId:    lead.id,
+        });
+      } catch (smsErr) {
+        console.error('[book/slug] Booking SMS failed (non-fatal):', smsErr);
+      }
+    }
 
     return NextResponse.json({ 
       success: true, 

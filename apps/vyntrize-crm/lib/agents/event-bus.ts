@@ -69,6 +69,9 @@ class AgentEventBus extends EventEmitter {
         const { enqueueAgentEvent } = await import('@/lib/queues/agentQueue');
         await enqueueAgentEvent(event, payload);
         console.log(`[EventBus] ✅ Queued ${event} to BullMQ`);
+        // Still fire Node EventEmitter listeners (notification-listener etc.) synchronously
+        // in this process — agent work is deferred to the queue worker.
+        super.emit(event, payload);
         return;
       } catch (err) {
         console.warn(`[EventBus] ⚠️ Failed to enqueue to BullMQ, falling back to in-memory:`, err);
@@ -83,13 +86,21 @@ class AgentEventBus extends EventEmitter {
   /**
    * In-memory dispatch — runs agents directly.
    * Also called by the queue worker to actually execute agents.
+   *
+   * Always emits on the Node EventEmitter so that non-agent listeners
+   * (e.g. the notification-listener) receive the event regardless of
+   * whether BullMQ or the in-memory path is active.
    */
   async _dispatchInMemory(event: CRMEvent, payload: EventPayload) {
+    // Fire Node EventEmitter listeners (e.g. notification-listener registered via .on())
+    // This ensures notifications work both in Redis/BullMQ mode and in-memory mode.
+    super.emit(event, payload);
+
     const registeredAgents = this.agents.get(event) || [];
     console.log(`[EventBus] Found ${registeredAgents.length} registered agent(s) for ${event}`);
 
     if (registeredAgents.length === 0) {
-      console.warn(`[EventBus] ⚠️  No agents registered for event: ${event}`);
+      console.log(`[EventBus] No agents registered for event: ${event} (notification listeners still fired)`);
       return;
     }
 

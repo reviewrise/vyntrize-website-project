@@ -43,14 +43,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     // Emit standard updated event
     if (event.leadId) {
-      await emitCalendarEventUpdated(event.id, event.leadId, event.contactId || undefined, session.userId);
+      await emitCalendarEventUpdated(event.id, event.leadId, event.contactId || undefined, session.userId, event.title);
       
       // Emit specific meeting events if status changed
       if (status !== undefined && status !== existing.status) {
         if (status === 'ATTENDED') {
-          await emitMeetingAttended(event.id, event.leadId, event.contactId || undefined, session.userId);
+          await emitMeetingAttended(event.id, event.leadId, event.contactId || undefined, session.userId, event.title);
         } else if (status === 'MISSED') {
-          await emitMeetingMissed(event.id, event.leadId, event.contactId || undefined, session.userId);
+          await emitMeetingMissed(event.id, event.leadId, event.contactId || undefined, session.userId, event.title);
         }
       }
     }

@@ -24,6 +24,8 @@ import { DripCampaignAgent } from './drip-campaign-agent';
 import { EmailGenerationAgent } from './email-generation-agent';
 import { emailService } from '@/lib/email/email-service';
 import { syncEventToGoogle } from '@/lib/google-calendar';
+import { sendCustomerSms } from '@/lib/sms/send-customer-sms';
+import { buildSmsTemplateVars } from '@/lib/sms/sms-template-vars';
 import crypto from 'crypto';
 import { z } from 'zod';
 import type { Lead } from '@platform/vyntrize-db';
@@ -321,6 +323,46 @@ export class WorkflowRuleEngine extends Agent {
         if (!result.success) {
           throw new Error(`EmailGenerationAgent failed: ${result.error || result.reasoning}`);
         }
+        break;
+      }
+
+      case 'send_sms': {
+        const { message, templateHint: _hint } = (action.config || {}) as {
+          message: string;
+          templateHint?: string;
+        };
+
+        const contact = await prisma.contact.findUnique({ where: { id: lead.contactId } });
+
+        if (rule.autonomyLevel === 'SUGGEST_APPROVE') {
+          // Park as a pending AgentAction for human review — do not send yet
+          await prisma.agentAction.create({
+            data: {
+              agentType:     this.agentType,
+              actionType:    ActionType.SMS_SEND,
+              leadId:        lead.id,
+              reasoning:     `Pending SMS approval for rule "${rule.name}"`,
+              autonomyLevel: AutonomyLevel.SUGGEST_APPROVE,
+              status:        ActionStatus.PENDING,
+              metadata:      {
+                ruleId:   rule.id,
+                ruleName: rule.name,
+                message,
+              },
+            },
+          });
+          break;
+        }
+
+        // FULLY_AUTONOMOUS — send immediately
+        const templateVars = buildSmsTemplateVars(contact, lead as any);
+        await sendCustomerSms({
+          to:        contact?.phone,
+          message,
+          variables: templateVars,
+          leadId:    lead.id,
+          contactId: contact?.id,
+        });
         break;
       }
 

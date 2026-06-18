@@ -26,6 +26,13 @@ export async function initializeAgentSystem(): Promise<void> {
       // Register all agents with the event bus
       await agentRegistry.registerAllAgents();
 
+      // Resume the job scheduler worker AFTER agents are registered.
+      // The worker starts paused (autorun: false) to avoid processing jobs
+      // before agents are available. Now that all agents are registered it is
+      // safe to start picking up queued / recurring jobs.
+      const { jobScheduler } = await import('@/lib/agents/job-scheduler');
+      await jobScheduler.resumeWorker();
+
       // If Redis is configured, start the BullMQ queue worker so events
       // are processed persistently (survives server restarts + retries on failure)
       if (process.env.REDIS_URL) {

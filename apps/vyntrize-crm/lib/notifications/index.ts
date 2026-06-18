@@ -8,4 +8,4 @@ import { sseStreamManager } from './sse-stream-manager';
 registerNotificationListener();
 sseStreamManager.startPingLoop();
 
-console.log('[NotificationCenter] Listener registered and ping loop started');
+console.log('[Notifications] Listener registered and SSE ping loop started');

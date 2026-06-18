@@ -148,6 +148,9 @@ model Contact {
   // Stripe Integration
   stripeCustomerId String? @unique
   
+  // SMS opt-out flag — set by the unsubscribe endpoint or 403 from vyntrise-sms
+  smsOptOut   Boolean   @default(false)
+
   deletedAt   DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -155,6 +158,7 @@ model Contact {
   leads          Lead[]
   activities     Activity[]
   emailLogs      EmailLog[]
+  smsLogs        SmsLog[]
   calendarEvents CalendarEvent[]
 
   @@index([email])
@@ -207,6 +211,7 @@ model Lead {
   deals           Deal[]
   emailTracking   EmailTracking[]
   emailLogs       EmailLog[]     @relation("EmailLogLead")
+  smsLogs         SmsLog[]       @relation("SmsLogLead")
   agentActions    AgentAction[]
   dripEnrollments DripEnrollment[]
   calendarEvents  CalendarEvent[]
@@ -976,6 +981,7 @@ model DripStep {
   sequence        DripSequence @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
   stepOrder       Int
   delayHours      Int
+  stepType        String       @default("email")  // 'email' | 'sms'
   subjectTemplate String
   bodyTemplate    String       @db.Text
   branchCondition String
@@ -1119,6 +1125,7 @@ enum ActionType {
   SCORE_UPDATE
   TASK_CREATE
   EMAIL_SEND
+  SMS_SEND
   STAGE_CHANGE
   ALERT
   PREDICTION_UPDATE
@@ -1377,6 +1384,46 @@ model InvoicePayment {
   @@index([invoiceId])
   @@index([paidAt])
   @@map("crm_invoice_payments")
+}
+
+// ─── SMS System: SMS Logs ─────────────────────────────────────────────────────
+
+model SmsLog {
+  id           String    @id @default(cuid())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Recipient
+  toPhone      String
+  toName       String?
+
+  // Content
+  content      String    @db.Text
+
+  // Delivery
+  status       SmsStatus @default(QUEUED)
+  messageId    String?             // returned by vyntrise-sms on success
+  sentAt       DateTime?
+  errorMessage String?   @db.Text
+
+  // CRM relations
+  contactId    String?
+  contact      Contact?  @relation(fields: [contactId], references: [id])
+  leadId       String?
+  lead         Lead?     @relation(fields: [leadId], references: [id], name: "SmsLogLead")
+
+  @@index([contactId])
+  @@index([leadId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("sms_logs")
+}
+
+enum SmsStatus {
+  QUEUED
+  SENT
+  FAILED
+  SKIPPED
 }
 
 // ─── Notification Center: Enums ───────────────────────────────────────────────

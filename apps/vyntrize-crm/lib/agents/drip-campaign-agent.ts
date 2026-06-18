@@ -18,6 +18,8 @@ import { jobScheduler, JobPriority } from './job-scheduler';
 import { EmailGenerationAgent } from './email-generation-agent';
 import { emailService } from '@/lib/email/email-service';
 import { TemplateRenderer } from '@/lib/email/template-renderer';
+import { sendCustomerSms } from '@/lib/sms/send-customer-sms';
+import { buildSmsTemplateVars } from '@/lib/sms/sms-template-vars';
 import type {
   Lead,
   Contact,
@@ -314,9 +316,11 @@ export class DripCampaignAgent extends Agent {
     }
 
     // 5. Evaluate branch condition
+    const stepType = (currentStep as any).stepType ?? 'email';
     const branchPasses = await this.checkBranchCondition(
       lead.id,
-      currentStep.branchCondition
+      currentStep.branchCondition,
+      stepType
     );
     if (!branchPasses) {
       this.log('info', 'Branch condition not met, skipping step', {
@@ -326,61 +330,76 @@ export class DripCampaignAgent extends Agent {
       return;
     }
 
-    // 6. Try EmailGenerationAgent for personalization; fall back to raw templates
-    let subject = currentStep.subjectTemplate;
-    let body = currentStep.bodyTemplate;
+    // 6 + 7. Send step — branches on stepType ('email' or 'sms')
+    const contact = (lead as LeadWithContact).contact;
 
-    try {
-      const emailAgent = new EmailGenerationAgent();
-      const result = await emailAgent.execute({ leadId: lead.id });
-      if (result.success && result.metadata?.emailDraft) {
-        const draft = result.metadata.emailDraft as { subject: string; body: string };
-        subject = draft.subject;
-        body = draft.body;
+    if (stepType === 'sms') {
+      // ── SMS step ────────────────────────────────────────────────────────
+      const smsTemplateVars = buildSmsTemplateVars(contact, lead as any);
+      try {
+        await sendCustomerSms({
+          to:        contact.phone,
+          message:   currentStep.bodyTemplate,
+          variables: smsTemplateVars,
+          leadId:    lead.id,
+          contactId: contact.id,
+        });
+      } catch (smsErr) {
+        this.log('error', 'SMS drip step error (continuing enrollment)', smsErr);
       }
-    } catch (err) {
-      this.log('warn', 'EmailGenerationAgent failed, using raw templates', err);
-      // subject and body already set to raw templates above
+
+      // Enrollment advancement and AgentAction recording happens below
+      // (outside this if/else block) — so we jump straight there.
+
+    } else {
+      // ── Email step (default) ─────────────────────────────────────────────
+      // 6. Try EmailGenerationAgent for personalization; fall back to raw templates
+      let subject = currentStep.subjectTemplate;
+      let body = currentStep.bodyTemplate;
+
+      try {
+        const emailAgent = new EmailGenerationAgent();
+        const result = await emailAgent.execute({ leadId: lead.id });
+        if (result.success && result.metadata?.emailDraft) {
+          const draft = result.metadata.emailDraft as { subject: string; body: string };
+          subject = draft.subject;
+          body = draft.body;
+        }
+      } catch (err) {
+        this.log('warn', 'EmailGenerationAgent failed, using raw templates', err);
+      }
+
+      // 7. Render templates and send email via EmailService
+      const contactEmail = contact.email;
+      const trackingId = `drip_${enrollmentId}_step${currentStep.stepOrder}_${Date.now()}`;
+
+      const templateVars = {
+        firstName: contact.firstName || '',
+        lastName:  contact.lastName  || '',
+        email:     contactEmail,
+        leadTitle: lead.title || '',
+        unsubscribeUrl: `${process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com'}/api/email/unsubscribe?email=${encodeURIComponent(contactEmail)}`,
+      };
+
+      let formattedBody = body.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br/>');
+      if (!formattedBody.startsWith('<p>')) formattedBody = `<p>${formattedBody}</p>`;
+      formattedBody = TemplateRenderer.wrapInEmailTemplate(formattedBody, subject);
+      subject = TemplateRenderer.render(subject, templateVars);
+      formattedBody = TemplateRenderer.renderWithTracking(formattedBody, templateVars, trackingId);
+      formattedBody = TemplateRenderer.inlineCSS(formattedBody);
+
+      await emailService.sendEmail({
+        role:      'sales',
+        to:        contactEmail,
+        toName:    `${contact.firstName} ${contact.lastName}`.trim(),
+        subject,
+        html:      formattedBody,
+        text:      body,
+        trackingId,
+        leadId:    lead.id,
+        contactId: contact.id,
+      } as Parameters<typeof emailService.sendEmail>[0]);
     }
-
-    // 7. Render templates and send email via EmailService
-    // 7. Render templates and send email via EmailService
-    const contactEmail = (lead as LeadWithContact).contact.email;
-    const trackingId = `drip_${enrollmentId}_step${currentStep.stepOrder}_${Date.now()}`;
-    
-    const templateVars = {
-      firstName: (lead as LeadWithContact).contact.firstName || '',
-      lastName: (lead as LeadWithContact).contact.lastName || '',
-      email: contactEmail,
-      leadTitle: lead.title || '',
-      unsubscribeUrl: `${process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com'}/api/email/unsubscribe?email=${encodeURIComponent(contactEmail)}`,
-    };
-    
-    // Format body: convert newlines to <p> tags or <br/> and wrap in the beautiful template
-    let formattedBody = body.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br/>');
-    if (!formattedBody.startsWith('<p>')) formattedBody = `<p>${formattedBody}</p>`;
-    
-    formattedBody = TemplateRenderer.wrapInEmailTemplate(formattedBody, subject);
-    
-    subject = TemplateRenderer.render(subject, templateVars);
-    
-    // Apply template variables and add tracking pixel
-    formattedBody = TemplateRenderer.renderWithTracking(formattedBody, templateVars, trackingId);
-    
-    // Inline CSS for maximum email client compatibility
-    formattedBody = TemplateRenderer.inlineCSS(formattedBody);
-
-    const sendResult = await emailService.sendEmail({
-      role: 'sales',
-      to: contactEmail,
-      toName: `${(lead as LeadWithContact).contact.firstName} ${(lead as LeadWithContact).contact.lastName}`.trim(),
-      subject,
-      html: formattedBody,
-      text: body, // Raw body for reference and logging
-      trackingId,
-      leadId: lead.id,
-      contactId: (lead as LeadWithContact).contact.id,
-    } as Parameters<typeof emailService.sendEmail>[0]);
 
     // 8. Update enrollment
     const nextStepIndex = enrollment.currentStepIndex + 1;
@@ -392,17 +411,17 @@ export class DripCampaignAgent extends Agent {
       },
     });
 
-    // 9. Record EMAIL_SEND AgentAction
+    // 9. Record AgentAction (EMAIL_SEND or SMS_SEND depending on step type)
     await this.recordAction(
-      ActionType.EMAIL_SEND,
+      stepType === 'sms' ? ActionType.SMS_SEND : ActionType.EMAIL_SEND,
       lead.id,
-      `Drip step ${enrollment.currentStepIndex} sent for sequence ${typedEnrollment.sequence.name}`,
+      `Drip ${stepType} step ${enrollment.currentStepIndex} sent for sequence ${typedEnrollment.sequence.name}`,
       AutonomyLevel.FULLY_AUTONOMOUS,
       {
         enrollmentId,
         sequenceId: enrollment.sequenceId,
-        stepOrder: currentStep.stepOrder,
-        subject,
+        stepOrder:  currentStep.stepOrder,
+        stepType,
       }
     );
 
@@ -443,8 +462,14 @@ export class DripCampaignAgent extends Agent {
 
   private async checkBranchCondition(
     leadId: string,
-    branchCondition: string
+    branchCondition: string,
+    stepType: string = 'email'
   ): Promise<boolean> {
+    // SMS steps have no open tracking — opened/not_opened always proceed
+    if (stepType === 'sms' && (branchCondition === 'opened' || branchCondition === 'not_opened')) {
+      return true;
+    }
+
     if (branchCondition === 'always') {
       return true;
     }

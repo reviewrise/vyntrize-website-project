@@ -94,11 +94,13 @@ class AgentJobScheduler {
         {
           connection: redisConnection,
           concurrency: parseInt(process.env.AGENT_JOB_CONCURRENCY || '5'),
+          // Start paused — resume() is called after agents are registered
+          autorun: false,
         }
       );
 
       this.setupWorkerListeners();
-      console.log('[JobScheduler] BullMQ Queue + Worker initialized');
+      console.log('[JobScheduler] BullMQ Queue + Worker initialized (paused until agents are registered)');
     } catch (err) {
       console.warn('[JobScheduler] BullMQ initialization failed — using direct execution:', err);
       this.queue = null;
@@ -112,6 +114,18 @@ class AgentJobScheduler {
   registerAgent(agentType: string, agent: Agent) {
     this.agents.set(agentType, agent);
     console.log(`[JobScheduler] Registered agent: ${agentType}`);
+  }
+
+  /**
+   * Resume the BullMQ worker to start processing jobs.
+   * Call this after all agents have been registered via registerAgent().
+   * Safe to call when Redis is not available (no-op in that case).
+   */
+  async resumeWorker() {
+    if (this.worker) {
+      await this.worker.run();
+      console.log('[JobScheduler] Worker resumed — ready to process jobs');
+    }
   }
 
   /**
@@ -185,7 +199,16 @@ class AgentJobScheduler {
     const { agentType, context } = job.data;
     console.log(`[JobScheduler] Processing job for ${agentType}`);
 
-    const agent = this.agents.get(agentType);
+    // If agent isn't registered yet (startup race with BullMQ recurring jobs),
+    // wait up to 5 seconds for it to appear before giving up.
+    let agent = this.agents.get(agentType);
+    if (!agent) {
+      for (let i = 0; i < 10; i++) {
+        await new Promise(r => setTimeout(r, 500));
+        agent = this.agents.get(agentType);
+        if (agent) break;
+      }
+    }
     if (!agent) throw new Error(`Agent ${agentType} not registered`);
 
     const startTime = Date.now();

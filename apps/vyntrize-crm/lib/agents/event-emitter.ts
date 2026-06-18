@@ -113,13 +113,15 @@ export async function emitCRMEvent(event: CRMEvent, payload: EventPayload) {
 /**
  * Emit a calendar event created event
  */
-export async function emitCalendarEventCreated(eventId: string, leadId?: string, contactId?: string, userId?: string) {
+export async function emitCalendarEventCreated(eventId: string, leadId?: string, contactId?: string, userId?: string, eventTitle?: string) {
   await eventBus.emitCRMEvent(CRMEvent.CALENDAR_EVENT_CREATED, {
     leadId,
     contactId,
     userId,
     metadata: {
       eventId,
+      calendarEventId: eventId,
+      eventTitle: eventTitle ?? 'Calendar event',
     },
   });
 }
@@ -127,13 +129,15 @@ export async function emitCalendarEventCreated(eventId: string, leadId?: string,
 /**
  * Emit a calendar event updated event
  */
-export async function emitCalendarEventUpdated(eventId: string, leadId?: string, contactId?: string, userId?: string) {
+export async function emitCalendarEventUpdated(eventId: string, leadId?: string, contactId?: string, userId?: string, eventTitle?: string) {
   await eventBus.emitCRMEvent(CRMEvent.CALENDAR_EVENT_UPDATED, {
     leadId,
     contactId,
     userId,
     metadata: {
       eventId,
+      calendarEventId: eventId,
+      eventTitle: eventTitle ?? 'Calendar event',
     },
   });
 }
@@ -148,6 +152,7 @@ export async function emitCalendarEventDeleted(eventId: string, leadId?: string,
     userId,
     metadata: {
       eventId,
+      calendarEventId: eventId,
     },
   });
 }
@@ -155,13 +160,15 @@ export async function emitCalendarEventDeleted(eventId: string, leadId?: string,
 /**
  * Emit a meeting attended event
  */
-export async function emitMeetingAttended(eventId: string, leadId?: string, contactId?: string, userId?: string) {
+export async function emitMeetingAttended(eventId: string, leadId?: string, contactId?: string, userId?: string, eventTitle?: string) {
   await eventBus.emitCRMEvent(CRMEvent.MEETING_ATTENDED, {
     leadId,
     contactId,
     userId,
     metadata: {
       eventId,
+      calendarEventId: eventId,
+      eventTitle: eventTitle ?? 'Meeting',
     },
   });
 }
@@ -169,13 +176,15 @@ export async function emitMeetingAttended(eventId: string, leadId?: string, cont
 /**
  * Emit a meeting missed event
  */
-export async function emitMeetingMissed(eventId: string, leadId?: string, contactId?: string, userId?: string) {
+export async function emitMeetingMissed(eventId: string, leadId?: string, contactId?: string, userId?: string, eventTitle?: string) {
   await eventBus.emitCRMEvent(CRMEvent.MEETING_MISSED, {
     leadId,
     contactId,
     userId,
     metadata: {
       eventId,
+      calendarEventId: eventId,
+      eventTitle: eventTitle ?? 'Meeting',
     },
   });
 }

@@ -97,15 +97,9 @@ export function NotificationBell() {
   // ─── Mount / unmount ───────────────────────────────────────────────────────
   useEffect(() => {
     fetchUnreadCount();
-
-    // Skip SSE in dev mode — Next.js dev server is single-threaded and the
-    // long-lived SSE connection blocks all other API requests. Use polling instead.
-    if (process.env.NODE_ENV === 'development') {
-      setSseStatus('polling');
-      startPolling();
-    } else {
-      connectSSE();
-    }
+    // Connect SSE in all environments — Next.js App Router handles long-lived
+    // streaming connections fine in dev. Falls back to polling on error.
+    connectSSE();
 
     return () => {
       if (sourceRef.current)     sourceRef.current.close();
@@ -115,7 +109,7 @@ export function NotificationBell() {
   }, [fetchUnreadCount, connectSSE, startPolling]);
 
   // ─── Callbacks for child panel ─────────────────────────────────────────────
-  function decrementCount() {
+  function decrementCount(_id: string) {
     setUnreadCount((c) => Math.max(0, c - 1));
   }
 

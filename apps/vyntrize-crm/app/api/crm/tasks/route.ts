@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { vyntrizeDb } from '@platform/vyntrize-db';
 import { getSession } from '@/lib/session';
+import { eventBus, CRMEvent } from '@/lib/agents/event-bus';
 
 // GET - Fetch tasks with filters
 export async function GET(request: NextRequest) {
@@ -139,6 +140,24 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    // Emit TASK_CREATED for notification delivery
+    if (assignedToId) {
+      try {
+        await eventBus.emitCRMEvent(CRMEvent.TASK_CREATED, {
+          leadId,
+          taskId:  task.id,
+          userId:  session.userId,
+          metadata: {
+            taskId:      task.id,
+            taskTitle:   task.title,
+            assignedToId,
+          },
+        });
+      } catch (err) {
+        console.error('[tasks/POST] Failed to emit TASK_CREATED:', err);
+      }
+    }
 
     return NextResponse.json({ task }, { status: 201 });
   } catch (error) {

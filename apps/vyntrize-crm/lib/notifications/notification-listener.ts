@@ -12,7 +12,10 @@
 
 import { eventBus, CRMEvent, EventPayload } from '@/lib/agents/event-bus';
 import { notificationService } from './notification-service';
+import { getTriggerConfig } from './trigger-config';
 import { NotificationEventType } from '@platform/vyntrize-db';
+
+let _registered = false; // guard against double-registration on HMR
 
 // ─── Handler: LEAD_CREATED ────────────────────────────────────────────────────
 //
@@ -23,6 +26,9 @@ import { NotificationEventType } from '@platform/vyntrize-db';
 
 async function handleLeadCreated(payload: EventPayload) {
   try {
+    const trigger = await getTriggerConfig('LEAD_CREATED');
+    if (!trigger) return; // globally disabled
+
     const leadTitle  = (payload.metadata?.leadTitle as string | undefined) ?? 'New lead';
     const assigneeId = payload.metadata?.assigneeId as string | undefined;
     const leadId     = payload.leadId;
@@ -34,14 +40,17 @@ async function handleLeadCreated(payload: EventPayload) {
       entityId:   leadId,
     };
 
-    if (assigneeId) {
-      // Notify the assigned user
-      await notificationService.createNotification({ ...notifyInput, userId: assigneeId });
-      // Notify all admins, skipping the assignee to avoid duplicates
-      await notificationService.createNotificationsForAdmins(notifyInput, [assigneeId]);
-    } else {
-      // No assignee — notify admins only
-      await notificationService.createNotificationsForAdmins(notifyInput);
+    const shouldNotifyAssignee = assigneeId && (trigger.recipients === 'assignee' || trigger.recipients === 'both');
+    const shouldNotifyAdmins   = trigger.recipients === 'admins' || trigger.recipients === 'both';
+
+    if (shouldNotifyAssignee) {
+      await notificationService.createNotification({ ...notifyInput, userId: assigneeId! });
+    }
+    if (shouldNotifyAdmins) {
+      await notificationService.createNotificationsForAdmins(
+        notifyInput,
+        shouldNotifyAssignee && assigneeId ? [assigneeId] : [],
+      );
     }
   } catch (err) {
     console.error('[NotificationListener] handleLeadCreated error:', err);
@@ -49,12 +58,12 @@ async function handleLeadCreated(payload: EventPayload) {
 }
 
 // ─── Handler: STAGE_CHANGED ───────────────────────────────────────────────────
-//
-// Target: assigned user only.
-// If no assigned user → log warning and skip (per requirements §2.4).
 
 async function handleStageChanged(payload: EventPayload) {
   try {
+    const trigger = await getTriggerConfig('STAGE_CHANGED');
+    if (!trigger) return;
+
     const assigneeId = payload.metadata?.assigneeId as string | undefined;
     if (!assigneeId) {
       console.warn('[NotificationListener] STAGE_CHANGED event has no assigned user — skipping notification');
@@ -81,6 +90,9 @@ async function handleStageChanged(payload: EventPayload) {
 
 async function handleTaskCreated(payload: EventPayload) {
   try {
+    const trigger = await getTriggerConfig('TASK_CREATED');
+    if (!trigger) return;
+
     const assignedToId = payload.metadata?.assignedToId as string | undefined;
     if (!assignedToId) {
       console.warn('[NotificationListener] TASK_CREATED event has no assignedToId — skipping notification');
@@ -106,6 +118,9 @@ async function handleTaskCreated(payload: EventPayload) {
 
 async function handleTaskCompleted(payload: EventPayload) {
   try {
+    const trigger = await getTriggerConfig('TASK_COMPLETED');
+    if (!trigger) return;
+
     const createdById = payload.metadata?.createdById as string | undefined;
     if (!createdById) {
       console.warn('[NotificationListener] TASK_COMPLETED event has no createdById — skipping notification');
@@ -131,6 +146,13 @@ async function handleTaskCompleted(payload: EventPayload) {
 
 async function handleCalendarEvent(payload: EventPayload, event: CRMEvent) {
   try {
+    const eventTypeKey = event === CRMEvent.CALENDAR_EVENT_CREATED
+      ? 'CALENDAR_EVENT_CREATED'
+      : 'CALENDAR_EVENT_UPDATED';
+
+    const trigger = await getTriggerConfig(eventTypeKey);
+    if (!trigger) return;
+
     const userId = payload.userId;
     if (!userId) {
       console.warn(`[NotificationListener] ${event} has no userId — skipping notification`);
@@ -157,6 +179,9 @@ async function handleCalendarEvent(payload: EventPayload, event: CRMEvent) {
 
 async function handleMeetingAttended(payload: EventPayload) {
   try {
+    const trigger = await getTriggerConfig('MEETING_ATTENDED');
+    if (!trigger) return;
+
     const userId = payload.userId;
     if (!userId) {
       console.warn('[NotificationListener] MEETING_ATTENDED event has no userId — skipping notification');
@@ -182,6 +207,9 @@ async function handleMeetingAttended(payload: EventPayload) {
 
 async function handleMeetingMissed(payload: EventPayload) {
   try {
+    const trigger = await getTriggerConfig('MEETING_MISSED');
+    if (!trigger) return;
+
     const userId = payload.userId;
     if (!userId) {
       console.warn('[NotificationListener] MEETING_MISSED event has no userId — skipping notification');
@@ -203,9 +231,50 @@ async function handleMeetingMissed(payload: EventPayload) {
   }
 }
 
+// ─── Handler: AGENT_ACTION_PENDING ───────────────────────────────────────────
+//
+// Fired by AI agent code when an action needs human review.
+// Notifies all admin users (config: recipients = 'admins').
+
+async function handleAgentActionPending(payload: EventPayload) {
+  try {
+    const trigger = await getTriggerConfig('AGENT_ACTION_PENDING');
+    if (!trigger) return;
+
+    const actionTitle = (payload.metadata?.actionTitle as string | undefined) ?? 'Agent action';
+    const actionId    = payload.metadata?.actionId as string | undefined;
+
+    // Notify the specific userId if provided, otherwise all admins
+    if (payload.userId) {
+      await notificationService.createNotification({
+        userId:     payload.userId,
+        eventType:  NotificationEventType.AGENT_ACTION_PENDING,
+        title:      `Agent action requires review: ${actionTitle}`,
+        entityType: 'agent_action',
+        entityId:   actionId,
+      });
+    } else {
+      await notificationService.createNotificationsForAdmins({
+        eventType:  NotificationEventType.AGENT_ACTION_PENDING,
+        title:      `Agent action requires review: ${actionTitle}`,
+        entityType: 'agent_action',
+        entityId:   actionId,
+      });
+    }
+  } catch (err) {
+    console.error('[NotificationListener] handleAgentActionPending error:', err);
+  }
+}
+
 // ─── Registration ─────────────────────────────────────────────────────────────
 
 export function registerNotificationListener(): void {
+  if (_registered) {
+    console.log('[NotificationListener] Already registered — skipping duplicate registration');
+    return;
+  }
+  _registered = true;
+
   eventBus.on(CRMEvent.LEAD_CREATED,           (p: EventPayload) => handleLeadCreated(p));
   eventBus.on(CRMEvent.STAGE_CHANGED,          (p: EventPayload) => handleStageChanged(p));
   eventBus.on(CRMEvent.TASK_CREATED,           (p: EventPayload) => handleTaskCreated(p));
@@ -214,6 +283,7 @@ export function registerNotificationListener(): void {
   eventBus.on(CRMEvent.CALENDAR_EVENT_UPDATED, (p: EventPayload) => handleCalendarEvent(p, CRMEvent.CALENDAR_EVENT_UPDATED));
   eventBus.on(CRMEvent.MEETING_ATTENDED,       (p: EventPayload) => handleMeetingAttended(p));
   eventBus.on(CRMEvent.MEETING_MISSED,         (p: EventPayload) => handleMeetingMissed(p));
+  eventBus.on(CRMEvent.TASK_APPROVED,          (p: EventPayload) => handleAgentActionPending(p));
 
   console.log('[NotificationListener] Registered for all CRM events');
 }

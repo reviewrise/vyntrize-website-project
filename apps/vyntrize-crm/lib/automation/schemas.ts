@@ -42,6 +42,7 @@ export const stopConditionsSchema = z.object({
 export const dripStepInputSchema = z.object({
   stepOrder: z.number().int().min(0),
   delayHours: z.number().int().min(0),
+  stepType: z.enum(['email', 'sms']).optional().default('email'),
   subjectTemplate: z.string().min(1),
   bodyTemplate: z.string().min(1),
   branchCondition: z.enum(['opened', 'not_opened', 'clicked', 'always']),
@@ -101,6 +102,13 @@ export const ruleActionSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('schedule_meeting'),
     config: z.object({ generateMeetLink: z.boolean().optional() }),
+  }),
+  z.object({
+    type: z.literal('send_sms'),
+    config: z.object({
+      message:      z.string().min(1, 'Message is required'),
+      templateHint: z.string().optional(),
+    }),
   }),
 ]);
 
