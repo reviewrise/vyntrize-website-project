@@ -184,8 +184,7 @@ export function NotificationPreferences() {
                 Email
               </th>
               <th
-                className="pb-2 text-center font-medium text-[var(--color-text-tertiary,#9ca3af)]"
-                title="Coming soon"
+                className="pb-2 text-center font-medium text-[var(--color-text-secondary,#6b7280)]"
               >
                 SMS
               </th>
@@ -220,13 +219,12 @@ export function NotificationPreferences() {
                   />
                 </td>
 
-                {/* SMS — disabled, coming soon */}
-                <td className="py-3 text-center" title="Coming soon">
+                {/* SMS — now active */}
+                <td className="py-3 text-center">
                   <ToggleSwitch
-                    checked={false}
-                    onChange={() => {}}
-                    disabled
-                    ariaLabel={`${EVENT_TYPE_LABELS[et]} SMS notifications (coming soon)`}
+                    checked={prefs[et][NotificationChannel.SMS]}
+                    onChange={() => handleToggle(et, NotificationChannel.SMS)}
+                    ariaLabel={`${EVENT_TYPE_LABELS[et]} SMS notifications`}
                   />
                 </td>
               </tr>

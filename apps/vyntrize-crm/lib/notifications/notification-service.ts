@@ -7,7 +7,18 @@ import {
 } from '@platform/vyntrize-db';
 import { prisma } from '@/lib/prisma';
 import { emailService } from '@/lib/email/email-service';
+import { smsService } from '@/lib/sms/sms-service';
 import { sseStreamManager } from './sse-stream-manager';
+
+// ─── HTML escape helper (prevents XSS in email bodies) ───────────────────────
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g,  '&amp;')
+    .replace(/</g,  '&lt;')
+    .replace(/>/g,  '&gt;')
+    .replace(/"/g,  '&quot;')
+    .replace(/'/g,  '&#039;');
+}
 
 // ─── Input / Result types ────────────────────────────────────────────────────
 
@@ -109,19 +120,81 @@ class NotificationService {
   /** Build a simple HTML body for notification emails. */
   private buildNotificationEmailHtml(input: CreateNotificationInput): string {
     const bodyText = input.body ?? input.title;
+    const crmBase  = process.env.NEXT_PUBLIC_CRM_URL ?? 'https://crm.vyntrize.com';
+
     let entitySection = '';
     if (input.entityType && input.entityId) {
       const routeFn = ENTITY_ROUTES[input.entityType];
       if (routeFn) {
-        const path = routeFn(input.entityId);
-        const crmBase = process.env.NEXT_PUBLIC_CRM_URL ?? 'https://crm.vyntrize.com';
-        const url = `${crmBase}${path}`;
-        entitySection = `<p style="margin-top:16px"><a href="${url}" style="color:#6366f1">View in CRM →</a></p>`;
+        const url = `${crmBase}${routeFn(input.entityId)}`;
+        entitySection = `
+          <div style="margin-top:24px">
+            <a href="${url}"
+               style="display:inline-block;background:#6366f1;color:#ffffff;text-decoration:none;
+                      padding:12px 24px;border-radius:8px;font-weight:600;font-size:14px">
+              View in CRM →
+            </a>
+          </div>`;
       }
     }
-    return `<div style="font-family:sans-serif;font-size:14px;color:#1f2937">
-  <p>${bodyText}</p>${entitySection}
-</div>`;
+
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <div style="max-width:520px;margin:40px auto;background:#ffffff;border-radius:12px;
+              border:1px solid #e5e7eb;overflow:hidden">
+    <!-- Header bar -->
+    <div style="background:#6366f1;height:4px"></div>
+    <!-- Body -->
+    <div style="padding:32px">
+      <p style="margin:0 0 8px;font-size:12px;font-weight:600;text-transform:uppercase;
+                letter-spacing:0.05em;color:#6366f1">Vyntrize CRM</p>
+      <h1 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#111827;line-height:1.3">
+        ${escapeHtml(input.title)}
+      </h1>
+      ${input.body
+        ? `<p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6">
+             ${escapeHtml(input.body)}
+           </p>`
+        : ''}
+      ${entitySection}
+    </div>
+    <!-- Footer -->
+    <div style="padding:16px 32px;background:#f9fafb;border-top:1px solid #e5e7eb">
+      <p style="margin:0;font-size:12px;color:#9ca3af">
+        You're receiving this because you have email notifications enabled in Vyntrize CRM.
+        <a href="${crmBase}/notifications" style="color:#6366f1">Manage preferences</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+  }
+
+  /** Build a compact SMS message (≤160 chars). */
+  private buildSmsMessage(input: CreateNotificationInput): string {
+    const crmBase = process.env.NEXT_PUBLIC_CRM_URL ?? 'https://crm.vyntrize.com';
+
+    // Build entity link if available — use short path
+    let link = '';
+    if (input.entityType && input.entityId) {
+      const routeFn = ENTITY_ROUTES[input.entityType];
+      if (routeFn) link = ` ${crmBase}${routeFn(input.entityId)}`;
+    }
+
+    // Compose message, truncating title if needed to stay within 1600 chars
+    const prefix  = 'Vyntrize: ';
+    const suffix  = link;
+    const budget  = 1600 - prefix.length - suffix.length - 3; // 3 for ' — '
+    const title   = input.title.length > budget
+      ? input.title.slice(0, budget - 1) + '…'
+      : input.title;
+
+    return link
+      ? `${prefix}${title} —${suffix}`
+      : `${prefix}${title}`;
   }
 
   // ─── Public API ────────────────────────────────────────────────────────────
@@ -162,27 +235,50 @@ class NotificationService {
       if (!input.isSeedOrTest) {
         try {
           const emailEnabled = await this.isEnabled(input.userId, input.eventType, NotificationChannel.EMAIL);
-          if (emailEnabled) {
+          const smsEnabled   = await this.isEnabled(input.userId, input.eventType, NotificationChannel.SMS);
+
+          // Only fetch user if at least one external channel is enabled
+          if (emailEnabled || smsEnabled) {
             const user = await prisma.crmUser.findUnique({
-              where: { id: input.userId },
-              select: { email: true },
+              where:  { id: input.userId },
+              select: { email: true, phone: true },
             });
-            if (user?.email) {
-              const result = await emailService.sendEmail({
-                to:      user.email,
-                subject: input.title,
-                html:    this.buildNotificationEmailHtml(input),
-                role:    'admin',
-              });
-              if (!result.success) {
-                console.error('[NotificationService] Email delivery failed:', result.error);
+
+            // ── Email ────────────────────────────────────────────────────────
+            if (emailEnabled) {
+              if (user?.email) {
+                const result = await emailService.sendEmail({
+                  to:      user.email,
+                  subject: input.title,
+                  html:    this.buildNotificationEmailHtml(input),
+                  role:    'admin',
+                });
+                if (!result.success) {
+                  console.error('[NotificationService] Email delivery failed:', result.error);
+                }
+              } else {
+                console.warn('[NotificationService] Email enabled but user has no email address:', input.userId);
               }
-            } else {
-              console.warn('[NotificationService] Email enabled but user has no email address:', input.userId);
+            }
+
+            // ── SMS ──────────────────────────────────────────────────────────
+            if (smsEnabled) {
+              if (user?.phone) {
+                const result = await smsService.sendSms({
+                  to:           user.phone,
+                  content:      this.buildSmsMessage(input),
+                  isSeedOrTest: false,
+                });
+                if (!result.success) {
+                  console.error('[NotificationService] SMS delivery failed:', result.error);
+                }
+              } else {
+                console.warn('[NotificationService] SMS enabled but user has no phone number:', input.userId);
+              }
             }
           }
-        } catch (emailErr) {
-          console.error('[NotificationService] Email channel error:', emailErr);
+        } catch (deliveryErr) {
+          console.error('[NotificationService] Channel delivery error:', deliveryErr);
         }
       }
     } catch (err) {
