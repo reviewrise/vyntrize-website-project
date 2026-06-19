@@ -3,7 +3,7 @@
 import { toast } from 'sonner';
 import {
   NOTIFICATION_ICONS,
-  NOTIFICATION_COLORS,
+  NOTIFICATION_COLORS, 
   NotificationEventTypeValue,
 } from './notification-icons';
 import type { ClientNotification } from './NotificationItem';
