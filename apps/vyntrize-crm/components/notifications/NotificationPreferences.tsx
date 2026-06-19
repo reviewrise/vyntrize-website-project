@@ -73,8 +73,8 @@ export function NotificationPreferences() {
         const res  = await fetch('/api/notifications/preferences');
         if (!res.ok) throw new Error('Failed to load');
         const rows = await res.json() as Array<{
-          eventType: NotificationEventType;
-          channel:   NotificationChannel;
+          eventType: NotificationEventTypeValue;
+          channel:   NotificationChannelValue;
           isEnabled: boolean;
         }>;
 
@@ -101,7 +101,7 @@ export function NotificationPreferences() {
   }
 
   // ─── Handle toggle change (optimistic + debounced save) ──────────────────
-  function handleToggle(eventType: NotificationEventType, channel: NotificationChannel) {
+  function handleToggle(eventType: NotificationEventTypeValue, channel: NotificationChannelValue) {
     setPrefs((prev) => {
       const next = {
         ...prev,

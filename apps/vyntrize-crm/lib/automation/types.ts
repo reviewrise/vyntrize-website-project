@@ -47,7 +47,8 @@ export interface RuleCondition {
   value: number | string;
 }
 
-export type RuleActionType = 'send_email' | 'change_stage' | 'create_task' | 'assign_lead' | 'enroll_drip' | 'notify_staff' | 'schedule_meeting';
+export type RuleActionType = 'send_email' | 'send_sms' | 'change_stage' | 'create_task' | 'assign_lead' | 'enroll_drip' | 'notify_staff' | 'schedule_meeting';
+
 
 export interface SendEmailActionConfig {
   templateHint?: string;
