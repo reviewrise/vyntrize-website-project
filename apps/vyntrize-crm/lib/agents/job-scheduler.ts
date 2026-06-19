@@ -123,7 +123,9 @@ class AgentJobScheduler {
    */
   async resumeWorker() {
     if (this.worker) {
-      await this.worker.run();
+      this.worker.run().catch((err) => {
+        console.error('[JobScheduler] Worker run error:', err);
+      });
       console.log('[JobScheduler] Worker resumed — ready to process jobs');
     }
   }

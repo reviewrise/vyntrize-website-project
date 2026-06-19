@@ -15,8 +15,6 @@ import { notificationService } from './notification-service';
 import { getTriggerConfig } from './trigger-config';
 import { NotificationEventType } from '@platform/vyntrize-db';
 
-let _registered = false; // guard against double-registration on HMR
-
 // ─── Handler: LEAD_CREATED ────────────────────────────────────────────────────
 //
 // Target: assigned user (if set) + all ADMINs.
@@ -231,35 +229,38 @@ async function handleMeetingMissed(payload: EventPayload) {
   }
 }
 
-// ─── Handler: AGENT_ACTION_PENDING ───────────────────────────────────────────
-//
-// Fired by AI agent code when an action needs human review.
-// Notifies all admin users (config: recipients = 'admins').
+// ─── Handler: AGENT_ACTION_PENDING ──────────────────────────────────────────────
 
 async function handleAgentActionPending(payload: EventPayload) {
   try {
     const trigger = await getTriggerConfig('AGENT_ACTION_PENDING');
     if (!trigger) return;
 
-    const actionTitle = (payload.metadata?.actionTitle as string | undefined) ?? 'Agent action';
-    const actionId    = payload.metadata?.actionId as string | undefined;
+    const leadId = payload.leadId;
+    const actionType = (payload.metadata?.actionType as string | undefined) ?? 'Action pending';
+    const reasoning = (payload.metadata?.reasoning as string | undefined) ?? 'Requires review';
+    const actionId = payload.metadata?.actionId as string | undefined;
 
-    // Notify the specific userId if provided, otherwise all admins
-    if (payload.userId) {
-      await notificationService.createNotification({
-        userId:     payload.userId,
-        eventType:  NotificationEventType.AGENT_ACTION_PENDING,
-        title:      `Agent action requires review: ${actionTitle}`,
-        entityType: 'agent_action',
-        entityId:   actionId,
-      });
-    } else {
-      await notificationService.createNotificationsForAdmins({
-        eventType:  NotificationEventType.AGENT_ACTION_PENDING,
-        title:      `Agent action requires review: ${actionTitle}`,
-        entityType: 'agent_action',
-        entityId:   actionId,
-      });
+    const notifyInput = {
+      eventType: NotificationEventType.AGENT_ACTION_PENDING,
+      title: `Agent Action Pending: ${actionType} - ${reasoning}`,
+      entityType: 'lead',
+      entityId: leadId,
+    };
+
+    // If there's an assignee, we can notify them. Usually we notify admins too.
+    const assigneeId = payload.metadata?.assigneeId as string | undefined;
+    const shouldNotifyAssignee = assigneeId && (trigger.recipients === 'assignee' || trigger.recipients === 'both');
+    const shouldNotifyAdmins   = trigger.recipients === 'admins' || trigger.recipients === 'both';
+
+    if (shouldNotifyAssignee) {
+      await notificationService.createNotification({ ...notifyInput, userId: assigneeId! });
+    }
+    if (shouldNotifyAdmins) {
+      await notificationService.createNotificationsForAdmins(
+        notifyInput,
+        shouldNotifyAssignee && assigneeId ? [assigneeId] : [],
+      );
     }
   } catch (err) {
     console.error('[NotificationListener] handleAgentActionPending error:', err);
@@ -269,12 +270,6 @@ async function handleAgentActionPending(payload: EventPayload) {
 // ─── Registration ─────────────────────────────────────────────────────────────
 
 export function registerNotificationListener(): void {
-  if (_registered) {
-    console.log('[NotificationListener] Already registered — skipping duplicate registration');
-    return;
-  }
-  _registered = true;
-
   eventBus.on(CRMEvent.LEAD_CREATED,           (p: EventPayload) => handleLeadCreated(p));
   eventBus.on(CRMEvent.STAGE_CHANGED,          (p: EventPayload) => handleStageChanged(p));
   eventBus.on(CRMEvent.TASK_CREATED,           (p: EventPayload) => handleTaskCreated(p));
@@ -283,7 +278,8 @@ export function registerNotificationListener(): void {
   eventBus.on(CRMEvent.CALENDAR_EVENT_UPDATED, (p: EventPayload) => handleCalendarEvent(p, CRMEvent.CALENDAR_EVENT_UPDATED));
   eventBus.on(CRMEvent.MEETING_ATTENDED,       (p: EventPayload) => handleMeetingAttended(p));
   eventBus.on(CRMEvent.MEETING_MISSED,         (p: EventPayload) => handleMeetingMissed(p));
-  eventBus.on(CRMEvent.TASK_APPROVED,          (p: EventPayload) => handleAgentActionPending(p));
+  // Provide any event matching AGENT_ACTION_PENDING
+  eventBus.on('agent_action_pending' as CRMEvent, (p: EventPayload) => handleAgentActionPending(p));
 
   console.log('[NotificationListener] Registered for all CRM events');
 }

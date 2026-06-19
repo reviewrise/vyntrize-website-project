@@ -3,7 +3,6 @@ import { Notification } from '@platform/vyntrize-db';
 class SSEStreamManager {
   private connections: Map<string, Set<ReadableStreamDefaultController<Uint8Array>>> = new Map();
   private encoder = new TextEncoder();
-  private _pingStarted = false;
 
   addConnection(userId: string, controller: ReadableStreamDefaultController<Uint8Array>): void {
     if (!this.connections.has(userId)) {
@@ -34,10 +33,12 @@ class SSEStreamManager {
     }
   }
 
+  private pingStarted = false;
+
   /** Send a keep-alive ping to every open connection every 30 seconds. */
   startPingLoop(): void {
-    if (this._pingStarted) return; // guard against duplicate loops on HMR
-    this._pingStarted = true;
+    if (this.pingStarted) return;
+    this.pingStarted = true;
     setInterval(() => {
       const ping = this.encoder.encode(': ping\n\n');
       for (const set of this.connections.values()) {

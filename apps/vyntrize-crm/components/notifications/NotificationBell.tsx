@@ -97,8 +97,8 @@ export function NotificationBell() {
   // ─── Mount / unmount ───────────────────────────────────────────────────────
   useEffect(() => {
     fetchUnreadCount();
-    // Connect SSE in all environments — Next.js App Router handles long-lived
-    // streaming connections fine in dev. Falls back to polling on error.
+
+    // Always use SSE; App Router handles streaming fine in dev.
     connectSSE();
 
     return () => {
