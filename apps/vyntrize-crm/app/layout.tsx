@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { Toaster } from 'sonner';
 import './globals.css';
 
 const inter = Inter({
@@ -27,6 +28,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <ThemeProvider>
                     {children}
                 </ThemeProvider>
+                <Toaster
+                    position="bottom-right"
+                    expand={false}
+                    richColors={false}
+                    closeButton={false}
+                    toastOptions={{
+                        style: {
+                            background: 'transparent',
+                            boxShadow: 'none',
+                            border: 'none',
+                            padding: 0,
+                        },
+                    }}
+                />
             </body>
         </html>
     );

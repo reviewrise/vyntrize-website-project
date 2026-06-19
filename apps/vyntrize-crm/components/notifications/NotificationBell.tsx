@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Bell } from './notification-icons';
 import { NotificationPanel } from './NotificationPanel';
 import type { ClientNotification } from './NotificationItem';
+import { showNotificationToast } from './NotificationToast';
 
 const MAX_RECONNECT_ATTEMPTS = 10;
 const INITIAL_BACKOFF_MS      = 5_000;
@@ -72,6 +73,8 @@ export function NotificationBell() {
         const notification = JSON.parse(event.data) as ClientNotification;
         setUnreadCount((c) => c + 1);
         setLatestNotification(notification);
+        // Show bottom-right popup toast
+        showNotificationToast(notification);
       } catch {
         // ignore malformed events
       }
