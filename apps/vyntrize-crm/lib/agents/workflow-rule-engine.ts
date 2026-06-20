@@ -306,17 +306,88 @@ export class WorkflowRuleEngine extends Agent {
   ): Promise<void> {
     switch (action.type) {
       case 'send_email': {
+        const { templateHint, templateId, templateName } = (action.config || {}) as { templateHint?: string; templateId?: string; templateName?: string };
+
+        // If a saved template was chosen, bypass AI and render directly
+        if (templateId) {
+          const emailTpl = await prisma.emailTemplate.findUnique({
+            where: { id: parseInt(templateId, 10) },
+            select: { name: true, subject: true, body: true },
+          });
+
+          if (emailTpl) {
+            const contact = await prisma.contact.findUnique({ where: { id: lead.contactId } });
+            if (!contact?.email) {
+              this.log('warn', 'Skipping email send: Lead has no email address', { leadId: lead.id });
+              return;
+            }
+
+            const { TemplateRenderer } = await import('@/lib/email/template-renderer');
+            const { emailService } = await import('@/lib/email/email-service');
+
+            const templateVars = {
+              firstName: contact.firstName || '',
+              lastName:  contact.lastName  || '',
+              email:     contact.email,
+              leadTitle: lead.title || '',
+              unsubscribeUrl: `${process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com'}/api/email/unsubscribe?email=${encodeURIComponent(contact.email)}`,
+            };
+
+            const trackingId = `wf_rule_${rule.id}_${Date.now()}`;
+            
+            let formattedBody = emailTpl.body.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br/>');
+            if (!formattedBody.startsWith('<p>')) formattedBody = `<p>${formattedBody}</p>`;
+            
+            // We rely on emailService.sendEmail to apply the global email layout.
+            const finalSubject = TemplateRenderer.render(emailTpl.subject, templateVars);
+            formattedBody = TemplateRenderer.renderWithTracking(formattedBody, templateVars, trackingId);
+            formattedBody = TemplateRenderer.inlineCSS(formattedBody);
+
+            await emailService.sendEmail({
+              role:      'sales',
+              to:        contact.email,
+              toName:    `${contact.firstName} ${contact.lastName}`.trim(),
+              subject:   finalSubject,
+              html:      formattedBody,
+              text:      emailTpl.body,
+              trackingId,
+              leadId:    lead.id,
+              contactId: contact.id,
+              templateId: parseInt(templateId, 10),
+              userId:    lead.assigneeId ?? undefined,
+            });
+            
+            await prisma.agentAction.create({
+              data: {
+                agentType: this.agentType,
+                actionType: 'EMAIL_SEND',
+                leadId: lead.id,
+                reasoning: `Auto-sent email using template: ${emailTpl.name || templateName || templateId}`,
+                autonomyLevel: rule.autonomyLevel as any,
+                status: 'EXECUTED',
+                executedAt: new Date(),
+                metadata: {
+                  subject: finalSubject,
+                  autoSent: true,
+                  templateId: templateId
+                }
+              }
+            });
+
+            this.log('info', 'Workflow engine sent template email directly', { leadId: lead.id, templateId });
+            break;
+          }
+        }
+
+        // Fallback to AI generation if no template is chosen
         const emailAgent = new EmailGenerationAgent();
-        const { templateHint } = (action.config || {}) as { templateHint?: string };
-        const result = await emailAgent.execute({ 
+        const result = await emailAgent.execute({
           leadId: lead.id,
           eventData: {
             ...context.eventData,
             templateHint,
             triggeredByRule: rule.id,
             ruleName: rule.name,
-            // Pass the rule's autonomy level so the agent knows whether to
-            // auto-send immediately (FULLY_AUTONOMOUS) or park as an approval draft.
             ruleAutonomyLevel: rule.autonomyLevel,
           }
         });
@@ -327,12 +398,22 @@ export class WorkflowRuleEngine extends Agent {
       }
 
       case 'send_sms': {
-        const { message, templateHint: _hint } = (action.config || {}) as {
+        const { message, smsTemplateId } = (action.config || {}) as {
           message: string;
-          templateHint?: string;
+          smsTemplateId?: string;
         };
 
         const contact = await prisma.contact.findUnique({ where: { id: lead.contactId } });
+
+        // Resolve template body if a template was selected
+        let resolvedMessage = message;
+        if (smsTemplateId) {
+          const smsTpl = await (prisma as any).smsTemplate.findUnique({
+            where: { id: smsTemplateId },
+            select: { body: true },
+          });
+          if (smsTpl?.body) resolvedMessage = smsTpl.body;
+        }
 
         if (rule.autonomyLevel === 'SUGGEST_APPROVE') {
           // Park as a pending AgentAction for human review — do not send yet
@@ -347,7 +428,7 @@ export class WorkflowRuleEngine extends Agent {
               metadata:      {
                 ruleId:   rule.id,
                 ruleName: rule.name,
-                message,
+                message:  resolvedMessage,
               },
             },
           });
@@ -358,7 +439,7 @@ export class WorkflowRuleEngine extends Agent {
         const templateVars = buildSmsTemplateVars(contact, lead as any);
         await sendCustomerSms({
           to:        contact?.phone,
-          message,
+          message:   resolvedMessage,
           variables: templateVars,
           leadId:    lead.id,
           contactId: contact?.id,

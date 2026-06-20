@@ -146,12 +146,12 @@ class OpenAIProvider extends AIProvider {
 // Lazy singleton instance - only created when accessed and API key is available
 let _openAIProviderInstance: OpenAIProvider | null = null;
 
-export function getOpenAIProvider(): OpenAIProvider {
-  if (!_openAIProviderInstance) {
-    if (!process.env.OPENAI_API_KEY) {
+export function getOpenAIProvider(config?: Partial<AIProviderConfig>): OpenAIProvider {
+  if (!_openAIProviderInstance || config) {
+    if (!config?.apiKey && !process.env.OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY environment variable not set');
     }
-    _openAIProviderInstance = new OpenAIProvider();
+    _openAIProviderInstance = new OpenAIProvider(config);
   }
   return _openAIProviderInstance;
 }

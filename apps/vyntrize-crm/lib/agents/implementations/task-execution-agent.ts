@@ -136,7 +136,7 @@ export class TaskExecutionAgent extends Agent {
     let formattedBody = body.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br/>');
     if (!formattedBody.startsWith('<p>')) formattedBody = `<p>${formattedBody}</p>`;
     
-    formattedBody = TemplateRenderer.wrapInEmailTemplate(formattedBody, subject);
+    // We rely on emailService.sendEmail to apply the global email layout.
     subject = TemplateRenderer.render(subject, templateVars);
     
     // Apply template variables and add tracking pixel
@@ -156,6 +156,7 @@ export class TaskExecutionAgent extends Agent {
       trackingId,
       leadId: lead.id,
       contactId: lead.contact.id,
+      userId: lead.assigneeId ?? undefined,
     });
     
     if (!sendResult.success) {

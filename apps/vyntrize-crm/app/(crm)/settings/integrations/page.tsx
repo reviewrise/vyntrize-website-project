@@ -3,6 +3,7 @@ import { vyntrizeDb } from '@platform/vyntrize-db';
 import { Calendar, CheckCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { VyntriseWebhookCard } from './VyntriseWebhookCard';
+import { VyntriseSmsCard } from './VyntriseSmsCard';
 
 export default async function IntegrationsSettingsPage({
   searchParams,
@@ -17,6 +18,14 @@ export default async function IntegrationsSettingsPage({
   const connectedAccount = await vyntrizeDb.connectedAccount.findFirst({
     where: { userId: session.userId, provider: 'google' },
   });
+
+  const smsConfig = await vyntrizeDb.systemSetting.findUnique({
+    where: { key: 'SMS_CONFIG' },
+  });
+  
+  // Extract API key from DB or env
+  const rawApiKey = (smsConfig?.value as any)?.apiKey || process.env.VYNTRIZE_SMS_API_KEY || '';
+  const keyPreview = rawApiKey ? `${rawApiKey.substring(0, 8)}...` : '';
 
   return (
     <div className="space-y-6">
@@ -91,6 +100,9 @@ export default async function IntegrationsSettingsPage({
 
         {/* Vyntrise Webhook Card */}
         <VyntriseWebhookCard initialHasSecret={!!process.env.VYNTRISE_WEBHOOK_SECRET} />
+
+        {/* Vyntrise SMS Card */}
+        <VyntriseSmsCard initialKeyPreview={keyPreview} />
       </div>
     </div>
   );

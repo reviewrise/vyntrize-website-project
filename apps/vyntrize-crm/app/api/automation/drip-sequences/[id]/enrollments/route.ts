@@ -50,7 +50,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
         sequence: {
           select: {
             steps: {
-              select: { stepOrder: true, subjectTemplate: true },
+              select: { stepOrder: true, emailSubjectTemplate: true, smsBodyTemplate: true },
               orderBy: { stepOrder: 'asc' },
             },
           },
@@ -74,7 +74,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
         leadName,
         leadTitle: enrollment.lead.title,
         currentStepIndex: enrollment.currentStepIndex,
-        currentStepSubject: currentStep?.subjectTemplate ?? null,
+        currentStepSubject: currentStep?.emailSubjectTemplate ?? currentStep?.smsBodyTemplate ?? null,
         totalSteps: enrollment.sequence.steps.length,
         status: enrollment.status,
         enrolledAt: enrollment.enrolledAt,

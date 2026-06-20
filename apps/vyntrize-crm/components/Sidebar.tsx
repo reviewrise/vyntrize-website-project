@@ -9,7 +9,7 @@ import {
     UserCircle, Settings, ChevronRight, BarChart2,
     CheckSquare, Mail, Send, Sparkles, Inbox,
     FileText, GitBranch, ChevronDown, CalendarDays,
-    Receipt,
+    Receipt, MessageSquare, MessageCircle, List,
 } from 'lucide-react';
 import { logout } from '@/lib/actions/auth';
 
@@ -39,6 +39,11 @@ const EMAIL_NAV = [
     { href: '/email-templates', label: 'Templates', icon: FileText },
     { href: '/email/logs', label: 'Logs', icon: Inbox },
     { href: '/settings/pipeline/automation', label: 'Drip Sequences', icon: GitBranch },
+];
+
+const SMS_NAV = [
+    { href: '/sms/logs',      label: 'Logs',      icon: List },
+    { href: '/sms/templates', label: 'Templates', icon: FileText },
 ];
 
 const SETTINGS_NAV = [
@@ -137,6 +142,41 @@ function EmailSection() {
     );
 }
 
+function SmsSection() {
+    const pathname = usePathname();
+    const isSmsActive = SMS_NAV.some(item =>
+        pathname === item.href || pathname.startsWith(item.href + '/')
+    );
+    const [open, setOpen] = useState(isSmsActive);
+
+    return (
+        <div>
+            <button
+                onClick={() => setOpen(o => !o)}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[0.8125rem] font-medium transition-all"
+                style={{
+                    backgroundColor: isSmsActive ? 'var(--color-primary-soft)' : 'transparent',
+                    color: isSmsActive ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                }}
+            >
+                <MessageSquare className="h-[15px] w-[15px] flex-shrink-0" />
+                <span>SMS</span>
+                <ChevronDown
+                    className="h-3 w-3 ml-auto transition-transform duration-200"
+                    style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                />
+            </button>
+            {open && (
+                <div className="space-y-0.5 mt-0.5">
+                    {SMS_NAV.map(item => (
+                        <NavItem key={item.href} {...item} indent />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 export function Sidebar({ role, displayName, email }: SidebarProps) {
     const initials = displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
     const [logoError, setLogoError] = useState(false);
@@ -190,6 +230,7 @@ export function Sidebar({ role, displayName, email }: SidebarProps) {
                 <div className="space-y-0.5">
                     {CRM_NAV.map(item => <NavItem key={item.href} {...item} />)}
                     <EmailSection />
+                    <SmsSection />
                 </div>
 
                 <SectionLabel label="Sales" />

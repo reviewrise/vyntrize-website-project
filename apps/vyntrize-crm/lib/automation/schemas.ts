@@ -70,7 +70,11 @@ export const ruleConditionSchema = z.object({
 export const ruleActionSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('send_email'),
-    config: z.object({ templateHint: z.string().optional() }),
+    config: z.object({ 
+      templateHint: z.string().optional(),
+      templateId: z.string().optional().transform(v => v === '' ? undefined : v),
+      templateName: z.string().optional(),
+    }),
   }),
   z.object({
     type: z.literal('change_stage'),
@@ -106,8 +110,10 @@ export const ruleActionSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('send_sms'),
     config: z.object({
-      message:      z.string().min(1, 'Message is required'),
+      message: z.string().optional(),
+      smsTemplateId: z.string().optional(),
       templateHint: z.string().optional(),
+      _templatePreview: z.string().optional(),
     }),
   }),
 ]);

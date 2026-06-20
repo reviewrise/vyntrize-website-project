@@ -2,6 +2,23 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
+// ─── Template Types ───────────────────────────────────────────────────────────
+
+interface EmailTemplate {
+  id: number;
+  name: string;
+  subject: string;
+  type: string;
+  isShared?: boolean;
+}
+
+interface SmsTemplate {
+  id: string;
+  name: string;
+  body: string;
+  type: string;
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface RuleCondition {
@@ -81,6 +98,7 @@ const NUMERIC_OPERATORS = [
 
 const ACTION_TYPES = [
   { value: 'send_email', label: 'Send an email' },
+  { value: 'send_sms', label: 'Send an SMS text message' },
   { value: 'change_stage', label: 'Change lead stage' },
   { value: 'create_task', label: 'Create a task' },
   { value: 'assign_lead', label: 'Assign lead to user' },
@@ -175,7 +193,14 @@ function ConditionBuilder({ conditions, onChange }: { conditions: RuleCondition[
 
 // ─── ActionBuilder ────────────────────────────────────────────────────────────
 
-function ActionConfigFields({ action, onChange }: { action: RuleAction; onChange: (a: RuleAction) => void }) {
+function ActionConfigFields({
+  action, onChange, emailTemplates, smsTemplates,
+}: {
+  action: RuleAction;
+  onChange: (a: RuleAction) => void;
+  emailTemplates: EmailTemplate[];
+  smsTemplates: SmsTemplate[];
+}) {
   const cfg = action.config;
   switch (action.type) {
     case 'change_stage':
@@ -207,8 +232,8 @@ function ActionConfigFields({ action, onChange }: { action: RuleAction; onChange
     case 'assign_lead':
       return (
         <div className="flex-1 flex gap-2">
-          <select 
-            value={(cfg.strategy as string) || 'specific'} 
+          <select
+            value={(cfg.strategy as string) || 'specific'}
             onChange={(e) => {
               const strategy = e.target.value;
               onChange({ ...action, config: { ...cfg, strategy, assigneeId: strategy === 'round-robin' ? undefined : '' } });
@@ -234,18 +259,93 @@ function ActionConfigFields({ action, onChange }: { action: RuleAction; onChange
           className="flex-1 px-2 py-1.5 rounded-lg text-xs"
           style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)' }} />
       );
-    case 'send_email':
+
+    case 'send_email': {
+      const hasTemplate = !!cfg.templateId;
+      const selectedTemplateName = cfg.templateName as string | undefined;
       return (
         <div className="flex-1 flex flex-col gap-1.5">
-          <input type="text" value={(cfg.templateHint as string) ?? ''} placeholder="Prompt hint, e.g. 'follow up after demo, mention pricing'"
-            onChange={(e) => onChange({ ...action, config: { ...cfg, templateHint: e.target.value } })}
+          <select
+            value={(cfg.templateId as string) ?? ''}
+            onChange={(e) => {
+              const id = e.target.value;
+              const tpl = emailTemplates.find((t) => String(t.id) === id);
+              onChange({ ...action, config: { ...cfg, templateId: id || undefined, templateName: tpl ? tpl.name : undefined, templateHint: tpl ? tpl.name : cfg.templateHint } });
+            }}
             className="flex-1 px-2 py-1.5 rounded-lg text-xs"
-            style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)' }} />
+            style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)' }}
+          >
+            <option value="">✏️ Write a prompt hint instead...</option>
+            {emailTemplates.map((t) => (
+              <option key={t.id} value={String(t.id)}>📄 {t.name}</option>
+            ))}
+            {/* Fallback: if templateId is set but templates haven't loaded yet */}
+            {hasTemplate && emailTemplates.length === 0 && selectedTemplateName && (
+              <option value={cfg.templateId as string}>📄 {selectedTemplateName}</option>
+            )}
+          </select>
+          {hasTemplate && (
+            <p className="text-xs font-medium" style={{ color: 'var(--color-primary)' }}>
+              📄 Using template: {selectedTemplateName || `ID ${cfg.templateId}`}
+            </p>
+          )}
+          {!hasTemplate && (
+            <input
+              type="text"
+              value={(cfg.templateHint as string) ?? ''}
+              placeholder="Prompt hint, e.g. 'follow up after demo'"
+              onChange={(e) => onChange({ ...action, config: { ...cfg, templateHint: e.target.value } })}
+              className="flex-1 px-2 py-1.5 rounded-lg text-xs"
+              style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)' }}
+            />
+          )}
           <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
             💡 Set <strong>Execution Mode</strong> to <em>Run Automatically</em> to send without approval.
           </p>
         </div>
       );
+    }
+
+    case 'send_sms': {
+      const hasTemplate = !!cfg.smsTemplateId;
+      return (
+        <div className="flex-1 flex flex-col gap-1.5">
+          <select
+            value={(cfg.smsTemplateId as string) ?? ''}
+            onChange={(e) => {
+              const id = e.target.value;
+              const tpl = smsTemplates.find((t) => t.id === id);
+              onChange({ ...action, config: { ...cfg, smsTemplateId: id || undefined, message: id ? '' : cfg.message, _templatePreview: tpl?.body } });
+            }}
+            className="flex-1 px-2 py-1.5 rounded-lg text-xs"
+            style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)' }}
+          >
+            <option value="">✏️ Write a custom message instead...</option>
+            {smsTemplates.map((t) => (
+              <option key={t.id} value={t.id}>💬 {t.name}</option>
+            ))}
+          </select>
+          {hasTemplate ? (
+            <p className="text-xs px-2 py-1.5 rounded-lg" style={{ backgroundColor: 'var(--color-surface-hover)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}>
+              {(cfg._templatePreview as string) ?? smsTemplates.find((t) => t.id === cfg.smsTemplateId)?.body ?? 'Template selected'}
+            </p>
+          ) : (
+            <textarea
+              value={(cfg.message as string) ?? ''}
+              placeholder="Hi {{firstName}}, thanks for contacting us!"
+              onChange={(e) => onChange({ ...action, config: { ...cfg, message: e.target.value } })}
+              rows={2}
+              className="flex-1 px-2 py-1.5 rounded-lg text-xs resize-none"
+              style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)' }}
+            />
+          )}
+          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+            💡 Sent instantly if mode is <em>Run Automatically</em>.
+          </p>
+        </div>
+      );
+    }
+
     case 'notify_staff':
       return (
         <span className="flex-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>Automatically emails the assigned staff member</span>
@@ -253,9 +353,9 @@ function ActionConfigFields({ action, onChange }: { action: RuleAction; onChange
     case 'schedule_meeting':
       return (
         <label className="flex-1 flex items-center gap-2 cursor-pointer text-xs" style={{ color: 'var(--color-text)' }}>
-          <input 
-            type="checkbox" 
-            checked={!!cfg.generateMeetLink} 
+          <input
+            type="checkbox"
+            checked={!!cfg.generateMeetLink}
             onChange={(e) => onChange({ ...action, config: { ...cfg, generateMeetLink: e.target.checked } })}
             className="rounded border-gray-300"
           />
@@ -268,6 +368,14 @@ function ActionConfigFields({ action, onChange }: { action: RuleAction; onChange
 }
 
 function ActionBuilder({ actions, onChange }: { actions: RuleAction[]; onChange: (a: RuleAction[]) => void }) {
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
+  const [smsTemplates, setSmsTemplates] = useState<SmsTemplate[]>([]);
+
+  useEffect(() => {
+    fetch('/api/email/templates').then((r) => r.json()).then(setEmailTemplates).catch(() => {});
+    fetch('/api/sms/templates').then((r) => r.json()).then(setSmsTemplates).catch(() => {});
+  }, []);
+
   const addAction = () => onChange([...actions, { type: 'create_task', config: { title: '', dueDaysOffset: 1 } }]);
   const removeAction = (i: number) => onChange(actions.filter((_, idx) => idx !== i));
   const updateAction = (i: number, a: RuleAction) => onChange(actions.map((x, idx) => idx === i ? a : x));
@@ -309,7 +417,7 @@ function ActionBuilder({ actions, onChange }: { actions: RuleAction[]; onChange:
           </div>
           <div className="flex-1 flex items-center gap-2">
             <span className="text-xs hidden sm:inline" style={{ color: 'var(--color-text-muted)' }}>→</span>
-            <ActionConfigFields action={action} onChange={(a) => updateAction(i, a)} />
+            <ActionConfigFields action={action} onChange={(a) => updateAction(i, a)} emailTemplates={emailTemplates} smsTemplates={smsTemplates} />
             <button type="button" onClick={() => removeAction(i)} className="text-xs w-6 h-6 rounded flex items-center justify-center hover:bg-red-50 flex-shrink-0" style={{ color: '#dc2626' }}>✕</button>
           </div>
         </div>

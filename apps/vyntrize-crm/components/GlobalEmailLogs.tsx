@@ -21,6 +21,8 @@ interface Email {
   template?: { id: number; name: string };
   sentBy?: { id: string; displayName: string; email: string };
   trackingId: string;
+  htmlBody?: string;
+  body?: string;
 }
 
 interface Stats {
@@ -39,6 +41,7 @@ export default function GlobalEmailLogs() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [expandedEmailId, setExpandedEmailId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchLogs();
@@ -173,60 +176,79 @@ export default function GlobalEmailLogs() {
           emails.map(email => {
             const badge = getStatusBadge(email);
             return (
-              <div
-                key={email.id}
-                className="px-6 py-4 transition-colors"
-                style={{
-                  borderLeft:
-                    email.status === 'FAILED'
-                      ? '3px solid #ef4444'
-                      : email.status === 'BOUNCED'
-                      ? '3px solid #f59e0b'
-                      : '3px solid transparent',
-                  backgroundColor: email.status === 'FAILED' ? 'rgba(239,68,68,0.02)' : undefined,
-                }}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 mt-1">{getStatusIcon(email)}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{email.subject}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {email.template && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-2">
-                              {email.template.name}
-                            </span>
-                          )}
-                          {email.sentBy ? `Sent by ${email.sentBy.displayName}` : 'Sent by agent'}
-                        </p>
+              <div key={email.id} className="flex flex-col border-b border-gray-100 last:border-0">
+                <div
+                  onClick={() => setExpandedEmailId(expandedEmailId === email.id ? null : email.id)}
+                  className="px-6 py-4 transition-colors hover:bg-gray-50 cursor-pointer"
+                  style={{
+                    borderLeft:
+                      email.status === 'FAILED'
+                        ? '3px solid #ef4444'
+                        : email.status === 'BOUNCED'
+                        ? '3px solid #f59e0b'
+                        : '3px solid transparent',
+                    backgroundColor: email.status === 'FAILED' ? 'rgba(239,68,68,0.02)' : undefined,
+                  }}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 mt-1">{getStatusIcon(email)}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{email.subject}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {email.template && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+                                {email.template.name}
+                              </span>
+                            )}
+                            To: {email.toEmail} {email.toName ? `(${email.toName})` : ''} • {email.sentBy ? `Sent by ${email.sentBy.displayName}` : 'Sent by agent'}
+                          </p>
+                        </div>
+                        <div className="flex-shrink-0 text-right">
+                          <p className="text-xs text-gray-500">{formatDate(email.sentAt)}</p>
+                          <span
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mt-1"
+                            style={{ color: badge.color, backgroundColor: badge.bg }}
+                          >
+                            {badge.label}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex-shrink-0 text-right">
-                        <p className="text-xs text-gray-500">{formatDate(email.sentAt)}</p>
-                        <span
-                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mt-1"
-                          style={{ color: badge.color, backgroundColor: badge.bg }}
+                      {email.status === 'FAILED' && email.errorMessage && (
+                        <div
+                          className="mt-2 rounded-md px-3 py-2 text-xs"
+                          style={{ backgroundColor: 'rgba(239,68,68,0.08)', color: '#b91c1c', border: '1px solid rgba(239,68,68,0.2)' }}
                         >
-                          {badge.label}
-                        </span>
-                      </div>
+                          <span className="font-semibold">Error: </span>{email.errorMessage}
+                        </div>
+                      )}
+                      {(email.openedAt || email.clickedAt) && (
+                        <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
+                          {email.openedAt && <span>First opened {formatDate(email.openedAt)}</span>}
+                          {email.clickedAt && <span>First clicked {formatDate(email.clickedAt)}</span>}
+                        </div>
+                      )}
                     </div>
-                    {email.status === 'FAILED' && email.errorMessage && (
-                      <div
-                        className="mt-2 rounded-md px-3 py-2 text-xs"
-                        style={{ backgroundColor: 'rgba(239,68,68,0.08)', color: '#b91c1c', border: '1px solid rgba(239,68,68,0.2)' }}
-                      >
-                        <span className="font-semibold">Error: </span>{email.errorMessage}
-                      </div>
-                    )}
-                    {(email.openedAt || email.clickedAt) && (
-                      <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
-                        {email.openedAt && <span>First opened {formatDate(email.openedAt)}</span>}
-                        {email.clickedAt && <span>First clicked {formatDate(email.clickedAt)}</span>}
-                      </div>
-                    )}
                   </div>
                 </div>
+                {expandedEmailId === email.id && (
+                  <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 text-sm">
+                    <div className="font-medium text-gray-900 mb-2">Email Content:</div>
+                    <div className="bg-white border border-gray-200 rounded-md p-4 max-h-[600px] overflow-y-auto">
+                      {email.htmlBody ? (
+                        <iframe 
+                          srcDoc={email.htmlBody} 
+                          title="Email content"
+                          className="w-full min-h-[400px] border-0"
+                          sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin"
+                        />
+                      ) : (
+                        <pre className="whitespace-pre-wrap text-gray-700 font-sans">{email.body}</pre>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })

@@ -152,12 +152,12 @@ class GeminiProvider extends AIProvider {
 // Lazy singleton instance - only created when accessed and API key is available
 let _geminiProviderInstance: GeminiProvider | null = null;
 
-export function getGeminiProvider(): GeminiProvider {
-  if (!_geminiProviderInstance) {
-    if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_API_KEY) {
+export function getGeminiProvider(config?: Partial<AIProviderConfig>): GeminiProvider {
+  if (!_geminiProviderInstance || config) {
+    if (!config?.apiKey && !process.env.GEMINI_API_KEY && !process.env.GOOGLE_API_KEY) {
       throw new Error('GEMINI_API_KEY or GOOGLE_API_KEY environment variable not set');
     }
-    _geminiProviderInstance = new GeminiProvider();
+    _geminiProviderInstance = new GeminiProvider(config);
   }
   return _geminiProviderInstance;
 }

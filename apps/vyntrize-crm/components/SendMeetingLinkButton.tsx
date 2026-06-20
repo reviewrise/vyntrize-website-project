@@ -9,12 +9,15 @@ interface Props {
   leadId?: string;
   contactId?: string;
   bookingSlug?: string | null;
+  asMenuItem?: boolean;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 type Mode = 'schedule' | 'booking-link';
 
-export function SendMeetingLinkButton({ to, toName, leadId, contactId, bookingSlug }: Props) {
-  const [open, setOpen] = useState(false);
+export function SendMeetingLinkButton({ to, toName, leadId, contactId, bookingSlug, asMenuItem, isOpen, onClose }: Props) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [mode, setMode] = useState<Mode>('schedule');
   const [note, setNote] = useState('');
   const [title, setTitle] = useState('');
@@ -25,6 +28,8 @@ export function SendMeetingLinkButton({ to, toName, leadId, contactId, bookingSl
   const [status, setStatus] = useState<'idle' | 'sent' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [meetLink, setMeetLink] = useState<string | null>(null);
+
+  const isModalOpen = isOpen !== undefined ? isOpen : internalOpen;
 
   function resetForm() {
     setNote('');
@@ -38,7 +43,8 @@ export function SendMeetingLinkButton({ to, toName, leadId, contactId, bookingSl
   }
 
   function handleClose() {
-    setOpen(false);
+    if (onClose) onClose();
+    setInternalOpen(false);
     resetForm();
   }
 
@@ -103,22 +109,34 @@ export function SendMeetingLinkButton({ to, toName, leadId, contactId, bookingSl
 
   return (
     <>
-      <button
-        onClick={() => { setOpen(true); resetForm(); }}
-        className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors"
-        style={{
-          border: '1px solid var(--color-border)',
-          backgroundColor: 'var(--color-surface)',
-          color: 'var(--color-text)',
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-raised)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-surface)'; }}
-      >
-        <Video className="h-4 w-4" style={{ color: '#1a73e8' }} />
-        Send Meeting Link
-      </button>
+      {isOpen === undefined && (
+        asMenuItem ? (
+          <button
+            onClick={() => { setInternalOpen(true); resetForm(); }}
+            className="group flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm text-gray-900"
+          >
+            <CalendarDays className="h-4 w-4" />
+            Schedule Meeting
+          </button>
+        ) : (
+          <button
+            onClick={() => { setInternalOpen(true); resetForm(); }}
+            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors"
+            style={{
+              border: '1px solid var(--color-border)',
+              backgroundColor: 'var(--color-surface)',
+              color: 'var(--color-text)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-raised)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-surface)'; }}
+          >
+            <Video className="h-4 w-4" style={{ color: '#1a73e8' }} />
+            Send Meeting Link
+          </button>
+        )
+      )}
 
-      {open && (
+      {isModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}

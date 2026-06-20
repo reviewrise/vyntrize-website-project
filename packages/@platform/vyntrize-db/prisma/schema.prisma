@@ -981,10 +981,10 @@ model DripStep {
   sequence        DripSequence @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
   stepOrder       Int
   delayHours      Int
-  stepType        String       @default("email")  // 'email' | 'sms'
-  subjectTemplate String
-  bodyTemplate    String       @db.Text
-  branchCondition String
+  emailSubjectTemplate String?
+  emailBodyTemplate    String?      @db.Text
+  smsBodyTemplate      String?      @db.Text
+  branchCondition      String
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
@@ -1424,6 +1424,37 @@ enum SmsStatus {
   SENT
   FAILED
   SKIPPED
+}
+
+// ─── SMS Templates ─────────────────────────────────────────────────────────────
+
+model SmsTemplate {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name      String
+  body      String   @db.Text
+
+  type      SmsTemplateType @default(GENERAL)
+
+  // Optional template variable hints e.g. ["firstName", "company"]
+  variables Json?
+
+  isShared Boolean @default(true)
+
+  @@index([type])
+  @@map("sms_templates")
+}
+
+enum SmsTemplateType {
+  WELCOME
+  INITIAL_OUTREACH
+  FOLLOW_UP
+  CONFIRMATION
+  MEETING_INVITE
+  RE_ENGAGEMENT
+  GENERAL
 }
 
 // ─── Notification Center: Enums ───────────────────────────────────────────────

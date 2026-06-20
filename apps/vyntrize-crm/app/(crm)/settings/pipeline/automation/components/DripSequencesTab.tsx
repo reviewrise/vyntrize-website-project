@@ -5,11 +5,11 @@ import { useState, useEffect, useCallback } from 'react';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface DripStep {
-  id?: string;
   stepOrder: number;
   delayHours: number;
-  subjectTemplate: string;
-  bodyTemplate: string;
+  emailSubjectTemplate?: string;
+  emailBodyTemplate?: string;
+  smsBodyTemplate?: string;
   branchCondition: 'opened' | 'not_opened' | 'clicked' | 'always';
 }
 
@@ -100,7 +100,7 @@ function DripStepPreview({ steps }: { steps: DripStep[] }) {
               )}
             </div>
             <p className="text-sm font-medium mt-1" style={{ color: 'var(--color-text)' }}>
-              Subject: {step.subjectTemplate || '(No subject defined)'}
+              {step.emailSubjectTemplate ? `Subject: ${step.emailSubjectTemplate}` : '(No Email defined)'} {step.smsBodyTemplate ? '| 📱 SMS included' : ''}
             </p>
           </div>
         </div>
@@ -116,8 +116,9 @@ function DripStepBuilder({ steps, onChange }: { steps: DripStep[]; onChange: (s:
     onChange([...steps, {
       stepOrder: steps.length,
       delayHours: 24,
-      subjectTemplate: '',
-      bodyTemplate: '',
+      emailSubjectTemplate: '',
+      emailBodyTemplate: '',
+      smsBodyTemplate: '',
       branchCondition: 'always',
     }]);
   };
@@ -143,10 +144,10 @@ function DripStepBuilder({ steps, onChange }: { steps: DripStep[]; onChange: (s:
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>
-            Email Steps ({steps.length})
+            Campaign Steps ({steps.length})
           </p>
           <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-            Define the emails to send and how long to wait between them.
+            Define the emails and/or SMS messages to send and how long to wait between them.
           </p>
         </div>
         <button
@@ -155,7 +156,7 @@ function DripStepBuilder({ steps, onChange }: { steps: DripStep[]; onChange: (s:
           className="text-xs px-3 py-1.5 rounded-lg font-bold transition-colors hover:bg-gray-50"
           style={{ border: '1px solid var(--color-border)', color: 'var(--color-text)', backgroundColor: 'var(--color-surface)' }}
         >
-          + Add Email Step
+          + Add Step
         </button>
       </div>
 
@@ -169,7 +170,7 @@ function DripStepBuilder({ steps, onChange }: { steps: DripStep[]; onChange: (s:
             <div className="flex items-center justify-between border-b pb-3" style={{ borderColor: 'var(--color-border)' }}>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: 'var(--color-primary)' }}>{i + 1}</span>
-                <span className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>Email Step</span>
+                <span className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>Campaign Step</span>
               </div>
               <div className="flex gap-1">
                 <button type="button" onClick={() => moveStep(i, -1)} disabled={i === 0} title="Move step up"
@@ -211,42 +212,69 @@ function DripStepBuilder({ steps, onChange }: { steps: DripStep[]; onChange: (s:
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--color-text)' }}>Email Subject</label>
-                <input
-                  type="text" value={step.subjectTemplate}
-                  onChange={(e) => updateStep(i, { subjectTemplate: e.target.value })}
-                  placeholder="e.g. Following up on {{leadTitle}}"
-                  className="w-full px-3 py-2 rounded-xl text-sm"
-                  style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between items-end mb-1.5">
-                  <label className="block text-xs font-bold" style={{ color: 'var(--color-text)' }}>Email Body</label>
-                  <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>You can use {'{{firstName}}'} tags</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4" style={{ borderColor: 'var(--color-border)' }}>
+                {/* Email Section */}
+                <div className="space-y-4 pr-4 border-r" style={{ borderColor: 'var(--color-border)' }}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">✉️</span>
+                    <h4 className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>Email Channel</h4>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--color-text)' }}>Subject</label>
+                    <input
+                      type="text" value={step.emailSubjectTemplate || ''}
+                      onChange={(e) => updateStep(i, { emailSubjectTemplate: e.target.value })}
+                      placeholder="e.g. Following up on {{leadTitle}}"
+                      className="w-full px-3 py-2 rounded-xl text-sm"
+                      style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-end mb-1.5">
+                      <label className="block text-xs font-bold" style={{ color: 'var(--color-text)' }}>Body</label>
+                    </div>
+                    <textarea
+                      value={step.emailBodyTemplate || ''}
+                      onChange={(e) => updateStep(i, { emailBodyTemplate: e.target.value })}
+                      rows={5}
+                      placeholder="Hi {{firstName}}, ..."
+                      className="w-full px-3 py-2 rounded-xl text-sm resize-none"
+                      style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}
+                    />
+                  </div>
                 </div>
-                <textarea
-                  value={step.bodyTemplate}
-                  onChange={(e) => updateStep(i, { bodyTemplate: e.target.value })}
-                  rows={4}
-                  placeholder="Hi {{firstName}}, ..."
-                  className="w-full px-3 py-2 rounded-xl text-sm resize-none"
-                  style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}
-                />
+
+                {/* SMS Section */}
+                <div className="space-y-4 pl-0 md:pl-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">📱</span>
+                    <h4 className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>SMS Channel</h4>
+                  </div>
+                  <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>Sent instantly with the email. Use {'{{firstName}}'}. Leave blank to skip.</p>
+                  <div>
+                    <div className="flex justify-between items-end mb-1.5">
+                      <label className="block text-xs font-bold" style={{ color: 'var(--color-text)' }}>Text Message</label>
+                    </div>
+                    <textarea
+                      value={step.smsBodyTemplate || ''}
+                      onChange={(e) => updateStep(i, { smsBodyTemplate: e.target.value })}
+                      rows={5}
+                      placeholder="Hey {{firstName}}, I just sent you an email!"
+                      className="w-full px-3 py-2 rounded-xl text-sm resize-none"
+                      style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
           </div>
         ))}
       </div>
 
       {steps.length === 0 && (
         <div className="rounded-2xl p-6 text-center border-2 border-dashed" style={{ borderColor: 'var(--color-border)' }}>
-          <p className="text-2xl mb-2">✉️</p>
-          <p className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>No emails in this sequence yet.</p>
-          <p className="text-xs mt-1 mb-4" style={{ color: 'var(--color-text-muted)' }}>Add your first email step to get started.</p>
+          <p className="text-2xl mb-2">🚀</p>
+          <p className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>No steps in this sequence yet.</p>
+          <p className="text-xs mt-1 mb-4" style={{ color: 'var(--color-text-muted)' }}>Add your first step to get started.</p>
           <button
             type="button"
             onClick={addStep}

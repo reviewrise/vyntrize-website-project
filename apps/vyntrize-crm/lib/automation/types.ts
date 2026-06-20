@@ -31,8 +31,9 @@ export type BranchCondition = 'opened' | 'not_opened' | 'clicked' | 'always';
 export interface DripStepInput {
   stepOrder: number;
   delayHours: number;
-  subjectTemplate: string;
-  bodyTemplate: string;
+  emailSubjectTemplate?: string;
+  emailBodyTemplate?: string;
+  smsBodyTemplate?: string;
   branchCondition: BranchCondition;
 }
 

@@ -32,41 +32,72 @@ class AIProviderFactory {
     }
 
     this.initPromise = (async () => {
+      // Fetch DB settings
+      const { prisma } = await import('@/lib/prisma');
+      const settingsKeys = [
+        'AI_OPENAI_API_KEY', 'AI_OPENAI_DEFAULT_MODEL',
+        'AI_GEMINI_API_KEY', 'AI_GEMINI_DEFAULT_MODEL',
+        'AI_CLAUDE_API_KEY', 'AI_CLAUDE_DEFAULT_MODEL',
+        'AI_DEFAULT_PROVIDER'
+      ];
+      
+      let dbSettings: Record<string, string> = {};
+      try {
+        const dbRows = await prisma.systemSetting.findMany({
+          where: { key: { in: settingsKeys } }
+        });
+        dbSettings = dbRows.reduce((acc: any, row: any) => {
+          acc[row.key] = row.value;
+          return acc;
+        }, {});
+      } catch (e) {
+        console.warn('[AIProviderFactory] Could not fetch settings from DB', e);
+      }
+
+      // Update default provider if set in DB
+      if (dbSettings.AI_DEFAULT_PROVIDER && ['openai', 'gemini', 'claude', 'auto'].includes(dbSettings.AI_DEFAULT_PROVIDER)) {
+        this.defaultProvider = dbSettings.AI_DEFAULT_PROVIDER as AIProviderType;
+      }
+
       // OpenAI - always show, even if not configured
-      const openaiKey = process.env.OPENAI_API_KEY;
+      const openaiKey = dbSettings.AI_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+      const openaiModel = dbSettings.AI_OPENAI_DEFAULT_MODEL || process.env.OPENAI_MODEL || 'gpt-4';
+      
       if (!openaiKey) {
         console.log('[AIProviderFactory] OpenAI API key not configured - provider will be listed as unavailable');
-        this.providers.set('openai', this.createUnavailableProvider('OpenAI', 'gpt-4', 'API key not configured'));
+        this.providers.set('openai', this.createUnavailableProvider('OpenAI', openaiModel, 'API key not configured'));
       } else if (this.isPlaceholderKey(openaiKey)) {
         console.log('[AIProviderFactory] OpenAI API key is a placeholder - provider will be listed as unavailable');
-        this.providers.set('openai', this.createUnavailableProvider('OpenAI', 'gpt-4', 'Placeholder API key'));
+        this.providers.set('openai', this.createUnavailableProvider('OpenAI', openaiModel, 'Placeholder API key'));
       } else {
         try {
           const { getOpenAIProvider } = await import('./openai-provider');
-          this.providers.set('openai', getOpenAIProvider());
+          this.providers.set('openai', getOpenAIProvider({ apiKey: openaiKey, model: openaiModel }));
           console.log('[AIProviderFactory] OpenAI provider available');
         } catch (error) {
           console.warn('[AIProviderFactory] Failed to initialize OpenAI:', error);
-          this.providers.set('openai', this.createUnavailableProvider('OpenAI', 'gpt-4', 'Initialization failed'));
+          this.providers.set('openai', this.createUnavailableProvider('OpenAI', openaiModel, 'Initialization failed'));
         }
       }
 
       // Google Gemini - always show, even if not configured
-      const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+      const geminiKey = dbSettings.AI_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+      const geminiModel = dbSettings.AI_GEMINI_DEFAULT_MODEL || process.env.GEMINI_MODEL || 'gemini-pro';
+
       if (!geminiKey) {
         console.log('[AIProviderFactory] Gemini API key not configured - provider will be listed as unavailable');
-        this.providers.set('gemini', this.createUnavailableProvider('Google Gemini', 'gemini-pro', 'API key not configured'));
+        this.providers.set('gemini', this.createUnavailableProvider('Google Gemini', geminiModel, 'API key not configured'));
       } else if (this.isPlaceholderKey(geminiKey)) {
         console.log('[AIProviderFactory] Gemini API key is a placeholder - provider will be listed as unavailable');
-        this.providers.set('gemini', this.createUnavailableProvider('Google Gemini', 'gemini-pro', 'Placeholder API key'));
+        this.providers.set('gemini', this.createUnavailableProvider('Google Gemini', geminiModel, 'Placeholder API key'));
       } else {
         try {
           const { getGeminiProvider } = await import('./gemini-provider');
-          this.providers.set('gemini', getGeminiProvider());
+          this.providers.set('gemini', getGeminiProvider({ apiKey: geminiKey, model: geminiModel }));
           console.log('[AIProviderFactory] Gemini provider available');
         } catch (error) {
           console.warn('[AIProviderFactory] Failed to initialize Gemini:', error);
-          this.providers.set('gemini', this.createUnavailableProvider('Google Gemini', 'gemini-pro', 'Initialization failed'));
+          this.providers.set('gemini', this.createUnavailableProvider('Google Gemini', geminiModel, 'Initialization failed'));
         }
       }
 
@@ -248,12 +279,20 @@ class AIProviderFactory {
 // Singleton instance - initialized lazily
 let _aiProviderFactoryInstance: AIProviderFactory | null = null;
 let _initializationPromise: Promise<AIProviderFactory> | null = null;
+let _lastInitTime = 0;
 
 /**
  * Get or create the singleton AIProviderFactory instance
+ * Automatically reloads configuration from the DB every 60 seconds.
  */
-export async function getAIProviderFactory(): Promise<AIProviderFactory> {
-  if (_aiProviderFactoryInstance) {
+export async function getAIProviderFactory(forceReload = false): Promise<AIProviderFactory> {
+  const now = Date.now();
+  
+  if (forceReload || (now - _lastInitTime > 60000)) {
+    _initializationPromise = null;
+  }
+
+  if (_aiProviderFactoryInstance && _initializationPromise !== null) {
     return _aiProviderFactoryInstance;
   }
 
@@ -263,6 +302,7 @@ export async function getAIProviderFactory(): Promise<AIProviderFactory> {
 
   _initializationPromise = AIProviderFactory.create().then(factory => {
     _aiProviderFactoryInstance = factory;
+    _lastInitTime = Date.now();
     return factory;
   });
 

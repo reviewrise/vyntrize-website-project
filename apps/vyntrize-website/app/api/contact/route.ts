@@ -144,6 +144,30 @@ export async function POST(req: NextRequest) {
             // Don't fail the request if attribution tracking fails
         }
 
+        // Emit LEAD_CREATED event to trigger CRM automations via internal webhook
+        try {
+            const crmUrl = process.env.NEXT_PUBLIC_CRM_URL || 'http://localhost:3014';
+            const res = await fetch(`${crmUrl}/api/webhooks/internal`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${process.env.INTERNAL_API_SECRET || 'vyntrize-internal-secret'}`
+                },
+                body: JSON.stringify({
+                    event: 'lead_created',
+                    payload: { leadId: lead.id }
+                })
+            });
+            
+            if (res.ok) {
+                console.log(`[contact route] Emitted LEAD_CREATED event for lead ${lead.id} via webhook`);
+            } else {
+                console.error(`[contact route] Failed to emit lead created event via webhook. Status: ${res.status}`);
+            }
+        } catch (error) {
+            console.error('[contact route] Failed to call internal webhook:', error);
+        }
+
         return NextResponse.json({ 
             success: true, 
             id: submission.id,

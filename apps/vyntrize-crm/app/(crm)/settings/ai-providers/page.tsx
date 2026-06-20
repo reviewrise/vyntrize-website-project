@@ -74,6 +74,48 @@ export default function AIProvidersPage() {
   const [switching, setSwitching] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const [config, setConfig] = useState<Record<string, string>>({});
+  const [savingConfig, setSavingConfig] = useState<string | null>(null);
+
+  const fetchConfig = useCallback(async () => {
+    try {
+      const res = await fetch('/api/settings/ai');
+      if (res.ok) {
+        const data = await res.json();
+        setConfig(data);
+      }
+    } catch (err) {
+      console.error('Failed to load AI configuration', err);
+    }
+  }, []);
+
+  const saveConfig = async (provider: string) => {
+    setSavingConfig(provider);
+    setError(null);
+    try {
+      const payload: Record<string, string> = {};
+      const prefix = `AI_${provider.toUpperCase()}_`;
+      payload[`${prefix}API_KEY`] = config[`${prefix}API_KEY`] || '';
+      payload[`${prefix}DEFAULT_MODEL`] = config[`${prefix}DEFAULT_MODEL`] || '';
+
+      const res = await fetch('/api/settings/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to save configuration');
+      
+      // Refresh status after saving since initialization might have changed
+      await fetchStatus();
+      await fetchConfig();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSavingConfig(null);
+    }
+  };
 
   const fetchStatus = useCallback(async () => {
     setLoading(true);
@@ -93,7 +135,8 @@ export default function AIProvidersPage() {
 
   useEffect(() => {
     fetchStatus();
-  }, [fetchStatus]);
+    fetchConfig();
+  }, [fetchStatus, fetchConfig]);
 
   const switchProvider = async (provider: string) => {
     setSwitching(provider);
@@ -346,6 +389,48 @@ export default function AIProvidersPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Configuration Form */}
+                <div className="mt-6 pt-4 space-y-4" style={{ borderTop: '1px solid var(--color-border)' }}>
+                  <h4 className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>Configuration</h4>
+                  <div className="grid gap-3 max-w-sm">
+                    <div>
+                      <label className="block text-[10px] mb-1 font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+                        API Key
+                      </label>
+                      <input
+                        type="password"
+                        placeholder="sk-..."
+                        value={config[`AI_${key.toUpperCase()}_API_KEY`] || ''}
+                        onChange={(e) => setConfig({ ...config, [`AI_${key.toUpperCase()}_API_KEY`]: e.target.value })}
+                        className="w-full px-3 py-1.5 rounded-lg text-xs transition-colors focus:outline-none"
+                        style={{ backgroundColor: 'var(--color-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] mb-1 font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+                        Default Model
+                      </label>
+                      <select
+                        value={config[`AI_${key.toUpperCase()}_DEFAULT_MODEL`] || meta.models[0]}
+                        onChange={(e) => setConfig({ ...config, [`AI_${key.toUpperCase()}_DEFAULT_MODEL`]: e.target.value })}
+                        className="w-full px-3 py-1.5 rounded-lg text-xs transition-colors focus:outline-none"
+                        style={{ backgroundColor: 'var(--color-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+                      >
+                        {meta.models.map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                    </div>
+                    <button
+                      onClick={() => saveConfig(key)}
+                      disabled={savingConfig === key}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold self-start transition-opacity hover:opacity-90 disabled:opacity-50"
+                      style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}
+                    >
+                      {savingConfig === key ? 'Saving...' : 'Save Configuration'}
+                    </button>
+                  </div>
+                </div>
+
               </div>
 
               {/* Action footer */}

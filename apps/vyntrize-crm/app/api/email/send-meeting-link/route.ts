@@ -14,6 +14,7 @@ import { getSession } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { emailService } from '@/lib/email/email-service';
 import { syncEventToGoogle } from '@/lib/google-calendar';
+import { sendCustomerSms } from '@/lib/sms/send-customer-sms';
 import crypto from 'crypto';
 
 interface SendMeetingLinkRequest {
@@ -59,6 +60,25 @@ export async function POST(request: NextRequest) {
       ? `<p style="margin:0 0 16px; font-size:15px; line-height:1.7; color:#374151;">${body.personalNote}</p>`
       : '';
 
+    // ── Resolve lead/contact for DB record & Phone ────────────────────────
+    let contactId = body.contactId;
+    let contactPhone: string | null = null;
+    if (!contactId && body.leadId) {
+      const lead = await prisma.lead.findUnique({
+        where: { id: body.leadId },
+        select: { contactId: true },
+      });
+      contactId = lead?.contactId ?? undefined;
+    }
+
+    if (contactId) {
+      const contact = await prisma.contact.findUnique({
+        where: { id: contactId },
+        select: { phone: true }
+      });
+      contactPhone = contact?.phone ?? null;
+    }
+
     // ── MODE 1: Schedule a specific Google Meet ───────────────────────────
     if (body.scheduledTime) {
       const { startISO, endISO, title } = body.scheduledTime;
@@ -74,16 +94,6 @@ export async function POST(request: NextRequest) {
       // Try to create Google Calendar event + Meet link
       const cancelToken = crypto.randomUUID();
       const rescheduleToken = crypto.randomUUID();
-
-      // Resolve lead/contact for DB record
-      let contactId = body.contactId;
-      if (!contactId && body.leadId) {
-        const lead = await prisma.lead.findUnique({
-          where: { id: body.leadId },
-          select: { contactId: true },
-        });
-        contactId = lead?.contactId ?? undefined;
-      }
 
       // Save calendar event
       const calEvent = await prisma.calendarEvent.create({
@@ -216,6 +226,15 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: result.error || 'Failed to send' }, { status: 500 });
       }
 
+      if (contactPhone) {
+        await sendCustomerSms({
+          to: contactPhone,
+          message: `Hi ${firstName}, ${senderName} just sent you a calendar invite to meet! Check your email for the details.`,
+          contactId,
+          leadId: body.leadId,
+        });
+      }
+
       return NextResponse.json({
         success: true,
         mode: 'scheduled',
@@ -279,6 +298,15 @@ export async function POST(request: NextRequest) {
 
     if (!result.success) {
       return NextResponse.json({ error: result.error || 'Failed to send' }, { status: 500 });
+    }
+
+    if (contactPhone) {
+      await sendCustomerSms({
+        to: contactPhone,
+        message: `Hi ${firstName}, ${senderName} just sent you a calendar invite to meet! Check your email for the details.`,
+        contactId,
+        leadId: body.leadId,
+      });
     }
 
     return NextResponse.json({

@@ -54,6 +54,8 @@ export async function GET(request: NextRequest) {
         sentBy: email.user,
         trackingId: email.trackingId,
         events: email.events,
+        htmlBody: email.htmlBody,
+        body: email.body,
       })),
       pagination: {
         page,

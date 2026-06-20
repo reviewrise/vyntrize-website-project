@@ -316,11 +316,10 @@ export class DripCampaignAgent extends Agent {
     }
 
     // 5. Evaluate branch condition
-    const stepType = (currentStep as any).stepType ?? 'email';
     const branchPasses = await this.checkBranchCondition(
       lead.id,
       currentStep.branchCondition,
-      stepType
+      currentStep.emailBodyTemplate ? 'email' : 'sms'
     );
     if (!branchPasses) {
       this.log('info', 'Branch condition not met, skipping step', {
@@ -330,32 +329,32 @@ export class DripCampaignAgent extends Agent {
       return;
     }
 
-    // 6 + 7. Send step — branches on stepType ('email' or 'sms')
+    // 6 + 7. Send step — execute SMS and/or Email in parallel
     const contact = (lead as LeadWithContact).contact;
+    const recordedActions: ActionType[] = [];
 
-    if (stepType === 'sms') {
-      // ── SMS step ────────────────────────────────────────────────────────
+    // ── SMS step ────────────────────────────────────────────────────────
+    if (currentStep.smsBodyTemplate && !contact.smsOptOut) {
       const smsTemplateVars = buildSmsTemplateVars(contact, lead as any);
       try {
         await sendCustomerSms({
           to:        contact.phone,
-          message:   currentStep.bodyTemplate,
+          message:   currentStep.smsBodyTemplate,
           variables: smsTemplateVars,
           leadId:    lead.id,
           contactId: contact.id,
         });
+        recordedActions.push(ActionType.SMS_SEND);
       } catch (smsErr) {
         this.log('error', 'SMS drip step error (continuing enrollment)', smsErr);
       }
+    }
 
-      // Enrollment advancement and AgentAction recording happens below
-      // (outside this if/else block) — so we jump straight there.
-
-    } else {
-      // ── Email step (default) ─────────────────────────────────────────────
-      // 6. Try EmailGenerationAgent for personalization; fall back to raw templates
-      let subject = currentStep.subjectTemplate;
-      let body = currentStep.bodyTemplate;
+    // ── Email step ───────────────────────────────────────────────────────
+    if (currentStep.emailBodyTemplate) {
+      // Try EmailGenerationAgent for personalization; fall back to raw templates
+      let subject = currentStep.emailSubjectTemplate || 'Follow up';
+      let body = currentStep.emailBodyTemplate;
 
       try {
         const emailAgent = new EmailGenerationAgent();
@@ -369,7 +368,7 @@ export class DripCampaignAgent extends Agent {
         this.log('warn', 'EmailGenerationAgent failed, using raw templates', err);
       }
 
-      // 7. Render templates and send email via EmailService
+      // Render templates and send email via EmailService
       const contactEmail = contact.email;
       const trackingId = `drip_${enrollmentId}_step${currentStep.stepOrder}_${Date.now()}`;
 
@@ -383,22 +382,28 @@ export class DripCampaignAgent extends Agent {
 
       let formattedBody = body.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br/>');
       if (!formattedBody.startsWith('<p>')) formattedBody = `<p>${formattedBody}</p>`;
-      formattedBody = TemplateRenderer.wrapInEmailTemplate(formattedBody, subject);
+      // We rely on emailService.sendEmail to apply the global email layout.
       subject = TemplateRenderer.render(subject, templateVars);
       formattedBody = TemplateRenderer.renderWithTracking(formattedBody, templateVars, trackingId);
       formattedBody = TemplateRenderer.inlineCSS(formattedBody);
 
-      await emailService.sendEmail({
-        role:      'sales',
-        to:        contactEmail,
-        toName:    `${contact.firstName} ${contact.lastName}`.trim(),
-        subject,
-        html:      formattedBody,
-        text:      body,
-        trackingId,
-        leadId:    lead.id,
-        contactId: contact.id,
-      } as Parameters<typeof emailService.sendEmail>[0]);
+      try {
+        await emailService.sendEmail({
+          role:      'sales',
+          to:        contactEmail,
+          toName:    `${contact.firstName} ${contact.lastName}`.trim(),
+          subject,
+          html:      formattedBody,
+          text:      body,
+          trackingId,
+          leadId:    lead.id,
+          contactId: contact.id,
+          userId:    lead.assigneeId ?? undefined,
+        } as Parameters<typeof emailService.sendEmail>[0]);
+        recordedActions.push(ActionType.EMAIL_SEND);
+      } catch (err) {
+        this.log('error', 'Email drip step error', err);
+      }
     }
 
     // 8. Update enrollment
@@ -411,19 +416,20 @@ export class DripCampaignAgent extends Agent {
       },
     });
 
-    // 9. Record AgentAction (EMAIL_SEND or SMS_SEND depending on step type)
-    await this.recordAction(
-      stepType === 'sms' ? ActionType.SMS_SEND : ActionType.EMAIL_SEND,
-      lead.id,
-      `Drip ${stepType} step ${enrollment.currentStepIndex} sent for sequence ${typedEnrollment.sequence.name}`,
-      AutonomyLevel.FULLY_AUTONOMOUS,
-      {
-        enrollmentId,
-        sequenceId: enrollment.sequenceId,
-        stepOrder:  currentStep.stepOrder,
-        stepType,
-      }
-    );
+    // 9. Record AgentActions
+    for (const actionType of recordedActions) {
+      await this.recordAction(
+        actionType,
+        lead.id,
+        `Drip step ${enrollment.currentStepIndex} sent (${actionType}) for sequence ${typedEnrollment.sequence.name}`,
+        AutonomyLevel.FULLY_AUTONOMOUS,
+        {
+          enrollmentId,
+          sequenceId: enrollment.sequenceId,
+          stepOrder:  currentStep.stepOrder,
+        }
+      );
+    }
 
     // 10. Check if next step exists; schedule it or mark COMPLETED
     const nextStep = typedEnrollment.sequence.steps.find(

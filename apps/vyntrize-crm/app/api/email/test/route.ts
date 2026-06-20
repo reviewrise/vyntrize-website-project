@@ -88,8 +88,7 @@ export async function POST(request: NextRequest) {
 
     const config = await emailService.getConfig(role);
 
-    const htmlBody = TemplateRenderer.wrapInEmailTemplate(
-      `
+    const htmlBody = `
       <h2 style="margin-top:0;color:#111827;">✅ Email Delivery Test</h2>
       <p>This is a test email sent from <strong>Vyntrize CRM</strong> to verify your SMTP configuration is working correctly.</p>
 
@@ -112,13 +111,10 @@ export async function POST(request: NextRequest) {
         </tr>
       </table>
 
-
       <p style="color:#6b7280;font-size:14px;">
         If you received this email, your SMTP configuration is working correctly and Vyntrize CRM can send emails to your leads and contacts.
       </p>
-      `,
-      subject
-    );
+    `;
 
     const result = await emailService.sendEmail({
       role,
