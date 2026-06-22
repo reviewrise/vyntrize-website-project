@@ -42,8 +42,8 @@ const EMAIL_NAV = [
 ];
 
 const SMS_NAV = [
-    { href: '/sms/logs',      label: 'Logs',      icon: List },
-    { href: '/sms/templates', label: 'Templates', icon: FileText },
+    { href: '/sms/logs',          label: 'Logs',             icon: List },
+    { href: '/sms/templates',     label: 'Templates',        icon: FileText },
 ];
 
 const SETTINGS_NAV = [

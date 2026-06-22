@@ -183,29 +183,30 @@ export default function SmsComposer({
           )}
 
           {/* Phone number */}
-          <div>
-            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text)' }}>
-              Phone Number <span style={{ color: '#ef4444' }}>*</span>
-            </label>
-            <input
-              type="tel"
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              placeholder="+15551234567"
-              disabled={loading || !!defaultTo}
-              className="w-full rounded-lg px-3 py-2 text-sm transition-colors"
-              style={{
-                backgroundColor: 'var(--color-raised)',
-                border: '1px solid var(--color-border)',
-                color: 'var(--color-text)',
-                outline: 'none',
-                opacity: defaultTo ? 0.75 : 1,
-              }}
-            />
-            <p className="mt-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              Must be E.164 format, e.g. +15551234567
-            </p>
-          </div>
+          {!defaultTo && (
+            <div>
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text)' }}>
+                Phone Number <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <input
+                type="tel"
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+                placeholder="+15551234567"
+                disabled={loading}
+                className="w-full rounded-lg px-3 py-2 text-sm transition-colors"
+                style={{
+                  backgroundColor: 'var(--color-raised)',
+                  border: '1px solid var(--color-border)',
+                  color: 'var(--color-text)',
+                  outline: 'none',
+                }}
+              />
+              <p className="mt-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                Must be E.164 format, e.g. +15551234567
+              </p>
+            </div>
+          )}
 
           {/* Template selector */}
           {templates.length > 0 && (

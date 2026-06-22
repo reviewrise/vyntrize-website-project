@@ -101,6 +101,7 @@ export default async function LeadDetailPage({
                     leadId={lead.id}
                     contactEmail={lead.contact.email}
                     contactName={`${lead.contact.firstName} ${lead.contact.lastName}`}
+                    contactPhone={lead.contact.phone ?? null}
                     initialManualOverride={lead.manualOverride ?? false}
                     assigneeBookingSlug={lead.assignee?.bookingSlug ?? null}
                 />

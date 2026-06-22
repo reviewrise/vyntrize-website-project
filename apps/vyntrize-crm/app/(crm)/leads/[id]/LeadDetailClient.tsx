@@ -14,6 +14,7 @@ interface LeadDetailClientProps {
   leadId: string;
   contactEmail: string;
   contactName: string;
+  contactPhone?: string | null;
   initialManualOverride?: boolean;
   /** bookingSlug of the lead's assignee (or null if unassigned / no slug set) */
   assigneeBookingSlug?: string | null;
@@ -23,6 +24,7 @@ export default function LeadDetailClient({
   leadId,
   contactEmail,
   contactName,
+  contactPhone,
   initialManualOverride = false,
   assigneeBookingSlug,
 }: LeadDetailClientProps) {
@@ -204,7 +206,7 @@ export default function LeadDetailClient({
       <SmsComposer
         isOpen={isSmsOpen}
         onClose={() => setIsSmsOpen(false)}
-        defaultTo={''}
+        defaultTo={contactPhone || ''}
         defaultToName={contactName}
         leadId={leadId}
         onSuccess={() => window.location.reload()}

@@ -237,6 +237,12 @@ export default function CampaignDetailClient({ campaign, emails }: Props) {
                                     border: '1px solid var(--color-border)',
                                     color: 'var(--color-text)',
                                 }}
+                                onClick={(e) => {
+                                    const target = e.target as HTMLElement;
+                                    if (target.tagName.toLowerCase() === 'a') {
+                                        e.preventDefault();
+                                    }
+                                }}
                             >
                                 <div dangerouslySetInnerHTML={{ __html: campaign.body }} />
                             </div>

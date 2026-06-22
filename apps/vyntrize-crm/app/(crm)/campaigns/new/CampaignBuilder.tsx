@@ -534,10 +534,16 @@ export default function CampaignBuilder({ contacts, templates }: CampaignBuilder
                   Email Preview
                 </p>
                 <div
-                  className="rounded-lg p-4 text-sm overflow-auto max-h-64"
+                  className="rounded-lg p-4 text-sm overflow-auto max-h-64 preview-content"
                   style={{
                     backgroundColor: 'var(--color-raised)',
                     border: '1px solid var(--color-border)',
+                  }}
+                  onClick={(e) => {
+                    const target = e.target as HTMLElement;
+                    if (target.tagName.toLowerCase() === 'a') {
+                      e.preventDefault();
+                    }
                   }}
                   dangerouslySetInnerHTML={{ __html: body }}
                 />

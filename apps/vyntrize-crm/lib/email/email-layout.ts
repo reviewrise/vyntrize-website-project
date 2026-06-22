@@ -154,7 +154,9 @@ export function buildEmailLayout(
     : `${company.website.replace(/\/$/, '')}${company.logoUrl}`;
 
   const domain = extractDomain(company.website);
-  const deptEmail = sender ? getDeptEmail(sender.role, domain) : null;
+  const deptEmail = sender 
+    ? getDeptEmail(sender.role, domain) 
+    : { label: 'Contact', address: company.email || `info@${domain}` };
 
   // ── Header ──────────────────────────────────────────────────────────────────
   const header = `
@@ -248,8 +250,9 @@ export function buildEmailLayout(
       </table>`
     : '';
 
-  const footerContactRow = (senderBlock || deptBlock)
-    ? `
+  let footerContactRow = '';
+  if (senderBlock && deptBlock) {
+    footerContactRow = `
       <tr>
         <td style="padding:0 32px 24px;">
           <table width="100%" cellpadding="0" cellspacing="0">
@@ -257,16 +260,29 @@ export function buildEmailLayout(
               <td style="padding:24px 0; border-top:1px solid #e2e8f0;" valign="top" width="50%">
                 ${senderBlock}
               </td>
-              ${deptBlock ? `
               <td width="16" style="padding:24px 0;">&nbsp;</td>
               <td style="padding:24px 0; border-top:1px solid #e2e8f0;" valign="top" width="50%">
                 ${deptBlock}
-              </td>` : ''}
+              </td>
             </tr>
           </table>
         </td>
-      </tr>`
-    : '';
+      </tr>`;
+  } else if (deptBlock) {
+    // No sender, just show the company/dept info in a full-width block
+    footerContactRow = `
+      <tr>
+        <td style="padding:0 32px 24px;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="padding:24px 0; border-top:1px solid #e2e8f0;" valign="top" width="100%">
+                ${deptBlock}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>`;
+  }
 
   const addressLine = company.address
     ? `<br>${company.address.replace(/\n/g, ', ')}`

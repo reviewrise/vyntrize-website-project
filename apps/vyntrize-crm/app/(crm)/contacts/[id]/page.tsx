@@ -98,6 +98,7 @@ export default async function ContactDetailPage({
                         contactId={contact.id}
                         contactEmail={contact.email}
                         contactName={`${contact.firstName} ${contact.lastName}`}
+                        contactPhone={contact.phone ?? null}
                         bookingSlug={resolvedBookingSlug}
                     />
                 </div>

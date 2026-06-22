@@ -13,6 +13,7 @@ interface ContactDetailClientProps {
   contactId: string;
   contactEmail: string;
   contactName: string;
+  contactPhone?: string | null;
   /** bookingSlug of the session user (or the contact's most-recent lead assignee) */
   bookingSlug?: string | null;
 }
@@ -21,6 +22,7 @@ export default function ContactDetailClient({
   contactId,
   contactEmail,
   contactName,
+  contactPhone,
   bookingSlug,
 }: ContactDetailClientProps) {
   const [isEmailComposerOpen, setIsEmailComposerOpen] = useState(false);
@@ -118,7 +120,7 @@ export default function ContactDetailClient({
       <SmsComposer
         isOpen={isSmsOpen}
         onClose={() => setIsSmsOpen(false)}
-        defaultTo={''}
+        defaultTo={contactPhone || ''}
         defaultToName={contactName}
         contactId={contactId}
         onSuccess={() => window.location.reload()}

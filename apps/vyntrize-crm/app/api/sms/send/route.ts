@@ -46,11 +46,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── Opt-out check ─────────────────────────────────────────────────────
+    // ── Build Variables & Opt-out check ───────────────────────────────────
+    let variables: Record<string, string> | undefined;
+    
     if (data.contactId) {
       const contact = await prisma.contact.findUnique({
         where:  { id: data.contactId },
-        select: { smsOptOut: true },
+        include: { company: { select: { name: true } } },
       });
       if (contact?.smsOptOut === true) {
         return NextResponse.json(
@@ -58,12 +60,22 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+      if (contact) {
+        variables = {
+          firstName:   contact.firstName || '',
+          lastName:    contact.lastName || '',
+          companyName: contact.company?.name || '',
+          email:       contact.email || '',
+          phone:       contact.phone || '',
+        };
+      }
     }
 
     // ── Send ──────────────────────────────────────────────────────────────
     const result = await sendCustomerSms({
       to:        data.to,
       message:   data.message,
+      variables,
       contactId: data.contactId,
       leadId:    data.leadId,
     });

@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
         const trackedBody = TemplateRenderer.renderWithTracking(renderedBody, {}, trackingId);
         const finalBody = TemplateRenderer.inlineCSS(trackedBody);
 
-        // Send email
+        // Send email (emailService automatically handles logging to the database)
         const sendResult = await emailService.sendEmail({
           role: 'sales',
           to: recipient.email,
@@ -173,29 +173,14 @@ export async function POST(request: NextRequest) {
           subject: renderedSubject,
           html: finalBody,
           trackingId,
+          contactId: recipient.contactId,
+          leadId: recipient.leadId,
+          campaignId: campaign.id,
+          templateId: data.templateId,
+          userId: session.userId,
         });
 
         if (sendResult.success) {
-          // Create email log
-          await vyntrizeDb.emailLog.create({
-            data: {
-              subject: renderedSubject,
-              body: renderedBody,
-              htmlBody: finalBody,
-              fromEmail: process.env.EMAIL_FROM_ADDRESS || 'noreply@vyntrize.com',
-              fromName: process.env.EMAIL_FROM_NAME || 'Vyntrize CRM',
-              toEmail: recipient.email,
-              toName: recipient.name,
-              trackingId,
-              status: 'SENT',
-              sentAt: new Date(),
-              contactId: recipient.contactId,
-              leadId: recipient.leadId,
-              campaignId: campaign.id,
-              templateId: data.templateId,
-              userId: session.userId,
-            },
-          });
 
           sentCount++;
         } else {
