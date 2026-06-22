@@ -42,14 +42,14 @@ export class ContextBuilder {
     // 2. Resolve Lead & Company
     if (args.lead) {
       vars['lead.title'] = args.lead.title || '';
-      vars['lead.value'] = args.lead.value?.toString() || '0';
+      vars['lead.value'] = (args.lead as any).dealValue?.toString() || '0';
       vars['company.name'] = (args.lead as any).company?.name || '';
     }
 
     // 3. Resolve User (Assignee)
     const user = args.user || args.lead?.assignee;
     if (user) {
-      vars['user.name'] = user.name || '';
+      vars['user.name'] = (user as any).displayName || '';
       vars['user.email'] = user.email || '';
       vars['user.bookingLink'] = `${crmBase}/book/${user.id}`;
     }

@@ -153,12 +153,20 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
         ref={editorRef}
         contentEditable
         onInput={handleInput}
-        className="p-4 min-h-[200px] max-h-[400px] overflow-y-auto focus:outline-none text-sm text-gray-800 leading-relaxed font-medium"
-        placeholder={placeholder}
+        className="p-4 min-h-[200px] max-h-[400px] overflow-y-auto focus:outline-none text-sm text-gray-800 leading-relaxed font-medium rich-editor-content"
+        data-placeholder={placeholder}
         style={{
           minHeight: '200px',
         }}
       />
+      <style>{`
+        .rich-editor-content:empty::before {
+          content: attr(data-placeholder);
+          color: #9ca3af;
+          pointer-events: none;
+          display: block;
+        }
+      `}</style>
     </div>
   );
 }
