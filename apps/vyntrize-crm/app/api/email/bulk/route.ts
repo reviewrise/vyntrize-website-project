@@ -10,6 +10,8 @@ import { vyntrizeDb } from '@platform/vyntrize-db';
 import { emailService } from '@/lib/email/email-service';
 import { TemplateRenderer } from '@/lib/email/template-renderer';
 import { TrackingService } from '@/lib/email/tracking-service';
+import { ContextBuilder } from '@/lib/automation/context-builder';
+import { prisma } from '@/lib/prisma';
 
 interface BulkEmailRequest {
   campaignName: string;
@@ -112,7 +114,19 @@ export async function POST(request: NextRequest) {
       // Queue emails for scheduled sending
       for (const recipient of validRecipients) {
         const trackingId = TrackingService.generateTrackingId();
-        const variables = recipient.variables || {};
+        // Auto-resolve context variables from DB, then merge caller-supplied ones on top
+        let contextVars = {};
+        if (recipient.leadId) {
+          const lead = await prisma.lead.findUnique({
+            where: { id: recipient.leadId },
+            include: { contact: true, assignee: true },
+          });
+          if (lead) contextVars = ContextBuilder.buildVariables({ lead: lead as any, contact: lead.contact as any, user: lead.assignee as any });
+        } else if (recipient.contactId) {
+          const contact = await prisma.contact.findUnique({ where: { id: recipient.contactId } });
+          if (contact) contextVars = ContextBuilder.buildVariables({ contact: contact as any });
+        }
+        const variables = { ...contextVars, ...(recipient.variables || {}) };
         
         const renderedBody = TemplateRenderer.render(emailBody, variables);
         const renderedSubject = TemplateRenderer.render(emailSubject, variables);
@@ -157,7 +171,19 @@ export async function POST(request: NextRequest) {
     for (const recipient of validRecipients) {
       try {
         const trackingId = TrackingService.generateTrackingId();
-        const variables = recipient.variables || {};
+        // Auto-resolve context variables from DB, then merge caller-supplied ones on top
+        let contextVars = {};
+        if (recipient.leadId) {
+          const lead = await prisma.lead.findUnique({
+            where: { id: recipient.leadId },
+            include: { contact: true, assignee: true },
+          });
+          if (lead) contextVars = ContextBuilder.buildVariables({ lead: lead as any, contact: lead.contact as any, user: lead.assignee as any });
+        } else if (recipient.contactId) {
+          const contact = await prisma.contact.findUnique({ where: { id: recipient.contactId } });
+          if (contact) contextVars = ContextBuilder.buildVariables({ contact: contact as any });
+        }
+        const variables = { ...contextVars, ...(recipient.variables || {}) };
         
         // Render template with recipient-specific variables
         const renderedBody = TemplateRenderer.render(emailBody, variables);
