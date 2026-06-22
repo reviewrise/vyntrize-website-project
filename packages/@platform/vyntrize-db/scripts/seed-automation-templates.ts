@@ -1,7 +1,21 @@
 /**
- * Seed Automation Templates (Email + SMS)
+ * Seed Automation Templates (Email + SMS) + Drip Sequences
  * Run: pnpm --filter @platform/vyntrize-db seed:automation-templates
  *  or: npx tsx scripts/seed-automation-templates.ts (from within the package dir)
+ *
+ * Variable reference (resolved automatically by ContextBuilder):
+ *   {{contact.firstName}}   — Contact first name
+ *   {{contact.lastName}}    — Contact last name
+ *   {{contact.name}}        — Full name
+ *   {{contact.email}}       — Contact email
+ *   {{company.name}}        — Company name
+ *   {{lead.title}}          — Lead/deal title
+ *   {{user.name}}           — Assigned rep name
+ *   {{user.email}}          — Assigned rep email
+ *   {{user.bookingLink}}    — Rep's booking page URL
+ *   {{unsubscribeUrl}}      — Email unsubscribe link
+ *   {{optOutUrl}}           — SMS opt-out link
+ *   {{date}} / {{time}}     — Current date / time
  */
 
 import { vyntrizeDb } from '../src/index';
@@ -17,69 +31,104 @@ const prisma = vyntrizeDb;
 const emailTemplates = [
   {
     name: 'Welcome – New Lead',
-    subject: 'Welcome to Vyntrize, {{firstName}}!',
-    body: `<p>Hi {{firstName}},</p>
-<p>Thank you for reaching out! We're excited to connect with you and learn more about how we can help{{#if company}} {{company}}{{/if}}.</p>
+    subject: 'Welcome to Vyntrize, {{contact.firstName}}!',
+    body: `<p>Hi {{contact.firstName}},</p>
+<p>Thank you for reaching out! We're excited to connect with you and learn more about how we can help{{#if company.name}} {{company.name}}{{/if}}.</p>
 <p>One of our team members will be in touch with you shortly.</p>
-<p>Best regards,<br/>The Vyntrize Team</p>`,
+<p>Best regards,<br/>{{user.name}}</p>
+<p style="font-size:11px;color:#999;"><a href="{{unsubscribeUrl}}">Unsubscribe</a></p>`,
     type: 'WELCOME' as const,
     isShared: true,
-    variables: ['firstName', 'company'],
+    variables: ['contact.firstName', 'company.name', 'user.name', 'unsubscribeUrl'],
   },
   {
     name: 'Contact Us – Confirmation',
-    subject: "We've received your message, {{firstName}}!",
-    body: `<p>Hi {{firstName}},</p>
+    subject: "We've received your message, {{contact.firstName}}!",
+    body: `<p>Hi {{contact.firstName}},</p>
 <p>Thank you for getting in touch with us! We've received your message and one of our team members will reach out within 1 business day.</p>
 <p>We look forward to speaking with you soon!</p>
-<p>Best regards,<br/>The Vyntrize Team</p>`,
+<p>Best regards,<br/>{{user.name}}</p>
+<p style="font-size:11px;color:#999;"><a href="{{unsubscribeUrl}}">Unsubscribe</a></p>`,
     type: 'GENERAL' as const,
     isShared: true,
-    variables: ['firstName'],
+    variables: ['contact.firstName', 'user.name', 'unsubscribeUrl'],
   },
   {
     name: 'Initial Outreach',
-    subject: 'Quick question for you, {{firstName}}',
-    body: `<p>Hi {{firstName}},</p>
-<p>I noticed you recently got in touch and wanted to personally reach out. I'd love to learn more about your goals{{#if company}} at {{company}}{{/if}} and see if we can help.</p>
+    subject: 'Quick question for you, {{contact.firstName}}',
+    body: `<p>Hi {{contact.firstName}},</p>
+<p>I noticed you recently got in touch and wanted to personally reach out. I'd love to learn more about your goals{{#if company.name}} at {{company.name}}{{/if}} and see if we can help.</p>
 <p>Would you be open to a quick 15-minute call this week?</p>
-<p>Looking forward to connecting!</p>`,
+<p><a href="{{user.bookingLink}}">Book a time that works for you →</a></p>
+<p>Looking forward to connecting!<br/>{{user.name}}</p>
+<p style="font-size:11px;color:#999;"><a href="{{unsubscribeUrl}}">Unsubscribe</a></p>`,
     type: 'INITIAL_OUTREACH' as const,
     isShared: true,
-    variables: ['firstName', 'company'],
+    variables: ['contact.firstName', 'company.name', 'user.name', 'user.bookingLink', 'unsubscribeUrl'],
   },
   {
     name: 'Follow-up After Meeting',
-    subject: 'Great connecting with you, {{firstName}}!',
-    body: `<p>Hi {{firstName}},</p>
+    subject: 'Great connecting with you, {{contact.firstName}}!',
+    body: `<p>Hi {{contact.firstName}},</p>
 <p>It was a pleasure speaking with you earlier. I wanted to follow up and summarise the key points we discussed.</p>
 <p>As a next step, I'll send over a tailored proposal. Please let me know if you have any questions in the meantime.</p>
-<p>Thanks again for your time!</p>`,
+<p>Thanks again for your time!<br/>{{user.name}}</p>
+<p style="font-size:11px;color:#999;"><a href="{{unsubscribeUrl}}">Unsubscribe</a></p>`,
     type: 'FOLLOW_UP' as const,
     isShared: true,
-    variables: ['firstName'],
+    variables: ['contact.firstName', 'user.name', 'unsubscribeUrl'],
   },
   {
     name: 'Proposal Sent',
-    subject: "Here's your proposal, {{firstName}}",
-    body: `<p>Hi {{firstName}},</p>
-<p>Please find attached the proposal we discussed{{#if company}} for {{company}}{{/if}}. I've tailored it specifically to meet your requirements.</p>
+    subject: "Here's your proposal, {{contact.firstName}}",
+    body: `<p>Hi {{contact.firstName}},</p>
+<p>Please find attached the proposal we discussed{{#if company.name}} for {{company.name}}{{/if}}. I've tailored it specifically to meet your requirements.</p>
 <p>I'd love to walk you through it on a quick call — just let me know a time that suits you.</p>
-<p>Looking forward to your feedback!</p>`,
+<p><a href="{{user.bookingLink}}">Schedule a walkthrough →</a></p>
+<p>Looking forward to your feedback!<br/>{{user.name}}</p>
+<p style="font-size:11px;color:#999;"><a href="{{unsubscribeUrl}}">Unsubscribe</a></p>`,
     type: 'PROPOSAL' as const,
     isShared: true,
-    variables: ['firstName', 'company'],
+    variables: ['contact.firstName', 'company.name', 'user.name', 'user.bookingLink', 'unsubscribeUrl'],
   },
   {
     name: 'Re-engagement',
-    subject: "We haven't forgotten about you, {{firstName}}",
-    body: `<p>Hi {{firstName}},</p>
+    subject: "We haven't forgotten about you, {{contact.firstName}}",
+    body: `<p>Hi {{contact.firstName}},</p>
 <p>I wanted to check in since it's been a little while since we last spoke. I know things can get busy!</p>
-<p>We've made some exciting updates recently that I think would be a great fit{{#if company}} for {{company}}{{/if}}. Would you be open to a quick catch-up?</p>
-<p>Either way, feel free to reach out anytime.</p>`,
+<p>We've made some exciting updates recently that I think would be a great fit{{#if company.name}} for {{company.name}}{{/if}}. Would you be open to a quick catch-up?</p>
+<p><a href="{{user.bookingLink}}">Book a time here →</a></p>
+<p>Either way, feel free to reach out anytime.<br/>{{user.name}}</p>
+<p style="font-size:11px;color:#999;"><a href="{{unsubscribeUrl}}">Unsubscribe</a></p>`,
     type: 'RE_ENGAGEMENT' as const,
     isShared: true,
-    variables: ['firstName', 'company'],
+    variables: ['contact.firstName', 'company.name', 'user.name', 'user.bookingLink', 'unsubscribeUrl'],
+  },
+  {
+    name: 'Stage Change – Qualified',
+    subject: "Great news, {{contact.firstName}} — you've been qualified!",
+    body: `<p>Hi {{contact.firstName}},</p>
+<p>We've reviewed your details and are excited to move forward with {{lead.title}}.</p>
+<p>Your dedicated rep, {{user.name}}, will be reaching out very soon to discuss next steps.</p>
+<p>In the meantime, feel free to book a call directly:</p>
+<p><a href="{{user.bookingLink}}">Book a call →</a></p>
+<p style="font-size:11px;color:#999;"><a href="{{unsubscribeUrl}}">Unsubscribe</a></p>`,
+    type: 'STAGE_CHANGE' as const,
+    isShared: true,
+    variables: ['contact.firstName', 'lead.title', 'user.name', 'user.bookingLink', 'unsubscribeUrl'],
+  },
+  {
+    name: 'Email Opened – Engagement Response',
+    subject: "Saw you checking us out, {{contact.firstName}} 👋",
+    body: `<p>Hi {{contact.firstName}},</p>
+<p>I noticed you recently opened one of our emails and wanted to personally reach out.</p>
+<p>If you have any questions or want to explore how we can help{{#if company.name}} {{company.name}}{{/if}}, I'd love to chat!</p>
+<p><a href="{{user.bookingLink}}">Book a 15-minute call →</a></p>
+<p>Looking forward to hearing from you!<br/>{{user.name}}</p>
+<p style="font-size:11px;color:#999;"><a href="{{unsubscribeUrl}}">Unsubscribe</a></p>`,
+    type: 'ENGAGEMENT_RESPONSE' as const,
+    isShared: true,
+    variables: ['contact.firstName', 'company.name', 'user.name', 'user.bookingLink', 'unsubscribeUrl'],
   },
 ];
 
@@ -88,45 +137,45 @@ const emailTemplates = [
 const smsTemplates = [
   {
     name: 'Contact Auto-Reply',
-    body: "Hi {{firstName}}, thanks for reaching out to Vyntrize! We've received your message and will be in touch shortly.",
+    body: "Hi {{contact.firstName}}, thanks for reaching out to Vyntrize! We've received your message and will be in touch shortly.",
     type: 'CONFIRMATION' as const,
     isShared: true,
-    variables: ['firstName'],
+    variables: ['contact.firstName'],
   },
   {
     name: 'Welcome – New Lead',
-    body: "Hi {{firstName}}, welcome! We're excited to connect with you. One of our team will reach out soon.",
+    body: "Hi {{contact.firstName}}, welcome! We're excited to connect with you. {{user.name}} from our team will reach out soon.",
     type: 'WELCOME' as const,
     isShared: true,
-    variables: ['firstName'],
+    variables: ['contact.firstName', 'user.name'],
   },
   {
     name: 'Meeting Link Notification',
-    body: 'Hi {{firstName}}, {{senderName}} just sent you a calendar invite! Check your email for the meeting details.',
+    body: 'Hi {{contact.firstName}}, {{user.name}} just sent you a calendar invite! Check your email for the meeting details.',
     type: 'MEETING_INVITE' as const,
     isShared: true,
-    variables: ['firstName', 'senderName'],
+    variables: ['contact.firstName', 'user.name'],
   },
   {
     name: 'Follow-up Reminder',
-    body: "Hi {{firstName}}, just checking in! We'd love to continue the conversation. Reply anytime or book a call: {{bookingUrl}}",
+    body: "Hi {{contact.firstName}}, just checking in! We'd love to continue the conversation. Book a call here: {{user.bookingLink}}. Reply STOP to opt out.",
     type: 'FOLLOW_UP' as const,
     isShared: true,
-    variables: ['firstName', 'bookingUrl'],
+    variables: ['contact.firstName', 'user.bookingLink'],
   },
   {
     name: 'Initial Outreach',
-    body: 'Hi {{firstName}}, this is {{senderName}} from Vyntrize. Would you be open to a quick 15-minute call to explore how we can help?',
+    body: 'Hi {{contact.firstName}}, this is {{user.name}} from Vyntrize. Would you be open to a quick 15-min call? Book here: {{user.bookingLink}}. Reply STOP to opt out.',
     type: 'INITIAL_OUTREACH' as const,
     isShared: true,
-    variables: ['firstName', 'senderName'],
+    variables: ['contact.firstName', 'user.name', 'user.bookingLink'],
   },
   {
     name: 'Re-engagement',
-    body: "Hi {{firstName}}, we haven't spoken in a while! We've got some exciting updates — would love to reconnect when you get a chance.",
+    body: "Hi {{contact.firstName}}, we haven't spoken in a while! We've got exciting updates — would love to reconnect. Reply STOP to opt out.",
     type: 'RE_ENGAGEMENT' as const,
     isShared: true,
-    variables: ['firstName'],
+    variables: ['contact.firstName'],
   },
 ];
 
