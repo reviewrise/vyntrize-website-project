@@ -1,9 +1,9 @@
 # Redirect bare domain to www (canonical)
-vyntrise.com {
+http://vyntrise.com {
     redir https://www.vyntrise.com{uri} 301
 }
 
-www.vyntrise.com {
+http://www.vyntrise.com {
     # Block the phantom /en locale prefix — redirect to canonical paths.
     # NOTE: destination must NOT include /en or it will loop.
     @enExact path /en
@@ -15,6 +15,6 @@ www.vyntrise.com {
     reverse_proxy vyntrize-website:3013
 }
 
-crm.vyntrise.com {
+http://crm.vyntrise.com {
     reverse_proxy vyntrize-crm:3014
 }
