@@ -50,4 +50,6 @@ class SSEStreamManager {
   }
 }
 
-export const sseStreamManager = new SSEStreamManager();
+const globalForSse = global as unknown as { sseStreamManager?: SSEStreamManager };
+export const sseStreamManager = globalForSse.sseStreamManager ?? new SSEStreamManager();
+if (process.env.NODE_ENV !== 'production') globalForSse.sseStreamManager = sseStreamManager;

@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
         'ioredis',
     ],
     experimental: {
+        instrumentationHook: true,
         serverActions: {
             allowedOrigins: ['crm.vyntrise.com', 'localhost:3014'],
         },
