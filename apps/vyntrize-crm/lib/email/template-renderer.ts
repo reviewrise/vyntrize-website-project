@@ -121,10 +121,14 @@ export class TemplateRenderer {
   private static generateTrackingPixel(trackingId: string): string {
     // EMAIL_TRACKING_DOMAIN is a runtime server-side env var (not baked at build time).
     // NEXT_PUBLIC_CRM_URL is a fallback (baked at build time — can be wrong in production).
-    const trackingDomain =
+    let trackingDomain =
       process.env.EMAIL_TRACKING_DOMAIN ||
       process.env.NEXT_PUBLIC_CRM_URL ||
       'https://crm.vyntrise.com';
+    if (!trackingDomain.startsWith('http://') && !trackingDomain.startsWith('https://')) {
+      trackingDomain = `https://${trackingDomain}`;
+    }
+    trackingDomain = trackingDomain.replace(/\/$/, '');
     const trackingEnabled = process.env.EMAIL_TRACKING_ENABLED !== 'false';
 
     if (!trackingEnabled) return '';
@@ -136,10 +140,14 @@ export class TemplateRenderer {
    * Wrap links with tracking URLs
    */
   private static wrapLinksWithTracking(html: string, trackingId: string): string {
-    const trackingDomain =
+    let trackingDomain =
       process.env.EMAIL_TRACKING_DOMAIN ||
       process.env.NEXT_PUBLIC_CRM_URL ||
       'https://crm.vyntrise.com';
+    if (!trackingDomain.startsWith('http://') && !trackingDomain.startsWith('https://')) {
+      trackingDomain = `https://${trackingDomain}`;
+    }
+    trackingDomain = trackingDomain.replace(/\/$/, '');
     const trackingEnabled = process.env.EMAIL_TRACKING_ENABLED !== 'false';
 
     if (!trackingEnabled) return html;

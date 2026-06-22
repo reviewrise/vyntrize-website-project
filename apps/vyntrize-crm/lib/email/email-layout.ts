@@ -146,8 +146,20 @@ async function loadSenderProfile(userId: string): Promise<SenderProfile | null> 
 export function buildEmailLayout(
   bodyHtml: string,
   company: CompanyBranding,
-  sender?: SenderProfile | null
+  sender?: SenderProfile | null,
+  trackingId?: string
 ): string {
+  // Build the tracking pixel URL (if tracking is configured)
+  let trackingDomain =
+    process.env.EMAIL_TRACKING_DOMAIN ||
+    process.env.NEXT_PUBLIC_CRM_URL ||
+    'https://crm.vyntrise.com';
+  if (!trackingDomain.startsWith('http://') && !trackingDomain.startsWith('https://')) {
+    trackingDomain = `https://${trackingDomain}`;
+  }
+  const trackingPixelTag = trackingId
+    ? `<img src="${trackingDomain.replace(/\/$/, '')}/api/email/track/open/${trackingId}" width="1" height="1" border="0" alt="" style="display:block;width:1px;height:1px;border:0;" />`
+    : '';
   // Resolve logo: if it's a relative path, make it absolute using the company website.
   const logoSrc = company.logoUrl.startsWith('http')
     ? company.logoUrl
@@ -335,6 +347,9 @@ export function buildEmailLayout(
             </td>
           </tr>
 
+          <!-- TRACKING PIXEL -->
+          ${trackingPixelTag ? `<tr><td>${trackingPixelTag}</td></tr>` : ''}
+
           <!-- FOOTER -->
           <tr><td>${footer}</td></tr>
 
@@ -385,7 +400,7 @@ export async function wrapWithEmailLayout(
   // don't end up with nested <html> tags.
   const bodyHtml = extractBodyContent(html);
 
-  return buildEmailLayout(bodyHtml, company, sender);
+  return buildEmailLayout(bodyHtml, company, sender, options.trackingId);
 }
 
 /**
