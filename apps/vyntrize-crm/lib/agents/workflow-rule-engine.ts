@@ -25,7 +25,7 @@ import { EmailGenerationAgent } from './email-generation-agent';
 import { emailService } from '@/lib/email/email-service';
 import { syncEventToGoogle } from '@/lib/google-calendar';
 import { sendCustomerSms } from '@/lib/sms/send-customer-sms';
-import { buildSmsTemplateVars } from '@/lib/sms/sms-template-vars';
+import { ContextBuilder } from '@/lib/automation/context-builder';
 import crypto from 'crypto';
 import { z } from 'zod';
 import type { Lead } from '@platform/vyntrize-db';
@@ -325,13 +325,7 @@ export class WorkflowRuleEngine extends Agent {
             const { TemplateRenderer } = await import('@/lib/email/template-renderer');
             const { emailService } = await import('@/lib/email/email-service');
 
-            const templateVars = {
-              firstName: contact.firstName || '',
-              lastName:  contact.lastName  || '',
-              email:     contact.email,
-              leadTitle: lead.title || '',
-              unsubscribeUrl: `${process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com'}/api/email/unsubscribe?email=${encodeURIComponent(contact.email)}`,
-            };
+            const templateVars = ContextBuilder.buildVariables({ contact, lead: lead as any });
 
             const trackingId = `wf_rule_${rule.id}_${Date.now()}`;
             
@@ -436,7 +430,7 @@ export class WorkflowRuleEngine extends Agent {
         }
 
         // FULLY_AUTONOMOUS — send immediately
-        const templateVars = buildSmsTemplateVars(contact, lead as any);
+        const templateVars = ContextBuilder.buildVariables({ contact, lead: lead as any });
         await sendCustomerSms({
           to:        contact?.phone,
           message:   resolvedMessage,

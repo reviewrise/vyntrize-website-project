@@ -19,7 +19,7 @@ import { EmailGenerationAgent } from './email-generation-agent';
 import { emailService } from '@/lib/email/email-service';
 import { TemplateRenderer } from '@/lib/email/template-renderer';
 import { sendCustomerSms } from '@/lib/sms/send-customer-sms';
-import { buildSmsTemplateVars } from '@/lib/sms/sms-template-vars';
+import { ContextBuilder } from '@/lib/automation/context-builder';
 import type {
   Lead,
   Contact,
@@ -335,7 +335,7 @@ export class DripCampaignAgent extends Agent {
 
     // ── SMS step ────────────────────────────────────────────────────────
     if (currentStep.smsBodyTemplate && !contact.smsOptOut) {
-      const smsTemplateVars = buildSmsTemplateVars(contact, lead as any);
+      const smsTemplateVars = ContextBuilder.buildVariables({ contact, lead: lead as any });
       try {
         await sendCustomerSms({
           to:        contact.phone,
@@ -372,13 +372,7 @@ export class DripCampaignAgent extends Agent {
       const contactEmail = contact.email;
       const trackingId = `drip_${enrollmentId}_step${currentStep.stepOrder}_${Date.now()}`;
 
-      const templateVars = {
-        firstName: contact.firstName || '',
-        lastName:  contact.lastName  || '',
-        email:     contactEmail,
-        leadTitle: lead.title || '',
-        unsubscribeUrl: `${process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com'}/api/email/unsubscribe?email=${encodeURIComponent(contactEmail)}`,
-      };
+      const templateVars = ContextBuilder.buildVariables({ contact, lead: lead as any });
 
       let formattedBody = body.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br/>');
       if (!formattedBody.startsWith('<p>')) formattedBody = `<p>${formattedBody}</p>`;

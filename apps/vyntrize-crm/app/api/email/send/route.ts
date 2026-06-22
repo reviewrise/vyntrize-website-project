@@ -9,6 +9,8 @@ import { vyntrizeDb } from '@platform/vyntrize-db';
 import { emailService } from '@/lib/email/email-service';
 import { TemplateRenderer } from '@/lib/email/template-renderer';
 import { TrackingService } from '@/lib/email/tracking-service';
+import { ContextBuilder } from '@/lib/automation/context-builder';
+import { prisma } from '@/lib/prisma';
 
 interface SendEmailRequest {
   to: string;
@@ -69,8 +71,27 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Render template with variables
-      const variables = data.templateVariables || {};
+      // Build context variables from lead/contact in the DB
+      let contextVars = {};
+      if (data.leadId) {
+        const lead = await prisma.lead.findUnique({
+          where: { id: data.leadId },
+          include: { contact: true, assignee: true },
+        });
+        if (lead) {
+          contextVars = ContextBuilder.buildVariables({
+            lead: lead as any,
+            contact: lead.contact as any,
+            user: lead.assignee as any,
+          });
+        }
+      } else if (data.contactId) {
+        const contact = await prisma.contact.findUnique({ where: { id: data.contactId } });
+        if (contact) contextVars = ContextBuilder.buildVariables({ contact: contact as any });
+      }
+
+      // Merge: DB-resolved vars as base, caller-supplied templateVariables override
+      const variables = { ...contextVars, ...(data.templateVariables || {}) };
       emailBody = TemplateRenderer.render(template.body, variables);
       emailSubject = TemplateRenderer.render(template.subject, variables);
     }

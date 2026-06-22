@@ -61,21 +61,21 @@ export class TemplateRenderer {
   }
 
   /**
-   * Replace simple variables {{variable}}
+   * Replace simple variables {{variable}} and {{dot.notation}}
    */
   private static replaceVariables(template: string, variables: TemplateVariables): string {
-    return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+    return template.replace(/\{\{([\w.]+)\}\}/g, (match, key) => {
       const value = variables[key];
       return value !== undefined && value !== null ? String(value) : '';
     });
   }
 
   /**
-   * Handle conditional blocks {{#if variable}}...{{/if}}
+   * Handle conditional blocks {{#if variable}} and {{#if dot.notation}}...{{/if}}
    */
   private static handleConditionals(template: string, variables: TemplateVariables): string {
     return template.replace(
-      /\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g,
+      /\{\{#if\s+([\w.]+)\}\}([\s\S]*?)\{\{\/if\}\}/g,
       (match, key, content) => {
         const value = variables[key];
         return value ? content : '';
