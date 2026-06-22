@@ -29,10 +29,24 @@ export async function POST(
         return NextResponse.json({ error: 'Cannot auto-approve a MANUAL task. Resolve it first.' }, { status: 400 });
     }
 
-    // 1. Update status to IN_PROGRESS
+    // Optional: User may have edited the draft payload before approving
+    let payloadOverride: Record<string, unknown> | undefined;
+    try {
+      const body = await request.json();
+      if (body?.payload && typeof body.payload === 'object') {
+        payloadOverride = body.payload;
+      }
+    } catch {
+      // No body or invalid JSON — that's fine, use original payload
+    }
+
+    // 1. Update status to IN_PROGRESS, and save edited payload if provided
     const updatedTask = await prisma.leadTask.update({
       where: { id: taskId },
-      data: { status: 'IN_PROGRESS' }
+      data: {
+        status: 'IN_PROGRESS',
+        ...(payloadOverride ? { payload: payloadOverride } : {}),
+      },
     });
 
     // 2. Emit the TASK_APPROVED event so the TaskExecutionAgent can pick it up

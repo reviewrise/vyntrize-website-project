@@ -69,6 +69,8 @@ export default function TaskList({ currentUserId, currentUserRole, leadId }: Tas
   
   // Action state
   const [processingId, setProcessingId] = useState<number | null>(null);
+  const [editingPayload, setEditingPayload] = useState<Record<string, string> | null>(null);
+  const [isEditingDraft, setIsEditingDraft] = useState(false);
 
   useEffect(() => {
     fetchTasks();
@@ -153,13 +155,19 @@ export default function TaskList({ currentUserId, currentUserRole, leadId }: Tas
     }
   };
 
-  const handleAiApprove = async (taskId: number) => {
+  const handleAiApprove = async (taskId: number, overridePayload?: Record<string, string>) => {
     setProcessingId(taskId);
     try {
+      const body: Record<string, unknown> = {};
+      if (overridePayload) body.payload = overridePayload;
       const response = await fetch(`/api/crm/tasks/${taskId}/approve`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       });
       if (!response.ok) throw new Error('Failed to approve task');
+      setEditingPayload(null);
+      setIsEditingDraft(false);
       fetchTasks();
     } catch (error) {
       alert('Approval failed');
@@ -434,33 +442,108 @@ export default function TaskList({ currentUserId, currentUserRole, leadId }: Tas
                         </div>
                       ) : (
                         <div className="p-5 rounded-xl" style={{ backgroundColor: 'var(--color-success-soft)' }}>
-                          <div className="flex items-center gap-2 mb-3">
+                          <div className="flex items-center justify-between gap-2 mb-3">
                             <span className="px-2 py-1 bg-white rounded text-xs font-bold" style={{ color: 'var(--color-success)' }}>
                               PROPOSED: {selectedTask.taskType}
                             </span>
+                            {selectedTask.taskType === 'EMAIL' && (
+                              <button
+                                onClick={() => {
+                                  if (isEditingDraft) {
+                                    setIsEditingDraft(false);
+                                    setEditingPayload(null);
+                                  } else {
+                                    setIsEditingDraft(true);
+                                    setEditingPayload({
+                                      to: selectedTask.payload?.to || '',
+                                      subject: selectedTask.payload?.subject || '',
+                                      body: selectedTask.payload?.body?.replace(/<[^>]+>/g, '') || '',
+                                    });
+                                  }
+                                }}
+                                className="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold transition-colors"
+                                style={{
+                                  backgroundColor: isEditingDraft ? 'var(--color-warning-soft)' : 'white',
+                                  color: isEditingDraft ? 'var(--color-warning)' : 'var(--color-text-muted)',
+                                  border: '1px solid var(--color-border)',
+                                }}
+                              >
+                                <PencilIcon className="h-3.5 w-3.5" />
+                                {isEditingDraft ? 'Cancel Edit' : 'Edit before sending'}
+                              </button>
+                            )}
                           </div>
+
                           <div className="text-sm mb-4 bg-white p-4 rounded-lg shadow-sm border border-emerald-100" style={{ color: 'var(--color-text)' }}>
                             {selectedTask.taskType === 'EMAIL' ? (
-                              <>
-                                <div className="mb-2"><strong className="text-gray-500 text-xs uppercase tracking-wider">To:</strong> {selectedTask.payload?.to}</div>
-                                <div className="mb-3"><strong className="text-gray-500 text-xs uppercase tracking-wider">Subject:</strong> {selectedTask.payload?.subject}</div>
-                                <div className="pt-3 border-t border-gray-100 text-gray-700 whitespace-pre-wrap font-medium">
-                                  {selectedTask.payload?.body?.replace(/<[^>]+>/g, '')}
+                              isEditingDraft && editingPayload ? (
+                                // ── Editable draft ──
+                                <div className="space-y-3">
+                                  <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--color-text-subtle)' }}>To</label>
+                                    <input
+                                      type="text"
+                                      value={editingPayload.to}
+                                      readOnly
+                                      className="w-full text-sm rounded-lg px-3 py-2 border bg-gray-50"
+                                      style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--color-text-subtle)' }}>Subject</label>
+                                    <input
+                                      type="text"
+                                      value={editingPayload.subject}
+                                      onChange={(e) => setEditingPayload({ ...editingPayload, subject: e.target.value })}
+                                      className="w-full text-sm rounded-lg px-3 py-2 border focus:outline-none focus:ring-2"
+                                      style={{ borderColor: 'var(--color-primary)', color: 'var(--color-text)' }}
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--color-text-subtle)' }}>Message</label>
+                                    <textarea
+                                      rows={8}
+                                      value={editingPayload.body}
+                                      onChange={(e) => setEditingPayload({ ...editingPayload, body: e.target.value })}
+                                      className="w-full text-sm rounded-lg px-3 py-2 border focus:outline-none focus:ring-2 resize-none font-medium leading-relaxed"
+                                      style={{ borderColor: 'var(--color-primary)', color: 'var(--color-text)' }}
+                                    />
+                                  </div>
                                 </div>
-                              </>
+                              ) : (
+                                // ── Read-only preview ──
+                                <>
+                                  <div className="mb-2"><strong className="text-gray-500 text-xs uppercase tracking-wider">To:</strong> {selectedTask.payload?.to}</div>
+                                  <div className="mb-3"><strong className="text-gray-500 text-xs uppercase tracking-wider">Subject:</strong> {selectedTask.payload?.subject}</div>
+                                  <div className="pt-3 border-t border-gray-100 text-gray-700 whitespace-pre-wrap font-medium">
+                                    {selectedTask.payload?.body?.replace(/<[^>]+>/g, '')}
+                                  </div>
+                                </>
+                              )
                             ) : (
                               <pre className="font-mono text-xs overflow-x-auto">{JSON.stringify(selectedTask.payload, null, 2)}</pre>
                             )}
                           </div>
-                          <button
-                            onClick={() => handleAiApprove(selectedTask.id)}
-                            disabled={processingId === selectedTask.id}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-white shadow-md transition-transform active:scale-95 disabled:opacity-50"
-                            style={{ backgroundColor: 'var(--color-success)' }}
-                          >
-                            <CheckIcon className="h-4 w-4" />
-                            {processingId === selectedTask.id ? 'Executing...' : 'Approve & Execute Task'}
-                          </button>
+
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => handleAiApprove(
+                                selectedTask.id,
+                                isEditingDraft && editingPayload
+                                  ? { ...selectedTask.payload, subject: editingPayload.subject, body: `<p>${editingPayload.body.replace(/\n/g, '</p><p>')}</p>` }
+                                  : undefined
+                              )}
+                              disabled={processingId === selectedTask.id}
+                              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-white shadow-md transition-transform active:scale-95 disabled:opacity-50"
+                              style={{ backgroundColor: 'var(--color-success)' }}
+                            >
+                              <CheckIcon className="h-4 w-4" />
+                              {processingId === selectedTask.id ? 'Sending...' : isEditingDraft ? 'Send Edited Version' : 'Approve & Send'}
+                            </button>
+                            {isEditingDraft && (
+                              <span className="text-xs" style={{ color: 'var(--color-text-subtle)' }}>Your edits will be sent instead of the original draft.</span>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
