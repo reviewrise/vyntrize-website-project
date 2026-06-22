@@ -172,10 +172,10 @@ export function buildEmailLayout(
 
   // ── Header ──────────────────────────────────────────────────────────────────
   const header = `
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a; border-radius:12px 12px 0 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff; border-top:4px solid #4f46e5; border-bottom:1px solid #e2e8f0; border-radius:12px 12px 0 0;">
       <tr>
-        <td style="padding:24px 32px;">
-          <table cellpadding="0" cellspacing="0">
+        <td style="padding:24px 32px; text-align:left;">
+          <table cellpadding="0" cellspacing="0" style="display:inline-block;">
             <tr>
               <td style="vertical-align:middle;">
                 <img
