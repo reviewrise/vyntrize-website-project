@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { PlusIcon, FunnelIcon, CheckCircleIcon, ClockIcon, BoltIcon, CheckIcon, PlayIcon, SparklesIcon, CalendarIcon, UserCircleIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
 import TaskModal from './TaskModal';
 import RichTextEditor from './RichTextEditor';
+import { toast } from 'sonner';
 
 interface Task {
   id: number;
@@ -132,8 +133,9 @@ export default function TaskList({ currentUserId, currentUserRole, leadId }: Tas
 
       // Update locally
       setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+      toast.success(`Task status updated to ${newStatus.replace('_', ' ')}`);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to update task');
+      toast.error(err instanceof Error ? err.message : 'Failed to update task');
     } finally {
       setProcessingId(null);
     }
@@ -149,8 +151,9 @@ export default function TaskList({ currentUserId, currentUserRole, leadId }: Tas
       const data = await response.json();
       // Update locally
       setTasks(tasks.map(t => t.id === taskId ? { ...t, taskType: data.task.taskType, payload: data.task.payload } : t));
+      toast.success('AI resolution draft generated successfully!');
     } catch (error) {
-      alert('AI Resolution failed');
+      toast.error('AI resolution draft failed to generate');
     } finally {
       setProcessingId(null);
     }
@@ -167,11 +170,12 @@ export default function TaskList({ currentUserId, currentUserRole, leadId }: Tas
         body: JSON.stringify(body),
       });
       if (!response.ok) throw new Error('Failed to approve task');
+      toast.success('Task approved and executed successfully!');
       setEditingPayload(null);
       setIsEditingDraft(false);
       fetchTasks();
     } catch (error) {
-      alert('Approval failed');
+      toast.error('Failed to approve and execute task');
     } finally {
       setProcessingId(null);
     }
