@@ -150,15 +150,15 @@ async function main() {
 
   console.log('\n💬 Seeding SMS Templates...');
   for (const tpl of smsTemplates) {
-    const existing = await (prisma as any).smsTemplate.findFirst({ where: { name: tpl.name } });
+    const existing = await vyntrizeDb.smsTemplate.findFirst({ where: { name: tpl.name } });
     if (existing) {
-      await (prisma as any).smsTemplate.update({
+      await vyntrizeDb.smsTemplate.update({
         where: { id: existing.id },
         data: { body: tpl.body, type: tpl.type, isShared: tpl.isShared, variables: tpl.variables },
       });
       console.log(`  🔄  Updated: "${tpl.name}"`);
     } else {
-      await (prisma as any).smsTemplate.create({ data: tpl });
+      await vyntrizeDb.smsTemplate.create({ data: tpl });
       console.log(`  ✅  Created: "${tpl.name}"`);
     }
   }
