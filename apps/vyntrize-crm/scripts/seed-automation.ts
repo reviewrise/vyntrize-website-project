@@ -144,6 +144,7 @@ Would you be open to a quick 15-minute call this week?
 
 Best,
 The Vyntrize Team`,
+          smsBodyTemplate: `Hi {{firstName}}, thanks for reaching out to Vyntrize! I just sent our service guide to your email. Let me know if you received it! — Abenezer`,
           branchCondition: 'always',
         },
         {
@@ -337,11 +338,12 @@ The Vyntrize Team`,
         autonomyLevel: seq.autonomyLevel as any,
         isActive: true,
         steps: {
-          create: seq.steps.map((step) => ({
+          create: seq.steps.map((step: any) => ({
             stepOrder: step.stepOrder,
             delayHours: step.delayHours,
-            subjectTemplate: step.subjectTemplate,
-            bodyTemplate: step.bodyTemplate,
+            emailSubjectTemplate: step.subjectTemplate,
+            emailBodyTemplate: step.bodyTemplate,
+            smsBodyTemplate: step.smsBodyTemplate,
             branchCondition: step.branchCondition,
           })),
         },

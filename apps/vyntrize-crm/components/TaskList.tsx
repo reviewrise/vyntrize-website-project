@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { PlusIcon, FunnelIcon, CheckCircleIcon, ClockIcon, BoltIcon, CheckIcon, PlayIcon, SparklesIcon, CalendarIcon, UserCircleIcon, TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
 import TaskModal from './TaskModal';
+import RichTextEditor from './RichTextEditor';
 
 interface Task {
   id: number;
@@ -457,7 +458,7 @@ export default function TaskList({ currentUserId, currentUserRole, leadId }: Tas
                                     setEditingPayload({
                                       to: selectedTask.payload?.to || '',
                                       subject: selectedTask.payload?.subject || '',
-                                      body: selectedTask.payload?.body?.replace(/<[^>]+>/g, '') || '',
+                                      body: selectedTask.payload?.body || '',
                                     });
                                   }
                                 }}
@@ -501,12 +502,10 @@ export default function TaskList({ currentUserId, currentUserRole, leadId }: Tas
                                   </div>
                                   <div>
                                     <label className="block text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--color-text-subtle)' }}>Message</label>
-                                    <textarea
-                                      rows={8}
+                                    <RichTextEditor
                                       value={editingPayload.body}
-                                      onChange={(e) => setEditingPayload({ ...editingPayload, body: e.target.value })}
-                                      className="w-full text-sm rounded-lg px-3 py-2 border focus:outline-none focus:ring-2 resize-none font-medium leading-relaxed"
-                                      style={{ borderColor: 'var(--color-primary)', color: 'var(--color-text)' }}
+                                      onChange={(val) => setEditingPayload({ ...editingPayload, body: val })}
+                                      placeholder="Write your email content here..."
                                     />
                                   </div>
                                 </div>
@@ -515,8 +514,8 @@ export default function TaskList({ currentUserId, currentUserRole, leadId }: Tas
                                 <>
                                   <div className="mb-2"><strong className="text-gray-500 text-xs uppercase tracking-wider">To:</strong> {selectedTask.payload?.to}</div>
                                   <div className="mb-3"><strong className="text-gray-500 text-xs uppercase tracking-wider">Subject:</strong> {selectedTask.payload?.subject}</div>
-                                  <div className="pt-3 border-t border-gray-100 text-gray-700 whitespace-pre-wrap font-medium">
-                                    {selectedTask.payload?.body?.replace(/<[^>]+>/g, '')}
+                                  <div className="pt-3 border-t border-gray-100 text-gray-700 font-medium">
+                                    <div dangerouslySetInnerHTML={{ __html: selectedTask.payload?.body || '' }} />
                                   </div>
                                 </>
                               )
@@ -530,7 +529,7 @@ export default function TaskList({ currentUserId, currentUserRole, leadId }: Tas
                               onClick={() => handleAiApprove(
                                 selectedTask.id,
                                 isEditingDraft && editingPayload
-                                  ? { ...selectedTask.payload, subject: editingPayload.subject, body: `<p>${editingPayload.body.replace(/\n/g, '</p><p>')}</p>` }
+                                  ? { ...selectedTask.payload, subject: editingPayload.subject, body: editingPayload.body }
                                   : undefined
                               )}
                               disabled={processingId === selectedTask.id}
