@@ -98,16 +98,7 @@ const team = [
     photo: '/images/teams/Abenezer Seyoum.png',
     linkedin: 'https://www.linkedin.com/in/abenezer-seyoum',
   },
-  {
-    name: 'Biniyam Lombe',
-    title: 'AI Systems Architect & LLM Engineer',
-    bio: 'Designs and builds the autonomous agent systems and LLM pipelines powering highly efficient custom client workflows.',
-    initials: 'BL',
-    color: 'bg-emerald-500',
-    tag: 'AI Engineering',
-    photo: '/images/teams/Biniyam Lombe.jpg',
-    linkedin: null,
-  },
+  
   {
     name: 'Mesay Alemayehu',
     title: 'Digital Marketing Strategist & Business Analyst',
