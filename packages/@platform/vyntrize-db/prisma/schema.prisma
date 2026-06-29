@@ -1564,3 +1564,61 @@ model NotificationPreference {
   @@unique([userId, eventType, channel])
   @@map("crm_notification_preferences")
 }
+
+// ─── Content Recommendation Engine ─────────────────────────────────────────────
+
+model Article {
+  id           String   @id @default(cuid())
+  source       String
+  sourceType   String
+  title        String
+  description  String?  @db.Text
+  content      String?  @db.Text
+  url          String   @unique
+  image        String?  @db.Text
+  author       String?
+  publishedAt  DateTime
+  language     String?  @default("en")
+  tags         String[]
+  category     String?
+  score        Float?   @default(0)
+  aiSummary    String?  @db.Text
+  whyItMatters String?  @db.Text
+  readingTime  Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([score])
+  @@index([publishedAt])
+  @@index([source])
+  @@map("articles")
+}
+
+model Organization {
+  id           String   @id @default(cuid())
+  industry     String?
+  companySize  String?
+  services     String[]
+  technologies String[]
+  interests    String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("organizations")
+}
+
+model SourceIntegration {
+  id       String  @id @default(cuid())
+  provider String
+  apiKey   String?
+  isActive Boolean @default(true)
+  config   Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("source_integrations")
+}
