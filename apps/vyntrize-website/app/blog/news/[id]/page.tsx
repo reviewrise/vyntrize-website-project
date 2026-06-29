@@ -4,9 +4,10 @@ import Link from "next/link";
 import { ArrowLeft, Calendar, ExternalLink, Hash, Tag } from "lucide-react";
 import SchemaMarkup from "@/components/seo/SchemaMarkup";
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const article = await prisma.article.findUnique({
-    where: { id: params.id },
+    where: { id },
   });
 
   if (!article) return { title: "Article Not Found" };
@@ -17,9 +18,10 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
   };
 }
 
-export default async function NewsDetailPage({ params }: { params: { id: string } }) {
+export default async function NewsDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const article = await prisma.article.findUnique({
-    where: { id: params.id },
+    where: { id },
   });
 
   if (!article) {
