@@ -6,6 +6,7 @@ export const metadata: Metadata = buildMeta({
   description: 'Human creativity amplified by AI efficiency. Authentic video content, community management, hybrid email strategy, and E-E-A-T SEO that drives real engagement.',
   path: '/services/digital-marketing',
   keywords: ['digital marketing', 'AI marketing', 'content marketing', 'email marketing', 'community management', 'SEO content'],
+  ogImage: '/og-services-marketing.png',
 });
 
 export default function Layout({ children }: { children: React.ReactNode }) {

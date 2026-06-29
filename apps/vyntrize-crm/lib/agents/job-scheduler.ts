@@ -142,12 +142,38 @@ class AgentJobScheduler {
   ) {
     await this.ensureInitialized();
 
+    let finalDelay = delay || 0;
+
+    // Phase 4: Timezone Compliance Check
+    if (context.leadId) {
+      try {
+        const { prisma } = await import('@/lib/prisma');
+        const lead = await prisma.lead.findUnique({ 
+          where: { id: context.leadId }, 
+          select: { 
+            assignee: { select: { timezone: true } }
+          } 
+        });
+        
+        if (lead && lead.assignee && lead.assignee.timezone) {
+          const { timezoneService } = await import('@/lib/compliance/timezone-service');
+          const complianceDelay = timezoneService.getDelayUntilNextWindow(lead.assignee.timezone);
+          if (complianceDelay > 0) {
+            console.log(`[JobScheduler] Delaying job for ${context.leadId} by ${Math.round(complianceDelay / 60000)} minutes to respect timezone window.`);
+            finalDelay += complianceDelay;
+          }
+        }
+      } catch (err) {
+        console.error('[JobScheduler] Failed to check timezone window', err);
+      }
+    }
+
     if (this.queue) {
       // BullMQ path
       await this.queue.add(
         `${agentType}-job`,
         { agentType, context, priority },
-        { priority, delay }
+        { priority, delay: finalDelay > 0 ? finalDelay : undefined }
       );
     } else {
       // In-memory fallback: run directly after optional delay
@@ -163,8 +189,8 @@ class AgentJobScheduler {
           console.error(`[JobScheduler] Direct execution failed for ${agentType}:`, err);
         }
       };
-      if (delay && delay > 0) {
-        setTimeout(run, delay);
+      if (finalDelay && finalDelay > 0) {
+        setTimeout(run, finalDelay);
       } else {
         // Fire-and-forget so we don't block the caller
         run().catch(() => {});

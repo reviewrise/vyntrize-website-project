@@ -139,16 +139,6 @@ class NotificationService {
     }
 
     return `
-<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-  <div style="max-width:520px;margin:40px auto;background:#ffffff;border-radius:12px;
-              border:1px solid #e5e7eb;overflow:hidden">
-    <!-- Header bar -->
-    <div style="background:#6366f1;height:4px"></div>
-    <!-- Body -->
-    <div style="padding:32px">
       <p style="margin:0 0 8px;font-size:12px;font-weight:600;text-transform:uppercase;
                 letter-spacing:0.05em;color:#6366f1">Vyntrize CRM</p>
       <h1 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#111827;line-height:1.3">
@@ -160,17 +150,13 @@ class NotificationService {
            </p>`
         : ''}
       ${entitySection}
-    </div>
-    <!-- Footer -->
-    <div style="padding:16px 32px;background:#f9fafb;border-top:1px solid #e5e7eb">
-      <p style="margin:0;font-size:12px;color:#9ca3af">
-        You're receiving this because you have email notifications enabled in Vyntrize CRM.
-        <a href="${crmBase}/notifications" style="color:#6366f1">Manage preferences</a>
-      </p>
-    </div>
-  </div>
-</body>
-</html>`;
+      
+      <div style="margin-top:32px;padding-top:16px;border-top:1px solid #e5e7eb">
+        <p style="margin:0;font-size:12px;color:#9ca3af">
+          You're receiving this because you have email notifications enabled in Vyntrize CRM.
+          <a href="${crmBase}/notifications" style="color:#6366f1">Manage preferences</a>
+        </p>
+      </div>`;
   }
 
   /** Build a compact SMS message (≤160 chars). */

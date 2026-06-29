@@ -2,13 +2,14 @@
 
 import { Draggable } from '@hello-pangea/dnd';
 import Link from 'next/link';
-import { AlertCircle, DollarSign, User } from 'lucide-react';
+import { AlertCircle, DollarSign, User, Star } from 'lucide-react';
 
 interface LeadCardProps {
     lead: {
         id: string;
         title: string;
         stage: string;
+        score: number;
         dealValue: string | null;
         closeDate: string | null;
         contact: { firstName: string; lastName: string };
@@ -40,11 +41,17 @@ export function LeadCard({ lead, index }: LeadCardProps) {
                         ...provided.draggableProps.style,
                     }}
                 >
-                    <Link href={`/leads/${lead.id}`} onClick={(e) => e.stopPropagation()}>
-                        <p className="text-xs font-semibold mb-1.5 hover:underline" style={{ color: 'var(--color-text)' }}>
-                            {lead.title}
-                        </p>
-                    </Link>
+                    <div className="flex items-start justify-between mb-1.5">
+                        <Link href={`/leads/${lead.id}`} onClick={(e) => e.stopPropagation()}>
+                            <p className="text-xs font-semibold hover:underline" style={{ color: 'var(--color-text)' }}>
+                                {lead.title}
+                            </p>
+                        </Link>
+                        <span className="flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--color-raised)', color: lead.score >= 80 ? '#16a34a' : lead.score >= 60 ? '#2563eb' : lead.score >= 40 ? '#d97706' : 'var(--color-text-muted)' }}>
+                            <Star className="h-2 w-2" />
+                            {lead.score}
+                        </span>
+                    </div>
 
                     <p className="text-[11px] mb-2" style={{ color: 'var(--color-text-muted)' }}>
                         {lead.contact.firstName} {lead.contact.lastName}

@@ -100,6 +100,22 @@ export class DripCampaignAgent extends Agent {
           };
         }
 
+        // If lead replied via email or SMS, stop all active drip sequences unconditionally
+        if (
+          context.eventData?.event === CRMEvent.EMAIL_REPLIED ||
+          context.eventData?.event === CRMEvent.SMS_REPLIED
+        ) {
+          for (const enrollment of activeEnrollments) {
+            if (enrollment.status === 'ACTIVE') {
+              await this.stopEnrollment(enrollment.id, 'lead_replied');
+            }
+          }
+          return {
+            success: true,
+            reasoning: `Stopped ${activeEnrollments.length} active drips because the lead replied.`,
+          };
+        }
+
         // 2. Check if any active DripSequence trigger conditions match this lead
         const sequences = await prisma.dripSequence.findMany({
           where: { isActive: true },

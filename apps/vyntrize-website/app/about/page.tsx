@@ -86,7 +86,7 @@ const team = [
     color: 'bg-blue-500',
     tag: 'Founder & CEO',
     photo: null, // No photo yet — renders InitialsAvatar
-    linkedin: '#',
+    linkedin: null,
   },
   {
     name: 'Abenezer Seyoum',
@@ -96,7 +96,7 @@ const team = [
     color: 'bg-violet-500',
     tag: 'CTO',
     photo: '/images/teams/Abenezer Seyoum.png',
-    linkedin: '#',
+    linkedin: 'https://www.linkedin.com/in/abenezer-seyoum',
   },
   {
     name: 'Biniyam Lombe',
@@ -106,7 +106,7 @@ const team = [
     color: 'bg-emerald-500',
     tag: 'AI Engineering',
     photo: '/images/teams/Biniyam Lombe.jpg',
-    linkedin: '#',
+    linkedin: null,
   },
   {
     name: 'Mesay Alemayehu',
@@ -116,7 +116,7 @@ const team = [
     color: 'bg-amber-500',
     tag: 'Marketing & Strategy',
     photo: '/images/teams/Mesay Alemayehu .jpg',
-    linkedin: '#',
+    linkedin: null,
   },
   {
     name: 'Gedion Bula',
@@ -126,7 +126,7 @@ const team = [
     color: 'bg-rose-500',
     tag: 'Business Intelligence',
     photo: '/images/teams/Gedion Bula.jpg',
-    linkedin: '#',
+    linkedin: null,
   },
   {
     name: 'Mahlet Getachew',
@@ -135,8 +135,8 @@ const team = [
     initials: 'MG',
     color: 'bg-cyan-500',
     tag: 'Business Development',
-    photo: '/images/teams/Mahlet Getachew .jpg', 
-    linkedin: '#',
+    photo: '/images/teams/Mahlet Getachew .jpg',
+    linkedin: null,
   },
   {
     name: 'Abel Legesse',
@@ -146,7 +146,7 @@ const team = [
     color: 'bg-indigo-500',
     tag: 'Engineering',
     photo: '/images/teams/Abel Legesse.jpg',
-    linkedin: '#',
+    linkedin: null,
   },
 ];
 
@@ -444,11 +444,13 @@ const portfolioBar: Record<string, string> = {
                   <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold" style={{ backgroundColor: 'var(--color-raised)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
                     {member.tag}
                   </span>
-                  <a href={member.linkedin} aria-label={`${member.name} on LinkedIn`} className="hover:text-blue-500 transition-colors" style={{ color: 'var(--color-text-subtle)' }}>
-                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                    </svg>
-                  </a>
+                  {member.linkedin ? (
+                    <a href={member.linkedin} target="_blank" rel="noopener noreferrer" aria-label={`${member.name} on LinkedIn`} className="hover:text-blue-500 transition-colors" style={{ color: 'var(--color-text-subtle)' }}>
+                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                      </svg>
+                    </a>
+                  ) : null}
                 </div>
               </motion.div>
             ))}

@@ -17,6 +17,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/contact`,                             lastModified: new Date('2026-05-10'), changeFrequency: 'monthly', priority: 0.7  },
     { url: `${BASE_URL}/faq`,                                 lastModified: new Date('2026-05-10'), changeFrequency: 'monthly', priority: 0.6  },
     { url: `${BASE_URL}/support`,                             lastModified: new Date('2026-05-10'), changeFrequency: 'monthly', priority: 0.6  },
+    { url: `${BASE_URL}/blog`,                                lastModified: new Date('2026-06-25'), changeFrequency: 'weekly',  priority: 0.8  },
+    { url: `${BASE_URL}/blog/how-to-get-more-5-star-google-reviews`, lastModified: new Date('2026-06-25'), changeFrequency: 'monthly', priority: 0.7  },
     { url: `${BASE_URL}/privacy`,                             lastModified: new Date('2026-01-01'), changeFrequency: 'yearly',  priority: 0.3  },
     { url: `${BASE_URL}/terms`,                               lastModified: new Date('2026-01-01'), changeFrequency: 'yearly',  priority: 0.3  },
     { url: `${BASE_URL}/cookies`,                             lastModified: new Date('2026-01-01'), changeFrequency: 'yearly',  priority: 0.3  },

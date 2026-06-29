@@ -21,6 +21,7 @@
     "@hello-pangea/dnd": "^17.0.0",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^3.9.0",
+    "@huggingface/inference": "^4.13.20",
     "@platform/tokens": "workspace:*",
     "@platform/vyntrize-db": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.15",

@@ -177,13 +177,19 @@ export function buildEmailLayout(
         <td style="padding:24px 32px; text-align:left;">
           <table cellpadding="0" cellspacing="0" style="display:inline-block;">
             <tr>
-              <td style="vertical-align:middle;">
+              ${company.logoUrl ? `
+              <td style="vertical-align:middle; padding-right:12px;">
                 <img
                   src="${logoSrc}"
-                  alt="${company.name}"
+                  alt="Logo"
                   height="36"
                   style="display:block; border:0; outline:none; height:36px; width:auto; max-width:160px;"
                 />
+              </td>` : ''}
+              <td style="vertical-align:middle;">
+                <span style="font-size: ${company.logoUrl ? '18px' : '22px'}; font-weight: 800; letter-spacing: -0.5px; color: #0f172a;">
+                  ${company.name}
+                </span>
               </td>
             </tr>
           </table>

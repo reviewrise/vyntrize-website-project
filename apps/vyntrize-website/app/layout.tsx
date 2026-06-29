@@ -31,7 +31,7 @@ const BASE_URL = 'https://www.vyntrise.com';
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: 'VyntRise — AI-Powered Business Growth',
+    default: 'VyntRise — AI Automation for Small Businesses',
     template: '%s | VyntRise',
   },
   description:
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: BASE_URL,
     siteName: 'VyntRise',
-    title: 'VyntRise — AI-Powered Business Growth',
+    title: 'VyntRise — AI Automation for Small Businesses',
     description:
       'Autonomous AI agents that handle your reputation, leads, workflows, and data — 24/7. Built for small businesses ready to grow.',
     images: [
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'VyntRise — AI-Powered Business Growth',
+        alt: 'VyntRise — AI Automation for Small Businesses',
       },
     ],
   },
@@ -75,7 +75,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@vyntrise',
     creator: '@vyntrise',
-    title: 'VyntRise — AI-Powered Business Growth',
+    title: 'VyntRise — AI Automation for Small Businesses',
     description:
       'Autonomous AI agents that handle your reputation, leads, workflows, and data — 24/7.',
     images: ['/og-image.png'],
@@ -106,19 +106,38 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Organization",
-              "name": "VyntRise",
-              "url": BASE_URL,
-              "logo": `${BASE_URL}/icon.svg`,
-              "description": "VyntRise deploys autonomous AI agents that handle your reputation, reviews, workflows, and data.",
-              "sameAs": [
-                "https://www.linkedin.com/company/vyntrise-technologies",
-                "https://www.instagram.com/vyntrisellc",
-                "https://www.facebook.com/share/1cBw5oDbhj/?mibextid=wwXIfr"
-              ]
-            }),
+            __html: JSON.stringify([
+              {
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                "name": "VyntRise",
+                "url": BASE_URL,
+                "logo": `${BASE_URL}/icon.svg`,
+                "description": "VyntRise deploys autonomous AI agents that handle your reputation, reviews, workflows, and data.",
+                "sameAs": [
+                  "https://www.linkedin.com/company/vyntrise-technologies",
+                  "https://www.instagram.com/vyntrisellc",
+                  "https://www.facebook.com/share/1cBw5oDbhj/?mibextid=wwXIfr"
+                ]
+              },
+              {
+                "@context": "https://schema.org",
+                "@type": "LocalBusiness",
+                "name": "VyntRise",
+                "url": BASE_URL,
+                "logo": `${BASE_URL}/icon.svg`,
+                "image": `${BASE_URL}/og-image.png`,
+                "telephone": "+15714843141",
+                "address": {
+                  "@type": "PostalAddress",
+                  "streetAddress": "205 Van Buren St, Suite 120, #063",
+                  "addressLocality": "Herndon",
+                  "addressRegion": "VA",
+                  "postalCode": "20170",
+                  "addressCountry": "US"
+                }
+              }
+            ]),
           }}
         />
         <ThemeProvider>
@@ -135,3 +154,4 @@ export default function RootLayout({
     </html>
   );
 }
+

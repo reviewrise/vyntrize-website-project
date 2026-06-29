@@ -11,8 +11,10 @@ export function buildMeta(opts: {
   description: string;
   path: string;
   keywords?: string[];
+  ogImage?: string;
 }): Metadata {
   const url = `${BASE_URL}${opts.path}`;
+  const image = opts.ogImage ?? '/og-image.png';
   return {
     title: opts.title,
     description: opts.description,
@@ -22,12 +24,12 @@ export function buildMeta(opts: {
       title: opts.title,
       description: opts.description,
       url,
-      images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+      images: [{ url: image, width: 1200, height: 630, alt: opts.title }],
     },
     twitter: {
       title: opts.title,
       description: opts.description,
-      images: ['/og-image.png'],
+      images: [image],
     },
   };
 }

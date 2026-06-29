@@ -17,6 +17,7 @@ export enum CRMEvent {
   EMAIL_OPENED = 'email_opened',
   EMAIL_CLICKED = 'email_clicked',
   EMAIL_REPLIED = 'email_replied',
+  SMS_REPLIED = 'sms_replied',
   TASK_COMPLETED = 'task_completed',
   CONTACT_CREATED = 'contact_created',
   TASK_CREATED = 'task_created',

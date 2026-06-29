@@ -14,14 +14,15 @@ const serviceLinks = [
 
 const companyLinks = [
   { label: 'About', href: '/about' },
+  { label: 'Blog', href: '/blog' },
+  { label: 'Our Work', href: '/work' },
   { label: 'Contact', href: '/contact' },
 ];
 
 const resourceLinks = [
-  { label: 'Documentation', href: '#' },
-  { label: 'API Reference', href: '#' },
   { label: 'FAQ', href: '/faq' },
   { label: 'Support', href: '/support' },
+  { label: 'Pricing', href: '/pricing' },
 ];
 
 const socials = [

@@ -1,7 +1,5 @@
 'use client';
 
-'use client';
-
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import {
@@ -50,27 +48,27 @@ const colorMap: Record<string, string> = {
 const resources = [
   {
     icon: BookOpen,
-    title: 'Documentation',
-    desc: 'Step-by-step guides for every feature.',
-    href: '#',
+    title: 'FAQ',
+    desc: 'Answers to the most common questions about VyntRise.',
+    href: '/faq',
   },
   {
     icon: Bot,
     title: 'AI Knowledge Base',
     desc: 'Ask our AI assistant anything about VyntRise.',
-    href: '#',
+    href: '/contact',
   },
   {
     icon: FileText,
-    title: 'API Reference',
-    desc: 'Full REST API docs with code examples.',
-    href: '#',
+    title: 'Services Overview',
+    desc: 'Explore all the services and solutions we offer.',
+    href: '/services',
   },
   {
     icon: Zap,
-    title: 'Quick-start guides',
-    desc: 'Get up and running in under 30 minutes.',
-    href: '#',
+    title: 'Quick-start',
+    desc: 'Book a free consultation and get up and running fast.',
+    href: '/contact',
   },
 ];
 
@@ -178,15 +176,15 @@ export default function SupportPage() {
                 </div>
               ))}
             </div>
-            <a
-              href="#"
+            <Link
+              href="/contact"
               className="inline-flex items-center gap-1.5 mt-4 text-xs transition-colors"
               style={{ color: 'var(--color-text-muted)' }}
               onMouseEnter={(e) => e.currentTarget.style.color = 'var(--color-text)'}
               onMouseLeave={(e) => e.currentTarget.style.color = 'var(--color-text-muted)'}
             >
-              View full status page <ExternalLink className="h-3 w-3" />
-            </a>
+              Report an issue <ExternalLink className="h-3 w-3" />
+            </Link>
           </div>
 
           {/* SLA table */}

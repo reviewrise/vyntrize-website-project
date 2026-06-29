@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import { ArrowLeft, ArrowRight, Database, Zap, Shield, Table, TrendingUp, CheckCircle2, Star } from 'lucide-react';
+import SchemaMarkup from '@/components/seo/SchemaMarkup';
 
 const meta = { badge: 'DATA · Service 04', headline: 'Data Architecture & Analytics', tagline: 'Chaos to clarity — your data as a strategic asset.', cta: 'Get data audit', ctaColor: 'bg-amber-600 hover:bg-amber-700' };
 
@@ -38,9 +39,23 @@ const modules = [
   },
 ];
 
+
 export default function DataArchitectureService() {
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
+      <SchemaMarkup
+        type="Service"
+        data={{
+          name: meta.headline,
+          description: meta.tagline,
+          provider: {
+            "@type": "Organization",
+            "name": "VyntRise",
+            "url": "https://www.vyntrise.com"
+          },
+          areaServed: "US"
+        }}
+      />
       <section className="pt-20 pb-10 px-4 md:px-6" style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
         <div className="container mx-auto max-w-6xl">
           <Link href="/services" className="inline-flex items-center gap-1.5 text-sm font-medium mb-6 transition-colors" style={{ color: 'var(--color-text-muted)' }}

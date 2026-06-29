@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import { ArrowLeft, ArrowRight, Search, Globe, BarChart3, MessageSquare, Shield, TrendingUp, Activity, CheckCircle2, Star } from 'lucide-react';
+import SchemaMarkup from '@/components/seo/SchemaMarkup';
 
 const meta = {
   badge: 'AISO · Service 01',
@@ -60,9 +61,25 @@ const modules = [
   },
 ];
 
+
+const testimonial = { quote: '250% traffic increase and our review rating jumped from 3.8 to 4.7 stars in just 90 days. VyntRise completely transformed our online presence.', name: 'Dr. Sofia Martinez', role: 'Owner, Martinez Dental Group', initials: 'SM' };
+
 export default function AISearchService() {
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
+      <SchemaMarkup
+        type="Service"
+        data={{
+          name: meta.headline,
+          description: meta.tagline,
+          provider: {
+            "@type": "Organization",
+            "name": "VyntRise",
+            "url": "https://www.vyntrise.com"
+          },
+          areaServed: "US"
+        }}
+      />
 
       {/* Header */}
       <section className="pt-20 pb-10 px-4 md:px-6" style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
@@ -201,6 +218,19 @@ export default function AISearchService() {
                 </motion.div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonial */}
+      <section className="px-4 md:px-6 py-12" style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
+        <div className="container mx-auto max-w-6xl">
+          <div className="flex items-start gap-4 max-w-2xl">
+            <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5">{testimonial.initials}</div>
+            <div>
+              <p className="text-sm leading-relaxed mb-2" style={{ color: 'var(--color-text)' }}>&ldquo;{testimonial.quote}&rdquo;</p>
+              <p className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>{testimonial.name} <span className="font-normal" style={{ color: 'var(--color-text-subtle)' }}>— {testimonial.role}</span></p>
+            </div>
           </div>
         </div>
       </section>

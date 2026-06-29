@@ -16,6 +16,7 @@ interface LeadDetailClientProps {
   contactName: string;
   contactPhone?: string | null;
   initialManualOverride?: boolean;
+  initialAiPaused?: boolean;
   /** bookingSlug of the lead's assignee (or null if unassigned / no slug set) */
   assigneeBookingSlug?: string | null;
 }
@@ -26,6 +27,7 @@ export default function LeadDetailClient({
   contactName,
   contactPhone,
   initialManualOverride = false,
+  initialAiPaused = false,
   assigneeBookingSlug,
 }: LeadDetailClientProps) {
   const [isEmailComposerOpen, setIsEmailComposerOpen] = useState(false);
@@ -33,6 +35,8 @@ export default function LeadDetailClient({
   const [isSmsOpen, setIsSmsOpen] = useState(false);
   const [manualOverride, setManualOverride] = useState(initialManualOverride);
   const [overrideLoading, setOverrideLoading] = useState(false);
+  const [aiPaused, setAiPaused] = useState(initialAiPaused);
+  const [aiPauseLoading, setAiPauseLoading] = useState(false);
 
   const handleManualOverrideChange = async (checked: boolean) => {
     setOverrideLoading(true);
@@ -49,6 +53,22 @@ export default function LeadDetailClient({
       console.error('Failed to update manual override', err);
     } finally {
       setOverrideLoading(false);
+    }
+  };
+
+  const handleAiPauseToggle = async () => {
+    setAiPauseLoading(true);
+    try {
+      const res = await fetch(`/api/leads/${leadId}/ai-pause`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paused: !aiPaused }),
+      });
+      if (res.ok) setAiPaused(p => !p);
+    } catch (err) {
+      console.error('Failed to toggle AI pause', err);
+    } finally {
+      setAiPauseLoading(false);
     }
   };
 
@@ -110,6 +130,24 @@ export default function LeadDetailClient({
             />
           </button>
         </label>
+
+        {/* AI Pause Toggle */}
+        <button
+          onClick={handleAiPauseToggle}
+          disabled={aiPauseLoading}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 disabled:opacity-50"
+          style={aiPaused ? {
+            backgroundColor: 'rgba(16,185,129,0.12)',
+            color: 'var(--color-success)',
+            border: '1px solid rgba(16,185,129,0.3)',
+          } : {
+            backgroundColor: 'rgba(239,68,68,0.12)',
+            color: 'var(--color-danger)',
+            border: '1px solid rgba(239,68,68,0.3)',
+          }}
+        >
+          {aiPauseLoading ? '...' : aiPaused ? '▶ Resume AI' : '⏸ Pause AI'}
+        </button>
 
         {/* Log Activity button */}
         <ActivityLogger

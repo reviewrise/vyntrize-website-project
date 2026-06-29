@@ -18,6 +18,7 @@ interface Lead {
     id: string;
     title: string;
     stage: string;
+    score: number;
     dealValue: string | null;
     closeDate: string | null;
     contact: { firstName: string; lastName: string };

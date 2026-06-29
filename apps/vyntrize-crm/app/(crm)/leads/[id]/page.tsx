@@ -244,6 +244,16 @@ export default async function LeadDetailPage({
 
                 {/* Sidebar - Right Column (1/3) */}
                 <div className="lg:col-span-1 space-y-6">
+                    {/* Lead Score Widget */}
+                    <LeadScoreWidget 
+                        score={lead.score ?? 0} 
+                        qualificationStatus={
+                            (lead.score ?? 0) >= 80 ? 'sql' :
+                            (lead.score ?? 0) >= 60 ? 'mql' :
+                            (lead.score ?? 0) >= 40 ? 'warm' : 'cold'
+                        } 
+                    />
+
                     {/* Lead Notes */}
                     <LeadNotes leadId={lead.id} currentUserId={session.userId} currentUserRole={session.role} />
                 </div>

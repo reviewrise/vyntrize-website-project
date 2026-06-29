@@ -22,6 +22,7 @@ export * from './task-automation-agent';
 export * from './stagnation-detection-agent';
 export * from './email-generation-agent';
 export * from './next-best-action-agent';
+export * from './conversational-agent';
 
 // Registry and initialization
 export * from './registry';

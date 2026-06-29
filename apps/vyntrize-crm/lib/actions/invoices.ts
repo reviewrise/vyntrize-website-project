@@ -291,6 +291,11 @@ export async function sendInvoice(id: string) {
   const statusBg = invoice.status === 'PAID' ? '#f0fdf4' : ['SENT', 'PARTIALLY_PAID', 'OVERDUE'].includes(invoice.status) ? '#eff6ff' : '#f1f5f9';
   const statusColor = invoice.status === 'PAID' ? '#22c55e' : ['SENT', 'PARTIALLY_PAID', 'OVERDUE'].includes(invoice.status) ? '#3b82f6' : '#64748b';
 
+  const crmBase = process.env.NEXT_PUBLIC_CRM_URL?.replace(/\/$/, '') ?? 'https://crm.vyntrise.com';
+  const logoSrc = company.logoUrl?.startsWith('http')
+    ? company.logoUrl
+    : company.logoUrl ? `${company.website?.replace(/\/$/, '') || crmBase}${company.logoUrl.startsWith('/') ? '' : '/'}${company.logoUrl}` : '';
+
   const htmlBody = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -324,7 +329,7 @@ export async function sendInvoice(id: string) {
               <table cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td style="background: #4f6ef7; border-radius: 6px;">
-                    <a href="${process.env.NEXT_PUBLIC_CRM_URL || 'https://crm.vyntrise.com'}/pay/${invoice.id}" style="display: inline-block; padding: 12px 24px; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none;">
+                    <a href="${crmBase}/pay/${invoice.id}" style="display: inline-block; padding: 12px 24px; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none;">
                       ${invoice.status !== 'PAID' ? 'View Full Invoice' : 'View Invoice Receipt'}
                     </a>
                   </td>
@@ -353,16 +358,16 @@ export async function sendInvoice(id: string) {
             <td valign="top">
               <table cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  ${company.logoUrl ? `<td style="padding-right: 12px;"><img src="${company.logoUrl}" alt="Logo" style="max-height: 36px; max-width: 120px; object-fit: contain; display: block;" /></td>` : ''}
+                  ${company.logoUrl ? `<td style="padding-right: 12px;"><img src="${logoSrc}" alt="Logo" style="max-height: 36px; max-width: 120px; object-fit: contain; display: block;" /></td>` : ''}
                   <td valign="middle">
                     <span style="font-size: ${company.logoUrl ? '18px' : '24px'}; font-weight: 800; letter-spacing: -0.5px; color: #4f6ef7;">${company.name}</span>
                   </td>
                 </tr>
               </table>
               <p style="margin: 12px 0 0; font-size: 12px; color: #94a3b8; line-height: 1.5;">
-                ${company.address ? company.address.replace(/\n/g, ' &middot; ') : ''}<br />
-                ${company.email} ${company.website ? `&middot; ${company.website.replace(/^https?:\/\//, '')}` : ''}
-                ${company.taxId ? `<br />Tax ID: ${company.taxId}` : ''}
+                ${company.address ? company.address.replace(/\\n/g, ' &middot; ') : ''}<br />
+                ${company.email} ${company.website ? '&middot; ' + company.website.replace(/^https?:\/\//, '') : ''}
+                ${company.taxId ? '<br />Tax ID: ' + company.taxId : ''}
               </p>
             </td>
             <td valign="top" align="right">

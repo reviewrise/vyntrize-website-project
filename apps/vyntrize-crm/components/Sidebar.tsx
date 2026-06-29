@@ -9,7 +9,7 @@ import {
     UserCircle, Settings, ChevronRight, BarChart2,
     CheckSquare, Mail, Send, Sparkles, Inbox,
     FileText, GitBranch, ChevronDown, CalendarDays,
-    Receipt, MessageSquare, MessageCircle, List,
+    Receipt, MessageSquare, MessageCircle, List, Database,
 } from 'lucide-react';
 import { logout } from '@/lib/actions/auth';
 
@@ -67,6 +67,8 @@ const AI_AGENTS_NAV = [
 const ADMIN_NAV = [
     { href: '/import', label: 'Import', icon: Download },
     { href: '/admin/users', label: 'Users', icon: UserCog },
+    { href: '/admin/sources', label: 'Content Sources', icon: Database },
+    { href: '/admin/blogs', label: 'Blog Management', icon: FileText },
 ];
 
 function NavItem({ href, label, icon: Icon, indent = false }: {

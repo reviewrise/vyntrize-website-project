@@ -9,6 +9,11 @@ interface AgentTypeBadgeProps {
 
 export function AgentTypeBadge({ type }: AgentTypeBadgeProps) {
   const config: Record<AgentType, { icon: any; color: string; label: string }> = {
+    CONVERSATIONAL: {
+      icon: Mail,
+      color: '#3b82f6',
+      label: 'Conversational',
+    },
     LEAD_SCORING: {
       icon: TrendingUp,
       color: '#6366f1',

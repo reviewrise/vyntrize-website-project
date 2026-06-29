@@ -12,9 +12,10 @@ import { EmailTestPanel } from './components/EmailTestPanel';
 import { RoiAnalyticsTab } from './components/RoiAnalyticsTab';
 import { InboxView } from './components/InboxView';
 import { LiveFeed } from './components/LiveFeed';
+import { ConversationalInbox } from './components/ConversationalInbox';
 import type { AgentAction, HealthStatus, MetricsResponse, FilterState, PaginationInfo } from '@/types/agent-dashboard';
 
-type ActiveTab = 'agents_inbox' | 'agents_history' | 'email' | 'roi';
+type ActiveTab = 'agents_inbox' | 'agents_history' | 'email' | 'roi' | 'conversations';
 
 export function AgentsDashboardClient() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('agents_inbox');
@@ -81,7 +82,9 @@ export function AgentsDashboardClient() {
       ]);
 
       if (!actionsRes.ok || !healthRes.ok || !metricsRes.ok) {
-        throw new Error('Failed to fetch data');
+        const statuses = `Actions: ${actionsRes.status}, Health: ${healthRes.status}, Metrics: ${metricsRes.status}`;
+        console.error('Failed to fetch data details:', statuses);
+        throw new Error(`Failed to fetch data (${statuses})`);
       }
 
       const [actionsData, healthData, metricsData] = await Promise.all([
@@ -249,10 +252,11 @@ export function AgentsDashboardClient() {
       >
         {(
           [
-            { id: 'agents_inbox', label: '📥 Inbox', title: 'Pending AI actions' },
-            { id: 'agents_history', label: '📜 History', title: 'All executed actions' },
-            { id: 'email',  label: '✉️ Email',  title: 'Test email delivery' },
-            { id: 'roi',    label: '📊 ROI',    title: 'AI vs manual performance' },
+            { id: 'agents_inbox',   label: '📥 Inbox',          title: 'Pending AI actions' },
+            { id: 'conversations',  label: '💬 Conversations',   title: 'AI chat threads with leads' },
+            { id: 'agents_history', label: '📜 History',         title: 'All executed actions' },
+            { id: 'email',          label: '✉️ Email',           title: 'Test email delivery' },
+            { id: 'roi',            label: '📊 ROI',             title: 'AI vs manual performance' },
           ] as { id: ActiveTab; label: string; title: string }[]
         ).map((tab) => (
           <button
@@ -276,6 +280,9 @@ export function AgentsDashboardClient() {
 
       {/* ── ROI Analytics Tab ───────────────────────────────────────────── */}
       {activeTab === 'roi' && <RoiAnalyticsTab />}
+
+      {/* ── Conversations Tab ────────────────────────────────────────────── */}
+      {activeTab === 'conversations' && <ConversationalInbox />}
 
       {/* ── Inbox Tab ─────────────────────────────────────────────────── */}
       {activeTab === 'agents_inbox' && (

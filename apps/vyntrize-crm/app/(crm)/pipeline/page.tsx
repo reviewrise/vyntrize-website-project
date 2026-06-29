@@ -32,6 +32,7 @@ export default async function PipelinePage() {
                 id: l.id,
                 title: l.title,
                 stage: l.stage,
+                score: l.score ?? 0,
                 dealValue: l.dealValue?.toString() ?? null,
                 closeDate: l.closeDate?.toISOString() ?? null,
                 contact: l.contact,

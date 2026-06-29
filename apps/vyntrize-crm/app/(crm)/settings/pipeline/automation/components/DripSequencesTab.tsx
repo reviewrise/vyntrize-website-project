@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -572,6 +572,240 @@ function EnrollmentTable({ sequenceId }: { sequenceId: string }) {
   );
 }
 
+// ─── BulkEnrollModal ─────────────────────────────────────────────────────────
+
+interface LeadOption {
+  id: string;
+  name: string;
+  stage: string;
+  email?: string;
+}
+
+const LEAD_STAGES = [
+  { value: '', label: 'All Stages' },
+  { value: 'NEW', label: '🆕 New' },
+  { value: 'CONTACTED', label: '📞 Contacted' },
+  { value: 'QUALIFIED', label: '✅ Qualified' },
+  { value: 'PROPOSAL_SENT', label: '📄 Proposal Sent' },
+  { value: 'WON', label: '🏆 Won' },
+  { value: 'LOST', label: '❌ Lost' },
+];
+
+function BulkEnrollModal({
+  sequenceId,
+  sequenceName,
+  onClose,
+  onDone,
+}: {
+  sequenceId: string;
+  sequenceName: string;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [leads, setLeads]             = useState<LeadOption[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [stageFilter, setStageFilter] = useState('');
+  const [search, setSearch]           = useState('');
+  const [selected, setSelected]       = useState<Set<string>>(new Set());
+  const [enrolling, setEnrolling]     = useState(false);
+  const [result, setResult]           = useState<{ enrolled: number; skipped: number; errors: number } | null>(null);
+  const searchRef                     = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    searchRef.current?.focus();
+    fetch('/api/crm/leads?limit=500&fields=id,title,stage,contact')
+      .then((r) => r.json())
+      .then((data) => {
+        const items: LeadOption[] = (data.leads ?? []).map((l: any) => ({
+          id:    l.id,
+          name:  l.contact ? `${l.contact.firstName} ${l.contact.lastName}`.trim() : l.title,
+          stage: l.stage,
+          email: l.contact?.email,
+        }));
+        setLeads(items);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = leads.filter((l) => {
+    if (stageFilter && l.stage !== stageFilter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return l.name.toLowerCase().includes(q) || (l.email?.toLowerCase().includes(q) ?? false);
+    }
+    return true;
+  });
+
+  const allSelected = filtered.length > 0 && filtered.every((l) => selected.has(l.id));
+
+  const toggle = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelected((prev) => { const next = new Set(prev); filtered.forEach((l) => next.delete(l.id)); return next; });
+    } else {
+      setSelected((prev) => { const next = new Set(prev); filtered.forEach((l) => next.add(l.id)); return next; });
+    }
+  };
+
+  const handleEnroll = async () => {
+    if (selected.size === 0) return;
+    setEnrolling(true);
+    try {
+      const res = await fetch(`/api/automation/drip-sequences/${sequenceId}/enrollments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadIds: Array.from(selected) }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResult(data.summary);
+      } else {
+        alert(data.error ?? 'Enrollment failed');
+      }
+    } catch {
+      alert('Network error — please try again');
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
+  const overlayStyle: React.CSSProperties = {
+    position: 'fixed', inset: 0, zIndex: 9999,
+    backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+  };
+  const modalStyle: React.CSSProperties = {
+    width: '100%', maxWidth: 560, maxHeight: '85vh',
+    borderRadius: 20, overflow: 'hidden', display: 'flex', flexDirection: 'column',
+    backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)',
+    boxShadow: '0 25px 60px rgba(0,0,0,0.25)',
+  };
+
+  return (
+    <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && !enrolling && onClose()}>
+      <div style={modalStyle}>
+        {/* Header */}
+        <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+            <div>
+              <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--color-text)' }}>Enroll Leads</h2>
+              <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 4 }}>
+                Select leads to add to <strong>{sequenceName}</strong>
+              </p>
+            </div>
+            <button onClick={onClose} disabled={enrolling}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: 'var(--color-text-muted)', lineHeight: 1, padding: 4 }}>
+              ✕
+            </button>
+          </div>
+          {/* Filters */}
+          <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+            <input ref={searchRef} value={search} onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name or email…"
+              style={{ flex: 1, padding: '8px 12px', borderRadius: 10, fontSize: 13,
+                border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}
+            />
+            <select value={stageFilter} onChange={(e) => setStageFilter(e.target.value)}
+              style={{ padding: '8px 10px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+                border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
+              {LEAD_STAGES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* Result banner */}
+        {result && (
+          <div style={{ padding: '12px 24px', backgroundColor: '#f0fdf4', borderBottom: '1px solid #bbf7d0' }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#16a34a' }}>
+              ✅ Done! <strong>{result.enrolled}</strong> enrolled, <strong>{result.skipped}</strong> already active, <strong>{result.errors}</strong> errors.
+            </p>
+            <button onClick={onDone} style={{ marginTop: 8, fontSize: 13, fontWeight: 700,
+              color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+              Close &amp; refresh →
+            </button>
+          </div>
+        )}
+
+        {/* List */}
+        <div style={{ overflowY: 'auto', flex: 1 }}>
+          {loading ? (
+            <div style={{ padding: 40, textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 14 }}>Loading leads…</div>
+          ) : filtered.length === 0 ? (
+            <div style={{ padding: 40, textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 14 }}>No leads match your filters.</div>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}>
+                  <th style={{ width: 44, padding: '10px 16px' }}>
+                    <input type="checkbox" checked={allSelected} onChange={toggleAll} style={{ cursor: 'pointer' }} />
+                  </th>
+                  <th style={{ textAlign: 'left', padding: '10px 0 10px 4px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)' }}>Lead</th>
+                  <th style={{ textAlign: 'left', padding: '10px 16px 10px 0', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-muted)' }}>Stage</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((lead) => (
+                  <tr key={lead.id}
+                    onClick={() => toggle(lead.id)}
+                    style={{ cursor: 'pointer', borderBottom: '1px solid var(--color-border)',
+                      backgroundColor: selected.has(lead.id) ? 'rgba(99,102,241,0.05)' : 'transparent',
+                      transition: 'background-color 0.1s' }}>
+                    <td style={{ width: 44, padding: '10px 16px' }}>
+                      <input type="checkbox" checked={selected.has(lead.id)} onChange={() => toggle(lead.id)}
+                        onClick={(e) => e.stopPropagation()} style={{ cursor: 'pointer' }} />
+                    </td>
+                    <td style={{ padding: '10px 0 10px 4px' }}>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>{lead.name}</p>
+                      {lead.email && <p style={{ margin: 0, fontSize: 11, color: 'var(--color-text-muted)' }}>{lead.email}</p>}
+                    </td>
+                    <td style={{ padding: '10px 16px 10px 0' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99,
+                        backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
+                        {lead.stage}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Footer */}
+        {!result && (
+          <div style={{ padding: '14px 24px', borderTop: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--color-text-muted)' }}>
+              {selected.size === 0 ? 'Select leads above' : <><strong>{selected.size}</strong> lead{selected.size !== 1 ? 's' : ''} selected</>}
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={onClose} disabled={enrolling}
+                style={{ padding: '8px 18px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                  border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', color: 'var(--color-text)' }}>
+                Cancel
+              </button>
+              <button onClick={handleEnroll} disabled={enrolling || selected.size === 0}
+                style={{ padding: '8px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: selected.size === 0 ? 'not-allowed' : 'pointer',
+                  border: 'none', backgroundColor: selected.size === 0 ? 'var(--color-border)' : 'var(--color-primary)',
+                  color: '#fff', opacity: enrolling ? 0.7 : 1, transition: 'opacity 0.2s' }}>
+                {enrolling ? 'Enrolling…' : `Enroll ${selected.size > 0 ? selected.size : ''} Lead${selected.size !== 1 ? 's' : ''}`}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── DripSequenceRow ──────────────────────────────────────────────────────────
 
 function DripSequenceRow({
@@ -585,9 +819,10 @@ function DripSequenceRow({
   onDeleted: () => void;
   onToggled: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const [toggling, setToggling] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const [expanded, setExpanded]     = useState(false);
+  const [toggling, setToggling]     = useState(false);
+  const [deleting, setDeleting]     = useState(false);
+  const [enrollModal, setEnrollModal] = useState(false);
 
   const handleToggle = async () => {
     setToggling(true);
@@ -670,6 +905,13 @@ function DripSequenceRow({
             {expanded ? 'Hide Leads' : 'View Leads'}
           </button>
           
+          <button onClick={() => setEnrollModal(true)}
+            className="text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
+            style={{ border: '1px solid var(--color-primary)', color: 'var(--color-primary)', backgroundColor: 'transparent' }}
+            title="Bulk-enroll leads into this sequence">
+            + Enroll Leads
+          </button>
+          
           <button
             onClick={handleToggle} disabled={toggling} title={sequence.isActive ? 'Turn off sequence' : 'Turn on sequence'}
             className="flex-shrink-0"
@@ -695,6 +937,15 @@ function DripSequenceRow({
         <div className="px-5 pb-5 pt-1 bg-gray-50 border-t" style={{ backgroundColor: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
           <EnrollmentTable sequenceId={sequence.id} />
         </div>
+      )}
+
+      {enrollModal && (
+        <BulkEnrollModal
+          sequenceId={sequence.id}
+          sequenceName={sequence.name}
+          onClose={() => setEnrollModal(false)}
+          onDone={() => { setEnrollModal(false); onToggled(); }}
+        />
       )}
     </div>
   );

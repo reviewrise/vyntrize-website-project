@@ -11,6 +11,7 @@ import { StageProgressionAgent } from './stage-progression-agent';
 import { DripCampaignAgent } from './drip-campaign-agent';
 import { WorkflowRuleEngine } from './workflow-rule-engine';
 import { TaskExecutionAgent } from './implementations/task-execution-agent';
+import { ConversationalAgent } from './conversational-agent';
 
 class AgentRegistry {
   private initialized = false;
@@ -81,6 +82,12 @@ class AgentRegistry {
       
       // On-demand: also available for manual triggering
       jobScheduler.registerAgent('EmailGenerationAgent', emailGenerationAgent);
+
+      // Register Conversational Agent
+      const conversationalAgent = new ConversationalAgent();
+      eventBus.registerAgent(CRMEvent.SMS_REPLIED, conversationalAgent);
+      eventBus.registerAgent(CRMEvent.EMAIL_REPLIED, conversationalAgent);
+      jobScheduler.registerAgent('ConversationalAgent', conversationalAgent);
 
       // Register Next Best Action Agent
       // On-demand only (triggered manually)

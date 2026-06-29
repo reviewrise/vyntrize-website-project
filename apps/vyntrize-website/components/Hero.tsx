@@ -116,9 +116,9 @@ export default function Hero() {
             className="font-extrabold tracking-tight leading-[1.02] mb-6"
             style={{ fontSize: 'clamp(2.5rem, 5vw, 4.5rem)', color: 'var(--color-text)' }}
           >
-            Your business deserves the same tools{' '}
+            AI automation for small businesses{' '}
             <span style={{ background: 'linear-gradient(135deg, #41A5FF 0%, #6366F1 50%, #2A52BE 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              as the big guys.
+              that drives real growth.
             </span>
           </motion.h1>
 

@@ -67,6 +67,16 @@ export async function emitEmailOpened(leadId: string, emailId: string, metadata?
 }
 
 /**
+ * Emit an SMS replied event
+ */
+export async function emitSmsReplied(leadId: string, metadata?: Record<string, unknown>) {
+  await eventBus.emitCRMEvent(CRMEvent.SMS_REPLIED, {
+    leadId,
+    metadata,
+  });
+}
+
+/**
  * Emit an email clicked event
  */
 export async function emitEmailClicked(leadId: string, emailId: string, metadata?: Record<string, unknown>) {

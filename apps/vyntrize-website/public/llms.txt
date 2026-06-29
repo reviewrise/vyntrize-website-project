@@ -13,9 +13,12 @@ VyntRise is a technology firm that builds intelligent systems, custom software, 
 
 ## Company Links
 - About Us: /about
+- Our Work: /work
+- Blog: /blog
 - Contact: /contact
 - FAQ: /faq
 - Support: /support
+- Pricing: /pricing
 
 ## Social Media
 - LinkedIn: https://www.linkedin.com/company/vyntrise-technologies/about/?viewAsMember=true
@@ -24,3 +27,7 @@ VyntRise is a technology firm that builds intelligent systems, custom software, 
 
 ## Contact Information
 - Address: 205 Van Buren St, Suite 120, #063, Herndon, VA 20170, United States
+- Phone: +1 (571) 484-3141
+
+## Blog
+- How to Get More 5-Star Google Reviews: /blog/how-to-get-more-5-star-google-reviews

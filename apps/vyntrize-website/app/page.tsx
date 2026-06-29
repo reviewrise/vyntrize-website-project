@@ -11,6 +11,7 @@ import {
   BarChart3, Users, Globe, Layers,
 } from 'lucide-react';
 import Hero from '@/components/Hero';
+import SchemaMarkup from '@/components/seo/SchemaMarkup';
 
 /* ─────────────────────────────────────────
    DATA
@@ -235,6 +236,45 @@ export default function Home() {
   return (
 
     <div className="flex flex-col" style={{ backgroundColor: 'var(--color-bg)' }}>
+      <SchemaMarkup 
+        type="FAQPage"
+        data={{
+          mainEntity: [
+            {
+              "@type": "Question",
+              "name": "What is VyntRise and how does it help small businesses?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "VyntRise is an AI-powered business growth platform. We combine intelligent automation, AI search & reputation management, custom software, and data architecture to help businesses scale faster with less manual effort."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How quickly can I see results with VyntRise?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Most clients see measurable growth, such as increased traffic and higher conversion rates, within the first 30 days of deploying our AI agents."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Does VyntRise integrate with my existing tools?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, we support over 500 native integrations including CRMs, review platforms, and data sources, requiring zero engineering effort from your side."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What industries does VyntRise specialize in?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "We serve a wide range of local businesses including Healthcare, Retail, Financial Services, Real Estate, and Hospitality. Our tools are customized to fit your specific industry needs."
+              }
+            }
+          ]
+        }}
+      />
       {/* ── 1. Hero ── */}
       <Hero />
 

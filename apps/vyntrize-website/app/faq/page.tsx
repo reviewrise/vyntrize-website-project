@@ -7,6 +7,7 @@ import {
   ChevronDown, ChevronUp, ArrowRight, Search,
   Bot, CreditCard, ShieldCheck, Zap, Code, LifeBuoy,
 } from 'lucide-react';
+import SchemaMarkup from '@/components/seo/SchemaMarkup';
 
 const categories = [
   { id: 'all', label: 'All', icon: Search },
@@ -142,6 +143,7 @@ const faqs = [
   },
 ];
 
+
 export default function FAQPage() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -158,6 +160,19 @@ export default function FAQPage() {
 
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
+      <SchemaMarkup
+        type="FAQPage"
+        data={{
+          mainEntity: faqs.map(faq => ({
+            "@type": "Question",
+            name: faq.q,
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: faq.a
+            }
+          }))
+        }}
+      />
 
       {/* Hero */}
       <section className="pt-20 pb-12 px-4 md:px-6" style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}>

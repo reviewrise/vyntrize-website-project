@@ -10,10 +10,12 @@ interface ScoringFactors {
   completedTasks: number;
   daysSinceActivity: number;
   emailReplies: number;
+  smsReplies: number;
   scheduledMeetings: number;
   attendedMeetings: number;
   missedMeetings: number;
   cancelledMeetings: number;
+  latestSentiment: string;
 }
 
 export class LeadScoringAgent extends Agent {
@@ -79,6 +81,15 @@ export class LeadScoringAgent extends Agent {
                 gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
               },
             },
+          },
+          agentActions: {
+            where: {
+              agentType: 'CONVERSATIONAL',
+              createdAt: {
+                gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+              },
+            },
+            orderBy: { createdAt: 'desc' },
           },
         },
       });
@@ -189,6 +200,19 @@ export class LeadScoringAgent extends Agent {
     const missedMeetings = lead.calendarEvents?.filter((e: any) => e.status === 'MISSED').length || 0;
     const cancelledMeetings = lead.calendarEvents?.filter((e: any) => e.status === 'CANCELLED').length || 0;
 
+    // Conversational Agent (SMS Replies & Sentiment)
+    const conversationalActions = lead.agentActions || [];
+    const smsReplies = conversationalActions.filter((a: any) => {
+       const meta = a.metadata as any;
+       return meta?.inbound_message && a.actionType.includes('SMS');
+    }).length;
+    
+    let latestSentiment = 'NEUTRAL';
+    const lastActionWithSentiment = conversationalActions.find((a: any) => (a.metadata as any)?.sentiment);
+    if (lastActionWithSentiment) {
+      latestSentiment = (lastActionWithSentiment.metadata as any).sentiment;
+    }
+
     return {
       emailOpens: emailOpens + emailLogOpens,
       emailClicks: emailClicks + emailLogClicks,
@@ -196,10 +220,12 @@ export class LeadScoringAgent extends Agent {
       completedTasks,
       daysSinceActivity,
       emailReplies,
+      smsReplies,
       scheduledMeetings,
       attendedMeetings,
       missedMeetings,
       cancelledMeetings,
+      latestSentiment,
     };
   }
 
@@ -213,10 +239,18 @@ export class LeadScoringAgent extends Agent {
     score += factors.emailOpens * 5;        // +5 per email open
     score += factors.emailClicks * 10;      // +10 per email click
     score += factors.emailReplies * 15;     // +15 per email reply
+    score += factors.smsReplies * 15;       // +15 per SMS reply
     score += factors.websiteVisits * 8;     // +8 per website visit
     score += factors.completedTasks * 12;   // +12 per completed task
     score += factors.scheduledMeetings * 25; // +25 per scheduled meeting
     score += factors.attendedMeetings * 15; // +15 per attended meeting
+
+    // Sentiment modifier
+    if (factors.latestSentiment === 'POSITIVE') {
+      score += 20;
+    } else if (factors.latestSentiment === 'NEGATIVE') {
+      score -= 15;
+    }
 
     // Negative factors (inactivity penalty, max -40)
     const inactivityPenalty = Math.min(factors.daysSinceActivity * 2, 40);
@@ -260,11 +294,13 @@ export class LeadScoringAgent extends Agent {
     if (factors.emailOpens > 0) engagementDetails.push(`${factors.emailOpens} email opens`);
     if (factors.emailClicks > 0) engagementDetails.push(`${factors.emailClicks} email clicks`);
     if (factors.emailReplies > 0) engagementDetails.push(`${factors.emailReplies} email replies`);
+    if (factors.smsReplies > 0) engagementDetails.push(`${factors.smsReplies} SMS replies`);
     if (factors.websiteVisits > 0) engagementDetails.push(`${factors.websiteVisits} website visits`);
     if (factors.completedTasks > 0) engagementDetails.push(`${factors.completedTasks} completed tasks`);
     if (factors.scheduledMeetings > 0) engagementDetails.push(`${factors.scheduledMeetings} scheduled meetings`);
     if (factors.attendedMeetings > 0) engagementDetails.push(`${factors.attendedMeetings} attended meetings`);
     if (factors.missedMeetings > 0) engagementDetails.push(`${factors.missedMeetings} missed meetings`);
+    if (factors.latestSentiment !== 'NEUTRAL') engagementDetails.push(`recent sentiment is ${factors.latestSentiment}`);
 
     if (engagementDetails.length > 0) {
       parts.push(`Engagement: ${engagementDetails.join(', ')}.`);
