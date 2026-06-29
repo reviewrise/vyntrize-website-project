@@ -136,7 +136,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
             <div className="flex items-center gap-3">
               <Tag className="h-5 w-5 text-[var(--color-text-subtle)]" />
               <div className="flex flex-wrap gap-2">
-                {article.tags.map((tag) => (
+                {article.tags.map((tag: string) => (
                   <span 
                     key={tag}
                     className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-[var(--color-surface)] border hover:bg-[var(--color-bg-hover)] transition-colors cursor-pointer"

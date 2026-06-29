@@ -1,6 +1,6 @@
 'use client';
 
-import { TrendingUp, CheckSquare, AlertTriangle, Mail, Lightbulb, Workflow } from 'lucide-react';
+import { TrendingUp, CheckSquare, AlertTriangle, Mail, Lightbulb, Workflow, MessageSquare } from 'lucide-react';
 import type { AgentType } from '@platform/vyntrize-db';
 
 interface AgentTypeBadgeProps {
@@ -58,6 +58,11 @@ export function AgentTypeBadge({ type }: AgentTypeBadgeProps) {
       icon: Lightbulb,
       color: '#6366f1',
       label: 'OpenAI Provider',
+    },
+    CONVERSATIONAL: {
+      icon: MessageSquare,
+      color: '#8b5cf6',
+      label: 'Conversational',
     },
     WORKFLOW_RULE: {
       icon: Workflow,
