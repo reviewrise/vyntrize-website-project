@@ -213,7 +213,21 @@ jobs:
             echo "Pulling latest Docker images..."
             docker compose pull
 
-            echo "Starting services..."
+            echo "Starting Postgres and Redis..."
+            docker compose up -d vyntrize-postgres vyntrize-redis
+
+            echo "Waiting for Postgres to be ready..."
+            sleep 10
+
+            echo "Running database migrations..."
+            docker run --rm \
+              --network review-rise-monorepo_reviewrise-network \
+              -v "$(pwd)/../packages/@platform/vyntrize-db:/app" \
+              -w /app \
+              -e VYNTRIZE_DATABASE_URL="postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@vyntrize-postgres:5432/${{ secrets.POSTGRES_DB }}" \
+              node:22-alpine sh -c "corepack enable && corepack prepare pnpm@9 --activate && rm -rf node_modules && pnpm install --no-frozen-lockfile && pnpm prisma db push"
+
+            echo "Starting all services..."
             docker compose up -d --remove-orphans
 
             echo "Cleaning up dangling images..."
