@@ -136,7 +136,8 @@ jobs:
             cd "${{ secrets.DEPLOY_PATH }}" || { echo "ERROR: Directory ${{ secrets.DEPLOY_PATH }} does not exist"; exit 1; }
 
             echo "Pulling latest code from repository..."
-            git pull origin main || { echo "ERROR: Failed to pull latest code"; exit 1; }
+            git fetch origin main || { echo "ERROR: Failed to fetch latest code"; exit 1; }
+            git reset --hard origin/main || { echo "ERROR: Failed to reset to origin/main"; exit 1; }
 
             echo "Navigating to deploy directory..."
             cd deploy
