@@ -220,25 +220,24 @@ jobs:
             docker compose exec vyntrize-postgres sh -c 'until pg_isready -U "${POSTGRES_USER:-vyntrize_user}" -d "${POSTGRES_DB:-vyntrize_db}" >/dev/null 2>&1; do sleep 1; done'
 
             echo "Running Prisma migrations on production..."
-            cd ..
-            export VYNTRIZE_DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@vyntrize-postgres:5432/${POSTGRES_DB}"
-            export CRM_DATABASE_URL="$VYNTRIZE_DATABASE_URL"
-            export DATABASE_URL="$VYNTRIZE_DATABASE_URL"
-            if ! command -v pnpm >/dev/null 2>&1; then
-              if command -v corepack >/dev/null 2>&1; then
-                corepack enable
-                corepack prepare pnpm@9 --activate
-              elif command -v npm >/dev/null 2>&1; then
-                npm install -g pnpm@9
-              else
-                echo "ERROR: Neither pnpm nor corepack nor npm is available" >&2
-                exit 1
-              fi
-            fi
-            cd packages/@platform/vyntrize-db
-            pnpm prisma migrate deploy || { echo "ERROR: Failed to run Prisma migrations"; exit 1; }
-            pnpm prisma generate || { echo "ERROR: Failed to generate Prisma client"; exit 1; }
-            cd ../..
+            docker run --rm \
+              --network review-rise-monorepo_reviewrise-network \
+              -v "${{ secrets.DEPLOY_PATH }}":/app \
+              -w /app \
+              -e POSTGRES_USER="${POSTGRES_USER}" \
+              -e POSTGRES_PASSWORD="${POSTGRES_PASSWORD}" \
+              -e POSTGRES_DB="${POSTGRES_DB}" \
+              -e DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@vyntrize-postgres:5432/${POSTGRES_DB}" \
+              -e VYNTRIZE_DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@vyntrize-postgres:5432/${POSTGRES_DB}" \
+              -e CRM_DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@vyntrize-postgres:5432/${POSTGRES_DB}" \
+              node:22-alpine sh -c '
+                corepack enable && \
+                corepack prepare pnpm@9 --activate && \
+                pnpm install --filter @platform/vyntrize-db... --frozen-lockfile --ignore-scripts && \
+                cd packages/@platform/vyntrize-db && \
+                pnpm prisma migrate deploy && \
+                pnpm prisma generate
+              ' || { echo "ERROR: Failed to run Prisma migrations"; exit 1; }
 
             echo "Starting services..."
             cd deploy

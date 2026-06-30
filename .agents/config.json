@@ -1,0 +1,11 @@
+{
+  "project": "registration",
+  "agent_settings": {
+    "default_mode": "Plan",
+    "provider": {
+      "name": "custom",
+      "api_base": "http://localhost:8787/v1",
+      "model": "gemini-3.5-flash"
+    }
+  }
+}
