@@ -219,6 +219,11 @@ jobs:
             echo "Waiting for Postgres to be ready..."
             docker compose exec vyntrize-postgres sh -c 'until pg_isready -U "${POSTGRES_USER:-vyntrize_user}" -d "${POSTGRES_DB:-vyntrize_db}" >/dev/null 2>&1; do sleep 1; done'
 
+            echo "Exporting environment variables from .env..."
+            set -a
+            . .env
+            set +a
+
             echo "Running Prisma migrations on production..."
             docker run --rm \
               --network review-rise-monorepo_reviewrise-network \
@@ -233,7 +238,7 @@ jobs:
               node:22-alpine sh -c '
                 corepack enable && \
                 corepack prepare pnpm@9 --activate && \
-                pnpm install --filter @platform/vyntrize-db... --frozen-lockfile --ignore-scripts && \
+                pnpm install --filter @platform/vyntrize-db... --frozen-lockfile --ignore-scripts --yes && \
                 cd packages/@platform/vyntrize-db && \
                 pnpm prisma migrate deploy && \
                 pnpm prisma generate
