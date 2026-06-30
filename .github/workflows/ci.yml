@@ -225,8 +225,15 @@ jobs:
             export CRM_DATABASE_URL="$VYNTRIZE_DATABASE_URL"
             export DATABASE_URL="$VYNTRIZE_DATABASE_URL"
             if ! command -v pnpm >/dev/null 2>&1; then
-              corepack enable
-              corepack prepare pnpm@9 --activate
+              if command -v corepack >/dev/null 2>&1; then
+                corepack enable
+                corepack prepare pnpm@9 --activate
+              elif command -v npm >/dev/null 2>&1; then
+                npm install -g pnpm@9
+              else
+                echo "ERROR: Neither pnpm nor corepack nor npm is available" >&2
+                exit 1
+              fi
             fi
             cd packages/@platform/vyntrize-db
             pnpm prisma migrate deploy || { echo "ERROR: Failed to run Prisma migrations"; exit 1; }
