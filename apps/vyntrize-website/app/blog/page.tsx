@@ -1,8 +1,7 @@
 import Link from 'next/link';
-import { blogPosts } from '@/lib/blog';
 import { ArrowRight, Calendar, User, TrendingUp, Sparkles, ExternalLink } from 'lucide-react';
 import SchemaMarkup from '@/components/seo/SchemaMarkup';
-import { getTrendingArticles, getRecommendedForYou } from '@/lib/recommendations';
+import { getRecentArticles, getTrendingArticles, getRecommendedForYou } from '@/lib/recommendations';
 
 export const metadata = {
   title: 'Blog | VyntRise AI & Automation Insights',
@@ -10,12 +9,15 @@ export const metadata = {
 };
 
 export default async function BlogIndexPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
-  const resolvedSearchParams = await searchParams
+  const resolvedSearchParams = await searchParams;
   const page = parseInt(resolvedSearchParams.page || "1", 10);
-  
-  // Fetch AI recommendations from our new engine
-  const trendingResponse = await getTrendingArticles(page);
-  const recommendedResponse = await getRecommendedForYou(page);
+
+  // Fetch CRM-managed articles and AI recommendations
+  const [recentArticles, trendingResponse, recommendedResponse] = await Promise.all([
+    getRecentArticles(),
+    getTrendingArticles(page),
+    getRecommendedForYou(page),
+  ]);
 
   const trendingArticles = trendingResponse.data;
   const recommendedArticles = recommendedResponse.data;
@@ -52,27 +54,27 @@ export default async function BlogIndexPage({ searchParams }: { searchParams: Pr
       {/* Blog List */}
       <section className="px-4 md:px-6 py-16">
         <div className="container mx-auto max-w-4xl space-y-8">
-          {blogPosts.map((post) => (
+          {recentArticles.map((article) => (
             <article 
-              key={post.slug} 
+              key={article.id} 
               className="rounded-2xl p-6 md:p-8 transition-shadow shadow-sm hover:shadow-md"
               style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg)' }}
             >
               <div className="flex flex-wrap items-center gap-4 text-xs font-semibold mb-4" style={{ color: 'var(--color-text-subtle)' }}>
-                <span className="uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded-md">{post.category}</span>
-                <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> {post.publishedAt}</span>
-                <span className="flex items-center gap-1.5"><User className="h-3.5 w-3.5" /> {post.author}</span>
+                <span className="uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded-md">{article.category || 'News'}</span>
+                <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> {new Date(article.publishedAt).toLocaleDateString()}</span>
+                <span className="flex items-center gap-1.5"><User className="h-3.5 w-3.5" /> {article.author || article.source}</span>
               </div>
               <h2 className="text-2xl font-bold mb-3" style={{ color: 'var(--color-text)' }}>
-                <Link href={`/blog/${post.slug}`} className="hover:underline decoration-blue-500">
-                  {post.title}
+                <Link href={`/blog/news/${article.id}`} className="hover:underline decoration-blue-500">
+                  {article.title}
                 </Link>
               </h2>
               <p className="text-base leading-relaxed mb-6" style={{ color: 'var(--color-text-muted)' }}>
-                {post.description}
+                {article.aiSummary || article.description || 'Read the full article.'}
               </p>
               <Link 
-                href={`/blog/${post.slug}`} 
+                href={`/blog/news/${article.id}`} 
                 className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
               >
                 Read article <ArrowRight className="h-4 w-4" />

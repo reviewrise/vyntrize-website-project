@@ -1,37 +1,8 @@
-import { getPostBySlug, blogPosts } from '@/lib/blog';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft, Calendar, User, Tag } from 'lucide-react';
-import SchemaMarkup from '@/components/seo/SchemaMarkup';
 
-export async function generateStaticParams() {
-  return blogPosts.map((post) => ({ slug: post.slug }));
+export default async function BlogLegacySlugPage() {
+  notFound();
 }
-
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const post = getPostBySlug(slug);
-  if (!post) return {};
-  return {
-    title: `${post.title} | VyntRise Blog`,
-    description: post.description,
-    openGraph: {
-      title: post.title,
-      description: post.description,
-      type: 'article',
-      publishedTime: post.publishedAt,
-      authors: [post.author],
-    },
-  };
-}
-
-export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const post = getPostBySlug(slug);
-  if (!post) notFound();
-
-  return (
-    <div className="flex flex-col min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
       <SchemaMarkup
         type="Article"
         data={{
