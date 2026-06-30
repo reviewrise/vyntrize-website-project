@@ -9,8 +9,9 @@ export const metadata = {
   description: 'Read the latest insights from VyntRise on how small businesses can leverage AI, automation, and data to drive growth.',
 };
 
-export default async function BlogIndexPage({ searchParams }: { searchParams: { page?: string } }) {
-  const page = parseInt(searchParams.page || "1", 10);
+export default async function BlogIndexPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const resolvedSearchParams = await searchParams
+  const page = parseInt(resolvedSearchParams.page || "1", 10);
   
   // Fetch AI recommendations from our new engine
   const trendingResponse = await getTrendingArticles(page);
