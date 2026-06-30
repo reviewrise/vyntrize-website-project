@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import { Inter, JetBrains_Mono, Cormorant_Garamond } from 'next/font/google';
 import './globals.css';
 import Header from '@/components/Header';
@@ -99,8 +100,18 @@ export default function RootLayout({
         <meta name="google-site-verification" content="64_A0DW5_f5MZK0wbNSa2zGgR4_XjMg8Gb9KyF9suxA" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         {/* Basic GA script to pass SEO scanners. Real tracking is handled by AnalyticsProvider */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-        <script dangerouslySetInnerHTML={{ __html: `window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-XXXXXXXXXX', { page_path: window.location.pathname });` }} />
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"
+          strategy="afterInteractive"
+        />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-XXXXXXXXXX', { page_path: window.location.pathname });`,
+          }}
+        />
       </head>
       <body className="font-sans antialiased flex flex-col min-h-screen transition-colors duration-200" style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)' }}>
         <script

@@ -30,11 +30,11 @@ export const blogPosts: BlogPost[] = [
         </p>
         <h2 className="text-2xl font-bold mt-8 mb-4">2. Make it Easy</h2>
         <p className="mb-6">
-          Don't make your customers hunt for your Google Business Profile. Provide a direct link to your review page.
+          Don&apos;t make your customers hunt for your Google Business Profile. Provide a direct link to your review page.
         </p>
         <h2 className="text-2xl font-bold mt-8 mb-4">3. Respond to All Reviews (Even the Bad Ones)</h2>
         <p className="mb-6">
-          When you respond to reviews, it shows that you care about your customers' feedback.
+          When you respond to reviews, it shows that you care about your customers&apos; feedback.
         </p>
         <h2 className="text-2xl font-bold mt-8 mb-4">4. Automate the Ask</h2>
         <p className="mb-6">
@@ -53,7 +53,7 @@ export const blogPosts: BlogPost[] = [
     content: (
       <>
         <p className="mb-6">
-          The AI landscape is noisy, but small businesses don't need shiny toys—they need tools that actually save time and generate revenue. From AI agents handling your CRM to automated review responses, here are the top tools moving the needle in 2026.
+          The AI landscape is noisy, but small businesses don&apos;t need shiny toys—they need tools that actually save time and generate revenue. From AI agents handling your CRM to automated review responses, here are the top tools moving the needle in 2026.
         </p>
       </>
     )
@@ -68,7 +68,7 @@ export const blogPosts: BlogPost[] = [
     content: (
       <>
         <p className="mb-6">
-          Negative reviews happen to every business. But a 1-star review isn't the end of the world—it's an opportunity to showcase your customer service to future potential clients.
+          Negative reviews happen to every business. But a 1-star review isn&apos;t the end of the world—it&apos;s an opportunity to showcase your customer service to future potential clients.
         </p>
       </>
     )
@@ -83,7 +83,7 @@ export const blogPosts: BlogPost[] = [
     content: (
       <>
         <p className="mb-6">
-          When people search for "restaurants near me," they rarely scroll past the first three results on Google Maps. If your restaurant isn't in the Local Pack, you are losing out on significant revenue.
+          When people search for &ldquo;restaurants near me,&rdquo; they rarely scroll past the first three results on Google Maps. If your restaurant isn&apos;t in the Local Pack, you are losing out on significant revenue.
         </p>
       </>
     )
@@ -143,7 +143,7 @@ export const blogPosts: BlogPost[] = [
     content: (
       <>
         <p className="mb-6">
-          Your Google Business Profile (GBP) is arguably your most important digital asset. It's the first thing customers see when they search for you. Here is how to fully optimize it for the 2026 algorithm.
+          Your Google Business Profile (GBP) is arguably your most important digital asset. It&apos;s the first thing customers see when they search for you. Here is how to fully optimize it for the 2026 algorithm.
         </p>
       </>
     )
@@ -173,7 +173,7 @@ export const blogPosts: BlogPost[] = [
     content: (
       <>
         <p className="mb-6">
-          Speed is critical in customer service. When a customer leaves a review at 2 AM, they don't expect an immediate response—which is exactly why an AI agent replying instantly leaves a lasting positive impression.
+          Speed is critical in customer service. When a customer leaves a review at 2 AM, they don&apos;t expect an immediate response—which is exactly why an AI agent replying instantly leaves a lasting positive impression.
         </p>
       </>
     )
@@ -188,7 +188,7 @@ export const blogPosts: BlogPost[] = [
     content: (
       <>
         <p className="mb-6">
-          Silence speaks volumes. Ignoring online reviews doesn't just mean missing out on thanking a happy customer; it signals to future prospects that you don't value post-purchase support.
+          Silence speaks volumes. Ignoring online reviews doesn&apos;t just mean missing out on thanking a happy customer; it signals to future prospects that you don&apos;t value post-purchase support.
         </p>
       </>
     )
