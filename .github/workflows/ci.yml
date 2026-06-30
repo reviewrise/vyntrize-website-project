@@ -219,10 +219,16 @@ jobs:
             echo "Waiting for Postgres to be ready..."
             docker compose exec vyntrize-postgres sh -c 'until pg_isready -U "${POSTGRES_USER:-vyntrize_user}" -d "${POSTGRES_DB:-vyntrize_db}" >/dev/null 2>&1; do sleep 1; done'
 
-            echo "Exporting environment variables from .env..."
-            set -a
-            . .env
-            set +a
+            echo "Extracting database credentials from .env..."
+            if [ -f .env ]; then
+              POSTGRES_USER=$(grep -E '^POSTGRES_USER=' .env | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")
+              POSTGRES_PASSWORD=$(grep -E '^POSTGRES_PASSWORD=' .env | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")
+              POSTGRES_DB=$(grep -E '^POSTGRES_DB=' .env | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")
+              export POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB
+              echo "Credentials loaded from .env"
+            else
+              echo ".env file not found; using only GitHub secrets"
+            fi
 
             echo "Running Prisma migrations on production..."
             docker run --rm \
@@ -238,14 +244,14 @@ jobs:
               node:22-alpine sh -c '
                 corepack enable && \
                 corepack prepare pnpm@9 --activate && \
-                pnpm install --filter @platform/vyntrize-db... --frozen-lockfile --ignore-scripts --yes && \
+                rm -rf node_modules packages/*/node_modules && \
+                pnpm install --filter @platform/vyntrize-db... --no-frozen-lockfile --ignore-scripts && \
                 cd packages/@platform/vyntrize-db && \
-                pnpm prisma migrate deploy && \
+                pnpm prisma db push --accept-data-loss=false && \
                 pnpm prisma generate
               ' || { echo "ERROR: Failed to run Prisma migrations"; exit 1; }
 
             echo "Starting services..."
-            cd deploy
             docker compose up -d --remove-orphans
 
             echo "Cleaning up dangling images..."
