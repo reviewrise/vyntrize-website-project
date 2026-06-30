@@ -1627,4 +1627,3 @@ model SourceIntegration {
 
   @@map("source_integrations")
 }
-

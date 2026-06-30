@@ -1,13 +1,9 @@
-import React from 'react';
-
-type SchemaType = 'LocalBusiness' | 'Service' | 'FAQPage' | 'Article' | 'Organization';
-
-interface SchemaProps {
-  type: SchemaType;
-  data: any;
+interface SchemaMarkupProps {
+  type: string;
+  data: Record<string, unknown>;
 }
 
-export default function SchemaMarkup({ type, data }: SchemaProps) {
+export default function SchemaMarkup({ type, data }: SchemaMarkupProps) {
   const schema = {
     '@context': 'https://schema.org',
     '@type': type,
