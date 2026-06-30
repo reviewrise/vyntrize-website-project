@@ -213,7 +213,28 @@ jobs:
             echo "Pulling latest Docker images..."
             docker compose pull
 
+            echo "Starting database services for migrations..."
+            docker compose up -d vyntrize-postgres vyntrize-redis
+
+            echo "Waiting for Postgres to be ready..."
+            docker compose exec vyntrize-postgres sh -c 'until pg_isready -U "${POSTGRES_USER:-vyntrize_user}" -d "${POSTGRES_DB:-vyntrize_db}" >/dev/null 2>&1; do sleep 1; done'
+
+            echo "Running Prisma migrations on production..."
+            cd ..
+            export VYNTRIZE_DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@vyntrize-postgres:5432/${POSTGRES_DB}"
+            export CRM_DATABASE_URL="$VYNTRIZE_DATABASE_URL"
+            export DATABASE_URL="$VYNTRIZE_DATABASE_URL"
+            if ! command -v pnpm >/dev/null 2>&1; then
+              corepack enable
+              corepack prepare pnpm@9 --activate
+            fi
+            cd packages/@platform/vyntrize-db
+            pnpm prisma migrate deploy || { echo "ERROR: Failed to run Prisma migrations"; exit 1; }
+            pnpm prisma generate || { echo "ERROR: Failed to generate Prisma client"; exit 1; }
+            cd ../..
+
             echo "Starting services..."
+            cd deploy
             docker compose up -d --remove-orphans
 
             echo "Cleaning up dangling images..."
